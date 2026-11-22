@@ -1,0 +1,1466 @@
+{
+  "commit": "c435dad12e9427c51f75990b7ed39c9c0e8a1db7",
+  "fingerprint": "659898377b091e4ebf2cffffef7dd1bbd60e0fe0ad8671c8505e768733216771",
+  "files": [
+    {
+      "path": "backend/migrations/env.py",
+      "sha256": "fedb23fde66bfd60235fc3f8fd1b2a9c83316163e98a537c53bd4c76664ac1dc"
+    },
+    {
+      "path": "backend/migrations/versions/0001_foundation.py",
+      "sha256": "cd3ef201a705e4a3c7f392e174e543383a66ae5ccf898f09abb321b92ab62d50"
+    },
+    {
+      "path": "backend/migrations/versions/0002_users.py",
+      "sha256": "32eeb1055167cdf5446be0d36e39155534436cc23623d8c4b11e5dda56e2926d"
+    },
+    {
+      "path": "backend/migrations/versions/0003_append_only_partitions.py",
+      "sha256": "df27e5f364414a188f69ec80a7baa46b6cf05f3800c28c08d8b53752944cae71"
+    },
+    {
+      "path": "backend/migrations/versions/0004_audit_events.py",
+      "sha256": "8fee9496fd76e4e9be87a3a0ff98234db42e7235af701d822d3389451a6a0dcf"
+    },
+    {
+      "path": "backend/migrations/versions/0005_audit_core_columns.py",
+      "sha256": "a17457cb03e3c7f0494c537217f995de5545e8c570d85cee5130eab0702653ac"
+    },
+    {
+      "path": "backend/migrations/versions/0006_partition_event_trigger.py",
+      "sha256": "c813b73878740083c0c419fca62b88e2da8f45ef06644dcb0f7166dcdc6c9cb1"
+    },
+    {
+      "path": "backend/migrations/versions/0007_auth.py",
+      "sha256": "712089e39b2e0c43095502ea59a8c28d6f95d5bb80d67752973816be721824ba"
+    },
+    {
+      "path": "backend/migrations/versions/0008_totp.py",
+      "sha256": "dd9e3e057992e26abd06ea9c6c278c217935a2df3d5ed483adbfc5120fbca9b1"
+    },
+    {
+      "path": "backend/migrations/versions/0009_api_keys.py",
+      "sha256": "d1e784ca38988171944735114a8d64ebea6240267e27f1efee09977ba68c6117"
+    },
+    {
+      "path": "backend/migrations/versions/0010_api_throttle.py",
+      "sha256": "a605870bddf03f46d115e6ff38f8846fafba4de713d71a3e5af689850a8bb790"
+    },
+    {
+      "path": "backend/migrations/versions/0011_deferred_rejection.py",
+      "sha256": "e17c2d654de2c9a130999c293ef7fd525353f7c9d61d7702469cc0f30c892d37"
+    },
+    {
+      "path": "backend/migrations/versions/0012_single_trading_account.py",
+      "sha256": "caa1f0acec0c3cef380604137c5e175ac2c731c26c63634c4dcd96be2157d509"
+    },
+    {
+      "path": "backend/migrations/versions/0013_market_candles.py",
+      "sha256": "ce2d8ff97680a196628803230776e6cbce593acc2f2b77cc16ef4484acb28e05"
+    },
+    {
+      "path": "backend/migrations/versions/0014_realtime_prices.py",
+      "sha256": "9ba67f7611d4e5ba68dad79a2832fe1be83a2a72e1ac6519111f43d8f406c1ae"
+    },
+    {
+      "path": "backend/migrations/versions/0015_prepared_indicator_source.py",
+      "sha256": "404abefaf8bee4bb2adadcbac2a05d390447a59e19003bea70ead3c34357af23"
+    },
+    {
+      "path": "backend/migrations/versions/0016_indicator_build_claims.py",
+      "sha256": "c2f1057656708a85ebe4e9ca1589f35c15ff93df4caf2364b30476a77cac50ca"
+    },
+    {
+      "path": "backend/migrations/versions/0017_indicator_staging.py",
+      "sha256": "977838adc0b6bcd08df1d9bbcd2c79fdc554a7550fdf2895b8afbdd36e2e247a"
+    },
+    {
+      "path": "backend/migrations/versions/0018_indicator_publication.py",
+      "sha256": "ee5eeeb94ebc7b3c2e7b831809c5659ece26715d9813f3c8653f2e52a5ca4249"
+    },
+    {
+      "path": "backend/migrations/versions/0019_indicator_scheduler.py",
+      "sha256": "b76278f90da9eebeb32fe536676afefeb1369ed4947af7ac2043321a40412436"
+    },
+    {
+      "path": "backend/migrations/versions/0020_indicator_recovery_gc.py",
+      "sha256": "7b50045108195456f66ee56a245afcc08d2e804d9d45e6a9919421aef360a05b"
+    },
+    {
+      "path": "backend/migrations/versions/0021_indicator_live_pressure.py",
+      "sha256": "8c0c97702bc32ba6f6baa85126467b9639c9a40831f5d27a54ce4bc12366f39a"
+    },
+    {
+      "path": "backend/migrations/versions/0022_indicator_api_metadata.py",
+      "sha256": "35804a5c5166818e4807f1b25cde6dcf72ba6c770bea9795ff3dd20a57318bd2"
+    },
+    {
+      "path": "backend/migrations/versions/0023_indicator_rollout.py",
+      "sha256": "30a50a842b8a0f7061fd9c206fd66ba00b6b49d9882a04360a71e7cd47576675"
+    },
+    {
+      "path": "backend/migrations/versions/0024_chart_candle_preview.py",
+      "sha256": "62f311e77d3148f1405038c6d1af3bfada0ef70026af286c81b872fe5f7e5eb1"
+    },
+    {
+      "path": "backend/migrations/versions/0025_indicator_without_macd.py",
+      "sha256": "3e357c00235c172141fe9512ed7864f062a70e4250fb93cba780b4a36f5c2484"
+    },
+    {
+      "path": "backend/migrations/versions/0026_week_month_timeframes.py",
+      "sha256": "71b4ea2fcddd845830bf952edff2cf288f7258f944e2d98b9182407c20030444"
+    },
+    {
+      "path": "backend/migrations/versions/0027_recent_candle_priority.py",
+      "sha256": "9d9daaf54a8eff7f8866075baff3e2ba987831a515c3cedf24e035195c301dd1"
+    },
+    {
+      "path": "backend/migrations/versions/0028_chart_history_bounds.py",
+      "sha256": "44f883d68ac582d088a1331e4a2fdc2b50dfbc048d66cea4de22ed8faa67c98c"
+    },
+    {
+      "path": "backend/migrations/versions/0029_indicator_long_timeframe_bounds.py",
+      "sha256": "670601254a762f7553a5c2ed491c57895939ebc761664e3d0bbd92999a531039"
+    },
+    {
+      "path": "backend/migrations/versions/0030_supported_pairs_reduction.py",
+      "sha256": "94c6cc88d7dd8fa82f75c8eef333bd7faad0a6d4eaa256546f01303934875e67"
+    },
+    {
+      "path": "backend/migrations/versions/0031_paper_wallet.py",
+      "sha256": "0ef8bcfc016245dc589b22deb87bc3ae80fafccf9a30d1e787dba36013e51a71"
+    },
+    {
+      "path": "backend/migrations/versions/0032_position_pnl.py",
+      "sha256": "2587148044e6731b323a9c4057e31c73ecab1fc155950c1f95a3909d7c8e1076"
+    },
+    {
+      "path": "backend/migrations/versions/0033_execution_market_inputs.py",
+      "sha256": "94d61d6683709d0a418be332d16b38055a28a4eddc5702e94eaf27f3a80e281c"
+    },
+    {
+      "path": "backend/migrations/versions/0034_paper_orders.py",
+      "sha256": "294058a6bab5d0d6e1c7a7b4bf737db4e210b47fb6c01d4f7cd83b2a0fc433f0"
+    },
+    {
+      "path": "backend/migrations/versions/0035_paper_writer_fence.py",
+      "sha256": "d37ad5d34c19da8644cbf77cb3d63b083f0fdd63630a04a68cede638e3e3c29b"
+    },
+    {
+      "path": "backend/migrations/versions/0036_paper_matching_decisions.py",
+      "sha256": "ba5a699b57cd5af2a0f2576cbe2a66d073bff0e30eed72a752a842561ad7e965"
+    },
+    {
+      "path": "backend/migrations/versions/0037_paper_wallet_reset_audit.py",
+      "sha256": "5fc700952d9a03ac06481a19f51f43d3bcabae71b1ef34a6a7366c02ea4fb8bd"
+    },
+    {
+      "path": "backend/migrations/versions/0038_paper_terminal_revisions.py",
+      "sha256": "212ac9a278e86f54b3bc5bf60c384e122a3c99eeb93dcc0890ea05141dc6e9eb"
+    },
+    {
+      "path": "backend/migrations/versions/0039_indicator_publication_boundaries.py",
+      "sha256": "93e66d19939568783820c94f7c2fb062acaf368d6538ec5eb772bec2ef56e773"
+    },
+    {
+      "path": "backend/migrations/versions/0040_supported_symbol_catalog.py",
+      "sha256": "69aff780513c58854b834c3018c67baccc591e2e8caa452f287efdb7266d53eb"
+    },
+    {
+      "path": "backend/migrations/versions/0041_manual_order_requests.py",
+      "sha256": "36a5b941a6df6fe2613a04e3d60a3445d88f9740497042334837e7c6d321f0c3"
+    },
+    {
+      "path": "backend/migrations/versions/0042_manual_order_admission.py",
+      "sha256": "45fc724a7feca0e85705d6c5ee841f1d01627e6f98360794a47156417d638348"
+    },
+    {
+      "path": "backend/migrations/versions/0043_wallet_risk_limits.py",
+      "sha256": "8cb7ef92e047ee0d350de418db41630dfe1e1f4c4d144ee09c47d981e5322498"
+    },
+    {
+      "path": "backend/migrations/versions/0044_risk_api_throttle.py",
+      "sha256": "24e77549b1611f32a1b00fd443031457a0d99dfa0f47260ba5bcb203779a41eb"
+    },
+    {
+      "path": "backend/migrations/versions/0045_risk_publication_boundaries.py",
+      "sha256": "acd9d66dea126dbf2b1dbf090d16b836f678820300c57bc1226798a181804426"
+    },
+    {
+      "path": "backend/migrations/versions/0046_risk_cancel_boundary.py",
+      "sha256": "3b7d6664ab7d34e7da08b69b9a8f5895999b85d4824bb746607637c71288a82c"
+    },
+    {
+      "path": "backend/migrations/versions/0047_risk_source_versions.py",
+      "sha256": "c125fd00f9d7dbab512e6c73b0d682bd4af522699f413359f745ad1780a5308b"
+    },
+    {
+      "path": "backend/migrations/versions/0048_risk_readers.py",
+      "sha256": "8acb4e3565ce57d129601e07067f9bb5057365708cbac5ed13a0350fb57fb0b7"
+    },
+    {
+      "path": "backend/migrations/versions/0049_risk_stops.py",
+      "sha256": "b6a2c2cb7a05bd0c636cbd3e396873ca1fb5676792b7a1cf3ca72e50a06276ef"
+    },
+    {
+      "path": "backend/migrations/versions/0050_risk_stop_cutoffs.py",
+      "sha256": "3ec3b503a8bf111b1bc10aaaa07c3010ea3de651189d60b72c8b8e747f35d6cd"
+    },
+    {
+      "path": "backend/migrations/versions/0051_risk_stop_dispatch.py",
+      "sha256": "dedb21bbadaef906c4eecb428a96aab06742af7f34b243216c0805c4d77f4129"
+    },
+    {
+      "path": "backend/migrations/versions/0052_risk_unconfigured_writer.py",
+      "sha256": "ac97585fbb61080f55678b6c203627cbd717c19b0e340984eb970ee061fa4c2e"
+    },
+    {
+      "path": "backend/migrations/versions/0053_risk_evaluation_requests.py",
+      "sha256": "8b4c6cb3310ed6e01c6c8c89c806ee54892719e9328375b5053899a06f4a8b4c"
+    },
+    {
+      "path": "backend/migrations/versions/0054_risk_pair_projection.py",
+      "sha256": "b425edf561e4441f4d030f0a951f6f389939fdf85c5c7de0992c26507d821ec6"
+    },
+    {
+      "path": "backend/migrations/versions/0055_risk_matching_owner_index.py",
+      "sha256": "29a0409dff2bcc940160a314c535ad749d9cb496771c934f2889fb781cc9a741"
+    },
+    {
+      "path": "backend/migrations/versions/0056_same_pair_dispatch.py",
+      "sha256": "3b18e0d93818f1a572798cb5d43dccf57ffe3526b1f9e4d8e8b0119559ddecaa"
+    },
+    {
+      "path": "backend/migrations/versions/0057_source_resume_probe.py",
+      "sha256": "fd2d91aaa8fc861e0377188ef627f8983db733d4546242d42de7c00399d7a4c3"
+    },
+    {
+      "path": "backend/migrations/versions/0058_risk_pending_price_hint.py",
+      "sha256": "c5943fa9d2f720df9b70c25a0369d65325a1ecd6676d1494493733513b3c6aad"
+    },
+    {
+      "path": "backend/migrations/versions/0059_paper_risk_increase_no_totp.py",
+      "sha256": "ee4fbd1308363be2c3927b166318519f25d182a31e59f127dbbc72dd4b65d782"
+    },
+    {
+      "path": "backend/migrations/versions/0060_paper_optional_risk_limit.py",
+      "sha256": "e3b439143530468d3ddf13a8ba6474861e01cf7d925d7d7fa1abe5827f0b8e6d"
+    },
+    {
+      "path": "backend/migrations/versions/0061_kill_switch.py",
+      "sha256": "80189d28f6306e2c63c714d395b4f748986911d75f5fc7c7e9ff5c9544973980"
+    },
+    {
+      "path": "backend/migrations/versions/0062_stop_snapshot_revision.py",
+      "sha256": "ee6a54426fd351c37811bca359dacb7feaf10d38358703825b29347a1a748901"
+    },
+    {
+      "path": "backend/migrations/versions/0063_protections.py",
+      "sha256": "904104a76b8a67e7bb166de2e936f88efe4cb643abe34dd9e173b2e46df6c0b5"
+    },
+    {
+      "path": "backend/migrations/versions/0064_protection_request_retry.py",
+      "sha256": "f72c699e6ca78abf6feadc47bca04d21bb69d92f93035ae5155011336d5f9a14"
+    },
+    {
+      "path": "backend/migrations/versions/0065_checkpoint_batch.py",
+      "sha256": "74d6a40715554b2990bc3354cf057b33dd2ab887dbd226157ee3abdf1f24d9b5"
+    },
+    {
+      "path": "backend/migrations/versions/0066_three_minute_timeframe.py",
+      "sha256": "b8eec531659f7849e81a390ea1445c172ff078aeec0ac63f34c7026805540553"
+    },
+    {
+      "path": "backend/migrations/versions/0067_bot_lifecycle.py",
+      "sha256": "622bb02d123be442a0472e41a1aab01ab9b0c81d498ced9adddeb8c7ff25d7a2"
+    },
+    {
+      "path": "backend/migrations/versions/0068_bot_protection_links.py",
+      "sha256": "7b0b2ba01146dfec58578793b98b899e666ae9253e66c1f87cef6ff3e5d98bd6"
+    },
+    {
+      "path": "backend/migrations/versions/0069_bot_catalog_consumer.py",
+      "sha256": "56d30c7421de831ba3ba7986e6688519bf8822259aa05a16d0a6525367a92592"
+    },
+    {
+      "path": "backend/migrations/versions/0070_bot_replacement_resume.py",
+      "sha256": "e83067079e29c7a87f4afd5632fc15b3e2445923d7744ee1bb370fbb15b93734"
+    },
+    {
+      "path": "backend/migrations/versions/0071_bot_resume_proofs.py",
+      "sha256": "58c0efb8b9e97b6db8a0fa66339f76df3288b3d29474a0223521df551927def2"
+    },
+    {
+      "path": "backend/migrations/versions/0072_bot_review_safety.py",
+      "sha256": "fe5cce1aae6adf3a6cc102fc4e14c8ba37d32ca90eb6af1af66aa660a8bbdb69"
+    },
+    {
+      "path": "backend/migrations/versions/0073_bot_pending_status.py",
+      "sha256": "830d3f47e5cf2134e882faaac1df7d1f0cb06c624a283508cd884a5e3af3a2e4"
+    },
+    {
+      "path": "backend/migrations/versions/0074_strategy_baskets.py",
+      "sha256": "4599ef2555a1c442a3966021a54ba71211f938ae2b658ff5ccf352c9bf162def"
+    },
+    {
+      "path": "backend/migrations/versions/0075_paper_test_strategy.py",
+      "sha256": "25c1b28a3e30e7ef203c1f3b29c0e0b2880af2de060f776f4ebde0553be14b72"
+    },
+    {
+      "path": "backend/migrations/versions/0076_candle_closure_proof.py",
+      "sha256": "a5bf5d89082755d6f17987b959cbe533cd8c646ff2b2fadb3ce06bf166dd8af3"
+    },
+    {
+      "path": "backend/src/tiewtrade/__init__.py",
+      "sha256": "054ce3e79f7d5eaa540ca7e07921f8d59e2e6fa450f7e843aee83879c9305aeb"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/__init__.py",
+      "sha256": "be587e49d16cf6b45b05e847fdb671930ab0db080b3cbd741744f0c388465797"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/basket_disposals.py",
+      "sha256": "296f31ae2f7e86e50b6aeb31bd210e78b5498f954cdbf2bca1972c5a99884166"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/bots.py",
+      "sha256": "25e13bb8566912193fb4e87648e06f300965434893e7f75aa5880a1373b990bd"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/candle_closure.py",
+      "sha256": "cfe48a1ac39ea442203b94f0f8de98ceb4df1628d0cdfa66b03c50aad9f6c333"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/candle_preview.py",
+      "sha256": "8c3b4e7bfb84457878e6c644641933c040e160365e9b5f162237bcc1e7630778"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/indicators.py",
+      "sha256": "e81367204172ab5b6b4af17b9903b6d3f97c07041306a38d2a58eea73205cb71"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/manual_trading.py",
+      "sha256": "8cf5f324cf62dc28dee3fa8ecdc131797da9aa30bd11f18b63af94597bd11714"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/market_catalog.py",
+      "sha256": "7194464c18e238ee5e8aa044cd8da4fe23fc41705e2421dec12512d8d410dfe3"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/market_data.py",
+      "sha256": "a3da2c885a74ec552b8b99ae590bd1809fc78ec3f4db97d695a948d50e0d7e3c"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/moments.py",
+      "sha256": "c25fc7947c3ea1b257cedb11dce9dd274859df2f2b5aa41fa3e48ba3584ed40b"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/__init__.py",
+      "sha256": "3a2582dd7a35530c979a8c88b067c6a4b081ffaf388522a60b0a3cbf176b9149"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/basket_arithmetic.py",
+      "sha256": "d5cf6158b0e12baa73d8ed01ad23f4970d0b2e895c7154055f61108f0c287e09"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/context.py",
+      "sha256": "6ac55fa91dec0ade5a12d2b5827cdcc36a198e4605efe068a1df06875919be7e"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/errors.py",
+      "sha256": "faa3f95c440c83adf310003ef8867a1b37afb1b2f2999ce394da015619be4d70"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/indicator_arithmetic.py",
+      "sha256": "7e7ddf8badad52a9602d2919d2560ccf89a7d81432c1a0dc34b6bd430307952f"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/indicator_batch.py",
+      "sha256": "0b432250c1a7b429d2a7bce7c85e8165cf21493b014e7ae741865afda4029cfe"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/limits.py",
+      "sha256": "567711bd05fe2bce0835c9ea5a3b6c0c2f46549f1e50ac87a487604af76642b4"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/order_arithmetic.py",
+      "sha256": "69275a3f7d53d54dcadbc395968e95fc267046ef0e9d25319ca95d7752c8718b"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/position_arithmetic.py",
+      "sha256": "d08dcaa1808162df6c27864fe09a7df0b5942cbcf3558068477505f0e1af5e28"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/rounding.py",
+      "sha256": "4efe20f90b715cfad412a395020935de3ccc6f19cc244034036091edcc0323bd"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/types.py",
+      "sha256": "831b2a5df8a6b5616bf75bacd19b6fca12583699ca918ae7e4e303274e537196"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/money/validation.py",
+      "sha256": "82badf22b6032ccea06a670ed76bc8fac8b1570587c4546a47421a23f835065f"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/order_book.py",
+      "sha256": "ae366f6af8814d4d0ecd24b7fcfcb9b5aaf97ea6f64e220e92f05e7dbe6a7e70"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/orders.py",
+      "sha256": "b9ac3d79db44fba0a038cf7ab1168308e7bc5f23273757848482624cfa4a54fd"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/paper_matching.py",
+      "sha256": "32e168bcf12c7f491217649e1c0d4ed41c9a7bcd74e9e321456fbe2348c1c185"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/paper_wallet.py",
+      "sha256": "41f88b02520689a9218a7d7b43eda0e1759e62410cb1e86abaf3d9d889a1d101"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/passwords.py",
+      "sha256": "b1d2263e74a3d0029197a952e8b00eec0ba5ecf929d8da565a184a3caf2eaf7c"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/positions.py",
+      "sha256": "0b1c0d83b5ece6a281342e405eeaf8783d4c007c830a4662b7169f63390fa2c2"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/protections.py",
+      "sha256": "1a8a224dc659084160ab4e823fd1db37699d8acb70eb627566f97b7fadec26a8"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/realtime_prices.py",
+      "sha256": "5df7da72500ce045cba496316db9cde64ac342f7c07248bdee0ac08ce29dd120"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/risk_limits.py",
+      "sha256": "a9d6509a85c2cf2cbf2f9674da2157855bc77c72c8e90a39fcfcd29484b8382b"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/strategies.py",
+      "sha256": "6f1deb1be59bd3482351e57320120344afe328af1e885a2506d2dcd2fa3405b7"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/strategy_candles.py",
+      "sha256": "50c76d0097cf61766a877cdedc96aa0ee8d34ded7b03364d5ade6907c092d181"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/strategy_config.py",
+      "sha256": "090b2798bbd642a1873a77265a898629af65c03a33e294410accc300b865122c"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/timeframes.py",
+      "sha256": "d5389ad5766ac854082e48bd4e86bad96728abf4c65ceb6f75617a8b6e7033d2"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/totp.py",
+      "sha256": "7acab71b8cbabdb82823d7d444080e3bf379d67a76a3e88f873a3c637ce67b71"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/trading_account.py",
+      "sha256": "8deafbbc5274b6d399551108688f569fb756f1cc8675de487896569f8965c36d"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/trading_limits.py",
+      "sha256": "94fbf9bdf43f46dccb87c5a07edb2e152aa14a57ae2487541ad90c1bdb400d78"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/trading_stops.py",
+      "sha256": "c5330fa8a4a0fa2b9a561941b161a54aa610f65569a6e9c36eb4e62afd8f0872"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/__init__.py",
+      "sha256": "212767371f5cb8d0fac2b259335482fe25b6a93fbd05d417f58a776c313de693"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/api_keys/__init__.py",
+      "sha256": "96407310653b687a9fcdac7553b5dcaad990495c98a654c953774a066cf6bea2"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/api_keys/claims.py",
+      "sha256": "ab8f677ffeeed9c04ab987239c9b0674783c89bfa2950a4349e7302628692948"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/api_keys/records.py",
+      "sha256": "c5ea3c77b754f5d952c5b2d4080ee1b31e6a410f1bd3734fda6a772bde37a91b"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/api_keys/signing.py",
+      "sha256": "82e73ad41eac8101c4130b1add3e71cf393a8a5b4ff153cea6e4427bea39a9cf"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/api_keys/storage.py",
+      "sha256": "56c49df7154f86945546e31b3a68a4d47967f391d80869d19d0a868fbaa2dcf4"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/audit/__init__.py",
+      "sha256": "3bb11ac7b6fdc2892b903036a5e9993ba98bf6f8399ae003babfb3500461f5a6"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/audit/events.py",
+      "sha256": "a94ee47bb02428b223223840bb612650178e6decfa572fce47b437cbab8cf046"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/audit/redaction.py",
+      "sha256": "cf1f067348aab417a5cca946e865940ac0883a46ce9e409a98f4b052f358efc5"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/audit/writer.py",
+      "sha256": "ced14423c6627e8ad95e02c4ed31222bf755fca9143388cfdd28f18ffaeb6670"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/__init__.py",
+      "sha256": "0916a7c4e879f6b37be5fe3c02a3b7c3e9e8f14558102fea19acfb8098cbde62"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/blocklist.py",
+      "sha256": "f2c973041959d439603efe18df3ec37bf7b15e3ec7902ecf024a4f50bc8100d4"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/challenges.py",
+      "sha256": "2515e5d580d0b7e5979123c0a524e7edf7c03b043e5170cfa8af2394b103124f"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/cleanup.py",
+      "sha256": "799cb51e12d5a5e1cd1aa5535a3fbcc1aabf93503c002ff513e72d06900815e1"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/credentials.py",
+      "sha256": "2cff8518d1083aa560fc6656f9e4e9f78b94a584dfc0bcae4dc8de7925efe053"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/hashing.py",
+      "sha256": "ee90f74960cf48f81b227e9c2ed86f1e6917d4e9b90da8ed7022b0a5cb8ac853"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/lifetimes.py",
+      "sha256": "2810d6aecbef7c623b3865ca5e584412b58d300000afb4b3329c3eb401c130fb"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/recovery_codes.py",
+      "sha256": "f3f35638336cf32ae0086fbd75d2966ea6cd35c6ef79e4ce41284c0313e7b3c7"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/recovery_grants.py",
+      "sha256": "68127c5b2cc015b3d37727b56ecc2180e04cee368a00b66440234e556ce46cd0"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/sessions.py",
+      "sha256": "7cb87dfe5bffe34bca2260e52bae2cb32b163ab2706b6a4b0d46400a654f3cc2"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/throttle.py",
+      "sha256": "290336d6ba289e5296055a40714e0901a162487fdc69db262b825512bce11e73"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/auth/totp.py",
+      "sha256": "2d89267834eb0c616641bdbfc2ab420dae4e0ad605796e387a811bdc95184e78"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/__init__.py",
+      "sha256": "85b8155033e24aa1bb474113b7cfaa67520514d37819aad8b1dcedfc11449b77"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/authority.py",
+      "sha256": "a8ad433b31664c6777c04d11efc8028520b294a60f747f2e18394449aedb1910"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/baskets.py",
+      "sha256": "6666aaa5077e8e8af4b33357a3d6ff41678427b5aca677e8a5bbc578c9d54e87"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/candle_sources.py",
+      "sha256": "d3fc533b0149b334d1f3e88da55607f0290703a86a62822a74302f4de31cdbc8"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/catalog.py",
+      "sha256": "28b474dbc33a0d097a7c2540da97c6a3079d79fe29e3b637febd03910c8bdb12"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/claims.py",
+      "sha256": "b9791c1d1f682946800629dee5c25e844a9d30854c63c34d150c1de8e7489ef3"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/configurations.py",
+      "sha256": "d704c33219744a5437e92aee169b4954509ac3edee824e1614f77529f6364009"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/decisions.py",
+      "sha256": "75a0360e42504c4ae296d814dd4bc7365f4271f5e0805296bd08170b1e0412bb"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/evaluation.py",
+      "sha256": "e56f064870aebe24a834ec94a9137b51d23d17c93c5a3e5db3fdccc564b9ccfd"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/feedback.py",
+      "sha256": "8ca5ad3f8cdaf1d89c7c6e39f3511f5c7578cfd906dd5f39cffad3ed8219a1fa"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/indicator_tail.py",
+      "sha256": "d15c68cf677e1ea91fbdd0809a7e82d62ba95a7b047473cc64ff90a68bee2c86"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/inputs.py",
+      "sha256": "eec0dcdfbb656d6251d770046b411006887c4d42c743067efc64e1b88f742d72"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/paper_admission.py",
+      "sha256": "3616301388da5f08bbc8ce0a57cb7de66c40ec089b7ff8e2664912c2db468887"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/requests.py",
+      "sha256": "1a525ae3021ae71f41ef284f92edd1bf2137ccbecd469f43d0e8bd5a5c699fab"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/resume_proofs.py",
+      "sha256": "c90cc1f363307dd56faa57a039be23e96691584ad63608253a339cb44fd70a03"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/start.py",
+      "sha256": "490b71a87bfafe604e9b4dab16727d33732eed1e24c807c36f575323546509d7"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/stop_projection.py",
+      "sha256": "33659728c8be33c367857b25f6cfec4989fbcf59aea188e329852846eaad38ba"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/system_stop.py",
+      "sha256": "f60241c50b340403effe3e8e7592cd26d10444771744aee32446935add19b527"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/crypto/__init__.py",
+      "sha256": "a44101b959bcc1a14099e7645ca6bc2af708905117f300147c9bb2055f566568"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/crypto/chart_proof.py",
+      "sha256": "c508503d0d34e080a03e57164c59488b0cd169fcf87232126874504dd87b9ca0"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/crypto/indicator_cursor.py",
+      "sha256": "8a6eb26e56dfd4417bcf66805bd2b916e32d0489c0abfaf72de0519809df8f94"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/crypto/keys.py",
+      "sha256": "136174569005df27fee0dd32ada5e4037eca8757a5df89e8fd2c8752188e8989"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/crypto/sealing.py",
+      "sha256": "57ba226773821418013de8caa00f980f7836f3b1a3bdfcb314a6b125bddfcbd2"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/db/__init__.py",
+      "sha256": "69c0175f7799c6162236dced57aa61a4397a698a5f6d92b22cbf54abd51763c6"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/db/engine.py",
+      "sha256": "c94bb776bbf6ac7c57a72c3ed73fb81f5e24b6d7f7422494d5d95fdb083c194d"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/db/errors.py",
+      "sha256": "398ab6c5456dc132434b727184fd420de0b9e33941a75fcb8d3bb563f4e8fd60"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/db/money.py",
+      "sha256": "83ffba0253869810c9a322b088130962f2f1235ce578239220cbbfbd47f432a4"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/db/session.py",
+      "sha256": "611ce82e0f4e30e0e47ea18f0ab1de0fc678abf269071806fad878997bbfac09"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/__init__.py",
+      "sha256": "c55e39e6d530d1eb742c8395dcaef18096fa040f8203d01796703b2776dd81b1"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/capabilities.py",
+      "sha256": "27ba612942285d835c4ae462b8012a2c0e4225a7c5ba01158a29f4736f6b5ee0"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/claims.py",
+      "sha256": "e46e8505ec150d4dc2372974e01c6dc406faca42cc61c815cbafefd36d1ed02e"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/codec.py",
+      "sha256": "83833d5e0bfb3bdc934771653bf3f74f3c224201707e879ab880d584d051ef54"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/maintenance.py",
+      "sha256": "50fb8a7a2a61fb4ed535854c379eee84af0dc2e9632e7c7354f349274e48ede9"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/pinned.py",
+      "sha256": "6390e423a2da1997e43a3974971c0a94405102e32fe7fbddff18b1d17d6f9671"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/prepared.py",
+      "sha256": "adeee8338d068990d8bf0c3413617d89f7305ea007445ecb2619fe718b7e1be4"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/read_contract.py",
+      "sha256": "9f8897da7517f0d24ee51e0be33515855f3ffbbb1a5bc16a86beea4ac59943b0"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/recovery.py",
+      "sha256": "c45180d58cb2d5fdc1694acf8a7b2600ee65492bd943bb082826c8beeec87a7f"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/rollout.py",
+      "sha256": "b2e123c7c31cf819adb74b74d120637f3f4e9b833d5252253c33b4e012fd2a22"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/scan.py",
+      "sha256": "3417b8abdb0974be54f3be48ac0ac029cb88e0a14374207fd325d4775a25d5ea"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/scheduling.py",
+      "sha256": "44b66b2d60b50d1d46b44f0c5725adf50a20efa2cfb67b970098b2ab5925a47b"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/session.py",
+      "sha256": "5a5c0f9298e27b2fce10bd6770906aff2d74fd6d8036765e58d97f4ca803d348"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/source.py",
+      "sha256": "82861efe1a287b26ce18a094c86904baebfbfb223233037a13e29626b1c8962d"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/staging.py",
+      "sha256": "3811eae3065c289ee26b713e8dccfec150b0ef696d6b2a45f04559a015362502"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/__init__.py",
+      "sha256": "d485d86680503279f2ea2fcdaefd4cd6dcc2e7d379c0fbdf26e625d7b120ad5b"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/candle_closure.py",
+      "sha256": "37e435e69a466ab1275d9d4ef712c4011905a528b1f800e80df4b99f913f49fb"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/candle_preview.py",
+      "sha256": "1821caaeca655373e4d397844ec79ba0b6af62d043dce0d6d34336dd1aebd5f1"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/catalog.py",
+      "sha256": "c7739c22380675dd2017533100809bed4a3de25ee70b85b47569fba0727c9a65"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/chart_overlay.py",
+      "sha256": "16720e31ca59e7f37d7d54639d56cffff7906cd3042d593486036267fd8f4ffd"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/chart_reader.py",
+      "sha256": "af873aca596c23a1c6a79bc2bcf38a4ca39396d58a1f4e1f3dda50e7352dc272"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/claims.py",
+      "sha256": "a2ac35ac7a0c4fa69e06021b0662fb5aa7ebcaf36bfe5dbf25efd05d72a6eb86"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/indicator_reader.py",
+      "sha256": "8bacab5d39968df77a40246d3eab79dcd345e0fa701153a1c11b79fd1efdc17e"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/order_book_codec.py",
+      "sha256": "9825a8f1c7fedb762868969d6491313947e68e32312e68723033489ec91244c8"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/order_book_storage.py",
+      "sha256": "ed4a9c9fb30307df9fb28a074cbcbb1232c8b6c29d840ff855faf8986907e10d"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/realtime_records.py",
+      "sha256": "99265b63f464cca7ed07c7fd95fa0fcdb94b846f05e5225c437286112f2bd91e"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/realtime_storage.py",
+      "sha256": "094d2c90de54fd9fa0a090a39287e8a522ce85073d891ecd923b7ec93edffc70"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/records.py",
+      "sha256": "050a757445d5c0f8358d6eb613072819d7d41d102f770b972bdff8ead8f4fb2b"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/storage.py",
+      "sha256": "e053f20b83a99f604ae5b7a4b97ccad72096248207e2e04051d49b8978153cee"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/__init__.py",
+      "sha256": "5738f532101f57808e61e8174c67029deb2cded7fbee45360f1f2698c53ffcf8"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/codec.py",
+      "sha256": "59fced9117dd067dd182e1088d1bc94378c2042c920d4dad4715d26dbfd9fc78"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/corrections.py",
+      "sha256": "6e2fd35f0391ff122a25a969ccef5b67d7e0603f16ce140cbd4e03f743b405b8"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/dispatch.py",
+      "sha256": "5d17d21e187daf79db2ea14ff08d0a200cd759bec4d99274b969f5cec1868ee6"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/executions.py",
+      "sha256": "99849f50ab2ec4e5c69df1cb2771b54c20db125f14ca00adec28b1c802b47bd1"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/initialization.py",
+      "sha256": "01d2180cb57ef5be38caf9ef8f1fec4bad1aa17077ec32c614c2fbaaf4b43e69"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/manual_policy.py",
+      "sha256": "5d3517889f4f979a1ce509b7c5f727a1678f2fdc5fd3ca8239d3bc1abace31fa"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/matching_storage.py",
+      "sha256": "dd1f7d63bdf46b028d1335c390076ad59afe60d469ffb8f1d3dc95adf5915266"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/records.py",
+      "sha256": "2f456a8176a995a9f8a93eb1fea8bde69477d00511ab3888c11a8cae57beb883"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/request_dispatch.py",
+      "sha256": "5bb8ae727a5ad6e61fbbf28c280eaecbc60da0a96de0497180bf2d4b5e24eb22"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/request_worker.py",
+      "sha256": "1b84a927cfa3be2a6a0a8d91987834f030d92f127e07ef8a821126b29a17a52e"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/requests.py",
+      "sha256": "7c6836d2a67959567abae8a7f508bf58cd6302063588f6b090976c29e06202f5"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/routing.py",
+      "sha256": "81f75a0f47d2fef5bd7ae09c21cc95bb4f18d4666dca938572bf3bbcf2ca2a2f"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/storage.py",
+      "sha256": "a55c1b2515b2543f38bed01f91a0aff365633ea50f10ccad5ebc86e760fd0e27"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/trade_views.py",
+      "sha256": "66be77bb19276df69d3a2666e2846b67361dde0726440ba6fbbec8db7e0b8f60"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/views.py",
+      "sha256": "6c46974b2d1d1c63b10f12474e2671e8f6eb7ccf6ada6db12335d8a0459478af"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_orders/worker.py",
+      "sha256": "9b2bf1a88da6255e6272a374b3b788230ee304f01429786e06d8d6e5089f11a5"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_wallet/__init__.py",
+      "sha256": "5ca73f870c3d495c194357c4e7a3bb21dbec71c9361270d5fb8d96b52654d41d"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_wallet/records.py",
+      "sha256": "2db366a3e9c3e17d9b364667a4f3fcfaf4a034b7fceefb720129a228c774d9be"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/paper_wallet/storage.py",
+      "sha256": "8b09950029e80cee75008e1fedf32ecab1031eb100ccbbccf3dcbd276d6149c8"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/platform/__init__.py",
+      "sha256": "7b1a661f242a4d43133fbc5854f76f55d57dc892ceec079d9e340c60dcc4d7df"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/platform/effects.py",
+      "sha256": "9ee3edcb787d8c5bcc1640d5c5f8c836450db43664daab7151fe65ee6928ab91"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/platform/readiness.py",
+      "sha256": "fd96e54986b267cb594c1dc81b3dca17865a7a63104e153a3893912ce2c9c051"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/platform/records.py",
+      "sha256": "6d380eab7fc57c375e034b9cdb352f986699bc509a26439e76f86128789041ff"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/platform/storage.py",
+      "sha256": "a212244ae452e3aed8e8e538bec255b797f7ba495dda465be63996fae865ac70"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/positions/__init__.py",
+      "sha256": "385252aabff6d359e29f4e8a058ed270255668db41ed15667de37cdd7237b51e"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/positions/records.py",
+      "sha256": "8772c3861687e6c7e9c5c53463a73230cf834cb089826bf68dccfc6921c89ba5"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/positions/storage.py",
+      "sha256": "1d7e1d9dd253da10a58192f9c1c10530aeeb7a9f9a327dfdc55c053cfe543185"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/positions/views.py",
+      "sha256": "8440b1e44e293e7d75626d7226a974d8f5486b18a55ca076903c49152a57b9c9"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/protections/__init__.py",
+      "sha256": "2b30332a416e300912b98cff6481fe5d07cb82e053a123da6931de73ea8068fd"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/protections/codec.py",
+      "sha256": "a2691c0702392771ffd91b9ee037f9e6e71aae910187b411f95d29f79ae66383"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/protections/entry_anchor.py",
+      "sha256": "b4840d443ea2bb70d68c19dc995d5b933a763c764913897bf167a651267446ad"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/protections/storage.py",
+      "sha256": "5e6d06f7398fe7ecbdeaacd733146b704527639d04e1daa8c235c472677c11e2"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/protections/worker.py",
+      "sha256": "89c02712cebcc0fdb354a09a087d2457a1f3c38bf7ef76f166292c618df1f203"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/realtime/__init__.py",
+      "sha256": "0ca756a9f10c9b21228f322c9b79f042c53c7c1d3ee7b55f9d84f6bc63026bbd"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/realtime/admission.py",
+      "sha256": "7047c7b2850809bd50e87bfb33b7b4c6668ba62cc9584cd88830c6e9d877c09c"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/realtime/connections.py",
+      "sha256": "471e6b1d3c811eef30c334f5651c8981d94d2a0d6665e37370ec16481404be27"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/realtime/notifications.py",
+      "sha256": "c9e78d6063e89ffaa1578788d35d8091f7ef1af4009f27d0f10c273a95747578"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/__init__.py",
+      "sha256": "297cc72f240aa5351048728b0f68f63beb67ed60560f31f5d1ab017b2d05fbda"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/books.py",
+      "sha256": "49301f8ccbab99796c66fbe6e09b503c8832d19aba61bdf317123fa2a0c13985"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/boundaries.py",
+      "sha256": "1e439f06c6a2bc5818b2631a08ec50e5bc86c11069b5529a11685df365bf174b"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/dispatch.py",
+      "sha256": "ff51c98b867da233c79354afd20a1ca34a0feef0fddc1f308dffec2de3abe244"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/evaluation_requests.py",
+      "sha256": "e69e4567496b2ff1ff73d8b3878cd1029dcee48a64f210c4d8a2bc76ca4fa537"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/monitor.py",
+      "sha256": "8c925be27a34f95169eaa535737e878a023683fc66371d18f93687bf8c5e705e"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/monitor_snapshot.py",
+      "sha256": "f88a94cacf810389f345e1abc726c5f6a8bca86e2b19cd12dcbb7668b1de2fa6"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/policy.py",
+      "sha256": "3b22b809f3b62c7335930cc9c2b8bb99dd2433c6de31d5be076bccdb2c3a686d"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/prices.py",
+      "sha256": "4080d8244910dbe9ea360e2530d2f12d4d4c1857e28e08f980692f55af6d415e"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/records.py",
+      "sha256": "7d7f3e8b88c489afd34940decc9d918bbe1a80dd059aa672b728f784ec65c309"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/requests.py",
+      "sha256": "f0eaed81852a74c2594028c8d94ca8415cf2102de98bdd9ca50afc2a2b84698b"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/stop_views.py",
+      "sha256": "92d8388d149115fbc5910ad884b448c42fddaeccf8f48c3a83f30877db9e5220"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/stops.py",
+      "sha256": "352d6ffe01af7a7730ff60319d0af8a30ba0b6863b67403e6bebfd751cd3aa0e"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/storage.py",
+      "sha256": "06f3c306ed861fecac8655ec77b3b7ade62a8f5e3489add806a0f41a1d85b6e3"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/risk_limits/views.py",
+      "sha256": "80914659015fc50aa1d964031ae97740786a843a52908f2b7324c0bebfe9c81b"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/trading_account/__init__.py",
+      "sha256": "c7d8bd21e91427779c07c12820dd993f4f992c2589aea5a028a708276220218d"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/trading_account/records.py",
+      "sha256": "43e88958ab4889595c4278d6c3d9af029b406e40ac339ed11f18a37bb79b2737"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/trading_account/storage.py",
+      "sha256": "c0e45e9eb24dfd0ff1b39b1e73ab7300275095aecf6a89c583ea6337d324451c"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/trading_stops/__init__.py",
+      "sha256": "edca6f54f637cf675abf6b1d74f97ac2139e51cd044502383bca776b294e3914"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/trading_stops/records.py",
+      "sha256": "fc693211274c13940474f4354d21b91faf08856bb1f56916e09830b3926a91b8"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/trading_stops/storage.py",
+      "sha256": "62f292395a7d09784e930de15e7ddb349fa21d2947b2f4828501ff9f1be70a8d"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/trading_stops/views.py",
+      "sha256": "e15cb5da2dcf2ad64aeea6732e96ce351680f514c4888110fa2028ef0d05537c"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/users.py",
+      "sha256": "87d67cf30d40531b44fcf65b87ff905987b64a44083074ea2ea1bc41f2c74924"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/__init__.py",
+      "sha256": "e5b9c935ed0f6236074de58a538c228b290838fd79260a24db3501ed8a61ac2a"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/__init__.py",
+      "sha256": "9226e11204cd3c278d6199ad2b89c89d05ebd509b2cd1bb4b63d29839696f54d"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/api_key_routes.py",
+      "sha256": "a6098245f264eda1aa216d654c84ad317336f37eaece079d9b70fd9953f5f7c0"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/app.py",
+      "sha256": "25a35840ac59f4c37af26f9bfaf480130d25d1fc4df52c84a9f24ef0e38dba5e"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/auth_routes.py",
+      "sha256": "72abd0d7254cc031f70cb4dc428b87825580a035aed3babb78a179cdbe89702e"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/authentication.py",
+      "sha256": "f605d44c894296542d94cc5ab5966c0bf2a149bd2b0dcdb6dc50a56bbd7c5e3a"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/bot_models.py",
+      "sha256": "c95e6dad7704256be4cffc865928256a258d5d0da4a7f44760dfb56f8de9a93f"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/bot_routes.py",
+      "sha256": "26af6da436dfccb679641d141cb0472bbe5bc4cd1e4ee69e18687cd57dae2905"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/candle_routes.py",
+      "sha256": "c44e0846c3dccc6c4082cda81ff0c12c87e4a2f2f6d7af1b2860f44b9791b24f"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/catalog_routes.py",
+      "sha256": "ee14610438a1eebeee8003687748f1752d8cfefd7af3b33de87f8f8cf04859c9"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/chart_routes.py",
+      "sha256": "f32efc28674aa0cc9cf658301793af310e919506e69f0a86e31ddcc741be6c08"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/db_resources.py",
+      "sha256": "ebbf3f956846d714e1ebb5362388eeb77a123a86f32d9506b04f0805b073a356"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/indicator_admission.py",
+      "sha256": "d34b5cba49cd0a644055a2881b6a0e0292e3e2228871e366f446b0d4b22cc623"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/indicator_http.py",
+      "sha256": "b05d039ab6fb56e9647b15db798f973743a229702c33ab603a798f74b58b0d2c"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/indicator_read_controller.py",
+      "sha256": "8d5a207bc1a07f9ff054e8f1a6d1f4916e172c652662d975c3d64a0ca3598ed1"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/indicator_routes.py",
+      "sha256": "5f2cb267b4fc40a2cc79d659d8324f530a0fa2cec2a39ed898c68d86f56fd6e7"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/indicator_settings.py",
+      "sha256": "fb46afb5584984d7904561546c520ce629b8a927957b0141fcdb29a5e58f197b"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/kill_switch_models.py",
+      "sha256": "b251f3014b4baf924607337a0c570ac71ea51059947da76134647e0f548ac17b"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/kill_switch_routes.py",
+      "sha256": "02a6bdd28aaf09fbb1f075d70374c0b6c3b4426ac8b81caf6ba4cdd29521fc21"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/manual_order_models.py",
+      "sha256": "5921caca6be15e566c05e10050d38ffac9d2f63197fecb57c3e98e512574c7dc"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/manual_order_routes.py",
+      "sha256": "09a30bdb15127db6dcd72b17512e3ae8c9d67baf8dfbd7357672952909a8df0b"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/openapi_export.py",
+      "sha256": "6ef7c2eb740aa4a9168f2403fddaf57fa96e8130bbc6c2cd3f086f313d02d7e6"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/paper_wallet_routes.py",
+      "sha256": "1303881404abe7402bb2f99420cc107ea25aa265fc9dd7591201ad14ee79fc42"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/price_admission.py",
+      "sha256": "9a1ba2aad8303be22f2d08c8c39b5d54af12e7215899947db23db63c98fd52d7"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/price_broadcast.py",
+      "sha256": "ae18bcc8e085201d37e8b1d859e375183b7b5bcf08308ec0dc3d0230e5a8367a"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/price_guard.py",
+      "sha256": "b79bfe68aae9c695acccac1bf05cc0eb7c0f3cf2ff401525f3c319d8cb43f1d8"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/price_models.py",
+      "sha256": "5d34608817a90575613bdcdb2001ac78965e7ef2cfa2a4fe0c3d31f8a8c85bc9"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/price_protocol.py",
+      "sha256": "338c43f658c8d5fca9be4e5baf9a957280f05b4acac49c6d264b57166f16b41a"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/price_routes.py",
+      "sha256": "f77ac0751909c40f12930448eca5813e50aac6d1bde6c80d88650d17af621ec3"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/protection_models.py",
+      "sha256": "9aba2ca8c4bec798afa89a8bdf73d771ec85b51b9aedb1607ff4b6b491bc60d9"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/protection_routes.py",
+      "sha256": "b32b6bc2c3cf68720dbd35101655839cf58260ad92cc7d65fa9df3d64475e466"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/request_identity.py",
+      "sha256": "947a923936971fe5e4062aeb636da3c416c001dd9d7cbd38a9ef9c013157e003"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/resources.py",
+      "sha256": "819687e8b9ab1d79dd57b1238d56f61a7787d7f1abdfa559fc8a6413c3c68e23"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/risk_limit_models.py",
+      "sha256": "db5e00a29a082288fcee5d233f687d3ef22edc3f40c9cc88fb98e539933cf43f"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/risk_limit_routes.py",
+      "sha256": "3b0871400d8d756f00e5e30e4163a33e34071b7127009b90f1244dceece9b2f4"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/routing_policy.py",
+      "sha256": "6abd822cb49366a1c9c9cc39e8cd07e2c7d619c2f2276d4037447c8bd37f6ace"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/safe_input_routes.py",
+      "sha256": "643567a7bdc89fc3b86ecd88b3f722da548951fd596bb641be09faf8caf4ca38"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/safe_logging.py",
+      "sha256": "6a2f79e30d0fb3c7bc7b9c1dc09094545cd450fdbd08b4ce8a8738b858cd5df8"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/settings.py",
+      "sha256": "f59f1915d4c80ab3c63a8ccb4e74f7a40f3ba8b000a5afdd5b34855e5a1e10a6"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/throttling.py",
+      "sha256": "f00b7e7b5b9519e50da7899de6822ae545cabceb50ee14ed8bcd0184d66393fd"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/totp_routes.py",
+      "sha256": "f8612aca800fcb64a81531a4e6a985cc387a05551a635a21e3436d7406caa587"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/api/trading_account_routes.py",
+      "sha256": "38317d7b7206c6b3a9dd6bd24f44b0b775a1b2328e297dfa8781562a93e661c0"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/__init__.py",
+      "sha256": "81f3154a3fcfbb179115f2e28ea2b95bb5220ef708333f209231a38be354feef"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/bot.py",
+      "sha256": "b018043668ca14cfb6b9f438e957624298968ae96a3a60cd47718ef4211bfa50"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/bot_replacement.py",
+      "sha256": "8f7f2cee9e66762217d495a9d4ae42111b6bb68e2959a3d6cbd4afa88db9ef4b"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/catalog.py",
+      "sha256": "c9594292fa671c22454c74cd80e5270ec779fb47f4f7742fc37c6525029a2e68"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/kill_switch.py",
+      "sha256": "def4e5a0e7fee8b87ce538642076439f07eba2b33f2b096394c303fe6a9e7787"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/main.py",
+      "sha256": "a72eb94f24ddd8c8e3e2165010c9ecccffb272394debe74e0171f3d24aeb2817"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/manual_order.py",
+      "sha256": "e5d8f89b730b14e06e6443a620ae10bde7e7f009543834721d69de02c17405f1"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/paper_order.py",
+      "sha256": "192888098bd7187fda88afbc6341540b8e56a8b9991f43f8422be85a28fd8105"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/paper_order_main.py",
+      "sha256": "8575b22bf56bed34103a3933fa1352012d2e34770f5f5f284f924c036b9f8025"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/paper_wallet.py",
+      "sha256": "5e9adc32eedc3a387c5d4639bbea456903119709bf8c859ac5ef3abacb845bf0"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/paper_wallet_main.py",
+      "sha256": "d9071ababa15c917c3ed6e1c54f0387ae98e7e8d62fa56370b19549cc64fde9d"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/risk_limit.py",
+      "sha256": "573903ba372d057bfea6bebe3df7b67ca269e825417d3ffe4b0d38f7ed7914ab"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/risk_limit_main.py",
+      "sha256": "326b98dfd079d3e6b7c7f8924fb8d3cf1c4f3f47fb6a1fb62ddca9c5f6877ded"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/engine/verification.py",
+      "sha256": "a598aa6c2de0f72b75cf97ae0185d7bb0bf9748e4f6bea09c202b5e51f59a1c5"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/indicator_builder/__init__.py",
+      "sha256": "f42dc0802ae80b802492507639a11ad5c133de6dc2fc1063d4fce66910914f89"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/indicator_builder/attempt.py",
+      "sha256": "fea5eef7b1abd08e6d3bb623deef7e21017217f449eeebbd5b4c5194b6c75c02"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/indicator_builder/events.py",
+      "sha256": "eaea184ab3a5a0b623132135d838eff054b06080221ce6afb0da53ced5414500"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/indicator_builder/main.py",
+      "sha256": "8943b36817e03551ee050dcb0495b0be06fdeda8deb988c66192cb182933f84a"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/indicator_builder/scheduler.py",
+      "sha256": "0b8306575370486e386f3d5ce8f06a78d1d5e36fd6a9a8d41d2382cb05ef1250"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/indicator_builder/supervisor.py",
+      "sha256": "27db359ecb680b6e64bffda53cb5555cf7804658196781547d78fdd6649fdd56"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/indicator_builder/worker.py",
+      "sha256": "14627ddd9cc1b62ee4aaef4844c2f093201e9a15023182c17aaa37127ec2b5ef"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/__init__.py",
+      "sha256": "b7c5ba26c23b0b65d2a1c95228bf3b37ed1d748eb6ccae94355ef65578621e51"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/candle_realtime.py",
+      "sha256": "02688f9f3305c4072f727d52851b109807e86d0772497c66308570e5b1f5781f"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/ingestion.py",
+      "sha256": "f1ff79dadd78522f47267367285061fb1fabc1ed32f782067dd817f4682a182a"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/main.py",
+      "sha256": "f7b227565fc50c90e7998f8fecc1ce809d6c85c57d70bae7ba4a07d31449087c"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/order_book.py",
+      "sha256": "51b38759f4642f97becc75b250ee3596cc7e472aca814ff3965da15f1bc651cb"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/realtime.py",
+      "sha256": "caf6fb1d2e5e2f6609a5ea8c58624e7ae457d525967c9d379c1e2c99e707635c"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/platform_bootstrap/__init__.py",
+      "sha256": "653e7828c03e6e99beaff4b0833af36df11ae472c1a299484f34d6c7ba46b903"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/platform_bootstrap/main.py",
+      "sha256": "a6ce23f46120e1e2cfa6f328befd4b2797144b9130dae8fddf28e4703228f040"
+    },
+    {
+      "path": "backend/src/tiewtrade/strategies/__init__.py",
+      "sha256": "24b25f58f6a832a0e27bf9bbcd36d2842d927860f996e4035f5afcc5d44a8da5"
+    },
+    {
+      "path": "backend/src/tiewtrade/strategies/paper_test/__init__.py",
+      "sha256": "3d299f14035b3b07f06d55ac1dfb60b5ca4cfe6e6d080ba1bcb503fa0c25514d"
+    },
+    {
+      "path": "backend/src/tiewtrade/strategies/paper_test/strategy.py",
+      "sha256": "63a79b0617a647d7db6fa21201d93b41eddb08dd7f078774f05bc8a94463c088"
+    },
+    {
+      "path": "backend/src/tiewtrade/strategies/rsi_step_grid/__init__.py",
+      "sha256": "520542b68b089f76591356c53173099a752e76d061d0b37cdc25ea7db1d116e1"
+    },
+    {
+      "path": "backend/src/tiewtrade/strategies/rsi_step_grid/strategy.py",
+      "sha256": "837cb72b3e1b8787efbc9b90de30227e06b21b289db9d5cc5f71325117c3e3ea"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/__init__.py",
+      "sha256": "0cccd3488687141136f95d5357cc0e4b3d20029c3b7586bcd42b6f07adb287e7"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/__init__.py",
+      "sha256": "9309183ce04af507bb2d3b62def165cc4209f7d210d612581d7d411569a1ff2d"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/candle_feed.py",
+      "sha256": "3699ee423082d02b58704f3e4e50e5b4a1c58ab5a502d1c03529678998156ef1"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/candle_stream_mapping.py",
+      "sha256": "725d35cfd23042b2627c3640f3ac25f0443e47754cf679ced866d37f2131b937"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/candles.py",
+      "sha256": "0e750d156cce8487eec14441b9a5ecc996728acdd68b4b0a7fc228566f8936ca"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/constraints.py",
+      "sha256": "282dd8c05bbbf045722f8e0b92411fb2fe209c4e5ed98ed7ab55a4fb6f05166f"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/endpoints.py",
+      "sha256": "1602aba58ad054d1d6ff51a5fd747aab9ddfcf3c902025c33dd44ffe4eae41a0"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/failures.py",
+      "sha256": "61986e225909d74fc8be4a12fc2893b7d2a539358ae5c68d4f0f51636ff3c5cf"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/mapping.py",
+      "sha256": "400970fd03ce1162e1df6e2253f1b157cc1cff907aab2334ee56e7349ed251ca"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/order_book.py",
+      "sha256": "5d97d53485280871c9c03ff5acaea0530cdbdf9c567f9b7a7232be41a458a1c0"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/order_book_mapping.py",
+      "sha256": "3abfd0924379f2495e13070b9039bcf2de55e7705d21db784f5899ec8feb7b17"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/price_feed.py",
+      "sha256": "53a2b77b5a773b86cca7c062b6b2ebae095b2f36833832d3fb9dd980937c901f"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/prices.py",
+      "sha256": "f4b7f8c9dbf8cc5d6b91644b68584be502f17b8e78b25ceec3120dee1e7f8860"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/rate_limit.py",
+      "sha256": "5213daa4c9ade9650728d4a75bad1e94012d73fdd7b9967cf195dc1f573a539f"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/stream_mapping.py",
+      "sha256": "1574fc85c246bb7881aadbb39303aee6ae82131af307edb89dcaed710aee513e"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/stream_transport.py",
+      "sha256": "51201ec0f4b37ebc01c1869b3da7078d2beb6fe84cbe1e840bb687d9493a49b1"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/transport.py",
+      "sha256": "43d7fadf9a1cde73b1ff4e5002f3b504bc2327d569d8969e79d6c58b27faf11d"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/binance_th/wallets.py",
+      "sha256": "16d003771814760bfd6160b6452ebd1d00f9587291fbd0844fb954e80bde5737"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/candle_streams.py",
+      "sha256": "7c99558c2e6e776ef12e97a2eae595697e4fc8f6f28efa816a8c1feaff0e8e0e"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/candles.py",
+      "sha256": "b509159aa2585a329279f99b2abbe18ec1d67018698d5bbe6d5773e3bd74d972"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/constraints.py",
+      "sha256": "d67489752159ddb62e0b5723a0787a86db8209aa196acbc200357a628d5d69ac"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/errors.py",
+      "sha256": "c5b04cd6e28e7ce792663609695a6fe61c9dcd01871f791d4a63c3a5ec504255"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/fake.py",
+      "sha256": "2516b314ee8149e8b0e4902b8ac76d228688fb0a9927901a9bf1fd73076bbef0"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/limits.py",
+      "sha256": "db60957e976135088a0030750ab4728756d10193caa3930d659ef97cbc36df7c"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/moments.py",
+      "sha256": "a7a8276752008e4910f75b940a8b634a8d950d53b7bc63b2cc66d29f4f8fc9a8"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/order_books.py",
+      "sha256": "03a28db9786106e597c87b23cbac06213cd718462f1344e2a9c20b40e94ecc27"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/price_streams.py",
+      "sha256": "0c5f45d0cac556e9e8f99a1422a27ad80f7497851a67f262259f08a2bfa15ef5"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/prices.py",
+      "sha256": "3e00e4389aefc2687c43164b66da64c87f7ff9a5aac3fc6fa33f73749d415bac"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/signing.py",
+      "sha256": "17b43302e4c4d05b4627c2b7eb40730a78c7f2262de20da29430c1f3e0b7d3c6"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/symbols.py",
+      "sha256": "1a0dbe7eb0c401d1b934afedc3b08fe987bdb4510d95280b34fecdccf0d71411"
+    },
+    {
+      "path": "backend/src/tiewtrade/venues/wallets.py",
+      "sha256": "8d7fe8b8c0098b7dcf4c2e9445ed4cf598223f7eb05bbdfd088cfd844fbbfdc6"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/profile_candle_closure.py",
+      "sha256": "a49084e06b2ca7473569f8f5fa2335dae2818729ecff8714a79911adb6b90bb8"
+    }
+  ]
+}

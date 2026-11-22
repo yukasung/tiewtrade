@@ -1,0 +1,48 @@
+{
+  "base_candidate": "c435dad12e9427c51f75990b7ed39c9c0e8a1db7",
+  "campaign8_result": "Partial retained",
+  "input_id": 6056,
+  "generation": 2,
+  "checkpoint_sequence": 7,
+  "checkpoint_matches_source": true,
+  "source_digest_verified": true,
+  "evidence_digest_verified": true,
+  "limit_and_market_constraints_match": true,
+  "recovery_changes_only": [
+    "rebase"
+  ],
+  "old_core_replay": "unchanged input is no-op; consumer rebase False-to-True raises market identity payload conflict",
+  "new_worker_replay": "existing_no_new_input_wait",
+  "runtime_limit": "Failed call arguments were not logged; this authenticates a retained-source reproduction of the failure mechanism, not every possible cause of campaign8 no-fill.",
+  "tests": {
+    "regression_run": {
+      "passed": 164,
+      "seconds": 105.34
+    },
+    "final_new_suite": {
+      "passed": 14,
+      "seconds": 1.91
+    },
+    "distinct_passing_cases": 166,
+    "overlap_note": "Final14 replace original12 in the164-case regression; do not sum raw run counts."
+  },
+  "static": {
+    "ruff": "passed",
+    "format": "passed",
+    "mypy_changed_files": 2,
+    "import_contracts_kept": 7
+  },
+  "review": "one overly broad rebase normalization narrowed to existing consumer-only source rule; negative source-flag mutation test passes",
+  "historical_test_failures": [
+    "Red regression selected consumed book before fix",
+    "Constraint-fault test metadata version mismatch corrected to valid constraint mutation",
+    "Position expectation corrected to received-asset fee using standard_execution_fee",
+    "Test union narrowing/session annotations corrected"
+  ],
+  "files_sha256": {
+    "backend/src/tiewtrade/infra/paper_orders/worker.py": "b5b0823a9f715216efae2f6f68de66f64cdd17ac39735cd968e032c6f1f562b0",
+    "backend/tests/infra/execution_market/test_same_book_recovery.py": "1e22a227f75cc2e998384a68f0b74d4a59550e2388421b1851532f87b71a6d61"
+  },
+  "publication": "not_authorized_not_done",
+  "public_attempt9": "not_authorized_not_run"
+}

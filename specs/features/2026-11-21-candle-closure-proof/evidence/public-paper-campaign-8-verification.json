@@ -1,0 +1,59 @@
+{
+  "candidate_commit": "c435dad12e9427c51f75990b7ed39c9c0e8a1db7",
+  "candidate_fingerprint": "659898377b091e4ebf2cffffef7dd1bbd60e0fe0ad8671c8505e768733216771",
+  "report_sha256": "6a893862af748d8f81a943bb37be25a89d6458edcd1126270c32240dfbab369d",
+  "result": "PARTIAL",
+  "phase": "CAMPAIGN",
+  "boot_started_at": "2026-11-22T17:50:03.035429+00:00",
+  "campaign_started_at": "2026-11-22T17:52:35.612185+00:00",
+  "stopped_at": "2026-11-22T17:58:36.003476+00:00",
+  "proofs_reverified": 7,
+  "decisions": 6,
+  "links": 1,
+  "orders": 1,
+  "executions": 0,
+  "positions": 0,
+  "reservations": 1,
+  "anchors": 1,
+  "decision_signals": [
+    {
+      "strategy": "paper-green-atr-test",
+      "candle_open_at": "2026-11-22T17:53:00+00:00",
+      "green": true,
+      "signal_atr": "35.731381927696582098",
+      "linked_new_order": false
+    },
+    {
+      "strategy": "rsi-step-grid-ema-single-tp",
+      "candle_open_at": "2026-11-22T17:53:00+00:00",
+      "green": true,
+      "signal_atr": "1.031795354282871344",
+      "linked_new_order": false
+    },
+    {
+      "strategy": "paper-green-atr-test",
+      "candle_open_at": "2026-11-22T17:54:00+00:00",
+      "green": true,
+      "signal_atr": "33.779854647146826233",
+      "linked_new_order": true
+    },
+    {
+      "strategy": "paper-green-atr-test",
+      "candle_open_at": "2026-11-22T17:56:00+00:00",
+      "green": false,
+      "signal_atr": "35.442425690652110373",
+      "linked_new_order": false
+    },
+    {
+      "strategy": "paper-green-atr-test",
+      "candle_open_at": "2026-11-22T17:57:00+00:00",
+      "green": true,
+      "signal_atr": "34.072966712748388203",
+      "linked_new_order": false
+    }
+  ],
+  "funded_anchors": 0,
+  "ledger": "capital only:10000USDT each; accepted BUY reserves100USDT without fill or debit",
+  "first_fill_tp_sl": "Not exercised: accepted order has no fill",
+  "duplicate_order_check": "one linked NEW order, one reservation, one unfilled anchor"
+}

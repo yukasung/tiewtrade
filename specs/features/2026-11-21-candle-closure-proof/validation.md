@@ -26,7 +26,7 @@
 | V16 | End-to-end deterministic composition CP01–16 | rawactualadapterpayload→PGnativeproof→RESTpublication→F11→strategy→actualPaperBUY/protection;BTCpositive/ETHnegative plus syntheticedgefixtures clearlylabelled;RSIpositiveARM/FIREregressionและtestgreenoneposition | Feature | Partial — deterministic path passed; actual API/proof/strategy/command chain verified, actual fill/protection not reached |
 | V17 | Current-candidate real public-source campaign CP01–16 | oneboundedownedPapercampaignตามด้านล่าง actualWS+REST/PG/API/engine;closedproofchain+testgreenBUYจริงถ้าเกิดeligiblegreen;RSIevaluateตามactualconditions ไม่มีforceARM;noLive/useraccountorders | Feature | Partial — attempt7 on ddcd469c stopped during F11 preparation after PostgreSQL lock timeout; no accounts/orders/fills; authorized attempt consumed |
 | V18 | Static/contracts/targeted regression | ruff/format/mypy/importcontracts, migrations/source-triggerinventory, APItypesเมื่อcontractเปลี่ยน;targetedF09/F11/F12/F20/F21/Paper/F17 dependencies;UIhiddenmessages/defaultsไม่เปลี่ยน | Feature | Passed — final full mypy804, Ruff/format885, import contracts7, unchanged API contract; prior90-error failure retained |
-| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Failed — a46dbe0d CI45044685661: backend6104Passed/1Failed during risk timeout restoration; Security45044685714/E2E/frontend/API/container Passed; local repair69 targeted cases passed, unpublished |
+| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Pending — offline matcher recovery patch is unpublished; c435dad1 CI45048519021/Security45048518987 Passed only for the prior candidate |
 | V20 | Review/owner acceptance/rollout | ReadyforCodeReview→diff+callers+DB/financial/stateless/concurrencyreview→fix/refactor→affectedchecks;ownerตรวจscope/candidate/activationความหมายจริงก่อนmerge ไม่ใช้automatedreviewแทนowner | Feature | Partial — Ready for Code Review announced, review/fixes done; owner/independent acceptance pending |
 | V21 | Combined source/strategy cross-feature E2E | candidateรวมF09/F11/F12/F17/F20/F21/Paperที่นิ่ง พร้อมfullfront/cross-featureprofilesตามBatchscope ไม่รันซ้ำทุกpatch | Batch | Not Run — Pending Full Validation |
 | V22 | Production/Live/release gates | approvedrestore/deployment/rate/load/endurance/venuecontractcoverageที่เกี่ยวข้อง;ไม่activateproduction/Liveในงานนี้ ไม่เรียกCompletedก่อนReleasecriteriaครบ | Release | Not Run — Pending Full Validation |
@@ -1029,3 +1029,114 @@ V19 stays Failed until a corrected candidate passes required CI. One additional
 publication/CI round needs owner authorization. Attempt7 remains Partial; no public
 attempt8, deployment activation or merge. Other Feature and Batch/Release gates
 remain open as previously recorded.
+
+## Final risk-cleanup candidate CI checkpoint —2026-11-23
+
+Owner-authorized publication c435dad12e9427c51f75990b7ed39c9c0e8a1db7 passed
+required CI45048519021 and Security45048518987. All CI jobs passed: backend static/
+imports/main pytest/isolated protection/fresh global-state and remaining required
+steps, frontend, API contract, container and E2E including F21/Paper Test Entry.
+Full step results are retained in evidence/risk-replay-restoration-ci-passed.json.
+This supersedes V19 Failed on a46dbe0d; its failure and local reproduction remain
+in history. Reviewed source/test fingerprints matched before publication. No
+additional runtime changes were made while CI ran.
+
+PR85 remains draft with no independent review submitted. V12/V15–17 public-source
+acceptance stays Partial; attempt7 did not reach orders and attempt8 has not run.
+Owner/independent review and actual deployment inventory/drain/restart-disable
+evidence remain open; V21/V22 Pending Full Validation are unchanged. No merge or
+Completed claim. Next is separately authorized bounded public-source Paper
+acceptance on this stable candidate, alongside the remaining owner/reviewer gates.
+No public experiment is inferred from CI approval. This receipt is recorded locally
+and in PR status without creating a documentation-only commit/CI loop.
+
+
+## Attempt8 authorized scope —2026-11-23
+
+One actual-source Paper attempt authorized on c435dad1 after passing final CI and
+Security. Existing300s preparation/360s capture, BTC/ETH1m,100USDT per entry, isolated
+users/database/Redis, no owner/Live action. Verify durable closure proofs, linked
+strategy decisions/orders/fills, exact financial consistency and first-fill TP/SL
+from signal ATR. No extra attempt is inferred; report Partial when not exercised.
+
+
+## Actual-source Paper attempt8 result —2026-11-23
+
+Candidate c435dad12e9427c51f75990b7ed39c9c0e8a1db7; required CI45048519021 and
+Security45048518987 remain Passed (runtime/test/migration manifest365files unchanged).
+Boot2026-11-22T17:50:03.035429Z, capture17:52:35.612185Z–17:58:36.003476Z:
+preparation152.576756s, capture360s plus0.391291s shutdown. This is00:50–00:58
+Asia/Bangkok on2026-11-23. One attempt only, no extension/restart.
+
+Result **Partial**. Both actual F11 heads became ready and isolated API setup
+completed.2012 actual candles,2users,2wallets,7MATCHED closure proofs independently
+reverified,6decisions,1linked BTC Paper Test Entry BUY. Signal17:54Z was green;
+decision observed17:55:31.266Z lies in the immediate next candle. ETH RSI Step Grid
+had no linked order. No synthetic candle/strategy/fill or cutoff change.
+
+BUY remains ACCEPTED:0filled/0spent, one100USDT quote reservation,0executions,
+0positions. Both wallets retain10000USDT capital ledger; BTC available9900USDT.
+One anchor row contains the decision ATR33.779854647146826233 but execution_id/
+anchor_price/TP/SL remain null; frozen first-fill protection is **Not exercised**.
+No duplicate linked order, reservation or funded anchor was observed.
+
+The matcher logged OrderConflictError("market identity payload conflict") at
+core/paper_matching.py:409 via the authoritative _apply_inputs path. Dispatch
+remains PENDING/ACTIVE with attempts4; events contain ACCEPTED plus9INPUT_APPLIED,
+noFILL. This identifies the rejecting invariant, not yet the differing payload
+field or upstream cause. Do not weaken identity equality or force a fill.
+Post-cleanup FEED_DISCONNECTED is not treated as the proven cause.
+
+External verifier initially assumed every decision had closure provenance and
+no-fill implied no reservation. Corrected it to require proof for every linked NEW,
+permit only unchanged/no-order pending decisions without proof, and verify accepted
+order/reservation/anchor/ledger consistency with Money/Quantity. Raw report unchanged.
+Final verifier passed; artifacts gitleaks exit0/no findings. Read-only admin audit
+found0otherDBsessions; owned attempt8PG/Redis stopped and retained. Local full
+order-event/market snapshots and runtime logs remain available for offline diagnosis.
+Bounded receipts: evidence/public-paper-campaign-8{,-verification,-diagnostics,
+-candidate-manifest}.json. Prior failures/Partial evidence remain.
+
+V12/V15/V16/V17 remain Partial: source-to-admission advanced, BUY-to-fill/TP/SL
+acceptance did not pass. V19 remains Passed on unchanged candidate. Owner/independent/
+deployment gates and V21/V22 Pending Full Validation unchanged. Next: offline
+reproduction of the accepted order's market identity conflict from retained facts,
+then focused fix/regressions before proposing any further public campaign. No
+attempt9, merge, new CI or financial safety relaxation is authorized by attempt8.
+
+
+## Offline same-book recovery checkpoint —2026-11-23
+
+Authenticated retained attempt8 input6056/generation2 against checkpoint7: source
+and evidence digests, complete book and both constraint sets match. Recovery changes
+only the consumer rebase flag. Old core replay reproduces the payload conflict;
+the corrected worker uses the existing no-new-input wait instead. Failed runtime
+call arguments were not logged, so this establishes a retained-source failure
+mechanism, not proof that every cause of attempt8 no-fill is resolved.
+
+Worker recovery now skips an identical already-consumed book and reads subsequent
+verified inputs without resetting liquidity/queue. Genuine payload, source flag,
+generation and constraint changes still fail. Core identity, financial, freshness,
+admission and risk rules are unchanged. Scoped review found overly broad flag
+normalization; narrowed it to the existing consumer-only rebase rule and added a
+negative source-flag case. No remaining finding identified in this scoped review;
+it does not replace independent review or owner acceptance.
+
+Validation: 164 targeted regression cases passed (105.34s); final new suite14 passed
+(1.91s), replacing the original12 within that run: **166 distinct passing cases**.
+Real PostgreSQL coverage includes durable reload/new connection, two concurrent
+workers and replay, exactly one execution/position event, released reservations,
+and fee-correct balances/position cost. Related matcher, worker, process recovery,
+strategy commit fences, Paper Test protection and evidence-decoder tests passed.
+Scoped Ruff/format/mypy (2files) and all7 import contracts passed. Initial red
+reproduction, invalid constraint fixture, fee expectation and typing corrections
+are retained in evidence/offline-same-book-recovery.json. Final source/test SHA256
+fingerprints are recorded there. Owned offline/review database services stopped;
+original attempt8 workers were never resumed and original evidence was retained.
+
+V19 is Pending for this unpublished runtime patch; prior c435dad1 CI remains a
+historical pass only. V12/V15/V16/V17 remain Partial, including public-source fill
+and frozen TP/SL. Owner/independent/deployment gates and V21/V22 Pending Full
+Validation remain unchanged. Next: separately authorized commit/push and required
+CI on the final candidate, then separately authorized bounded public acceptance.
+No attempt9, publication, CI, merge or Live action was performed in this task.

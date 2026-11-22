@@ -10,6 +10,7 @@ from tiewtrade.core.money import Money, MoneyError, Quantity
 from tiewtrade.core.order_book import BookState, MarketInput
 from tiewtrade.core.orders import (
     AdmissionPolicy,
+    OrderConflictError,
     OrderConstraints,
     OrderError,
     OrderIntent,
@@ -594,11 +595,27 @@ async def _recovery_inputs(
     # Rebase skips only the unproved interval. Consume the already committed,
     # contiguous fresh inputs after that snapshot in the same bounded batch.
     # Otherwise a slower owner may rebase every round and never see any trade.
+    consumed = bool(state.inputs and state.inputs[-1].input_id == market.input_id)
+    if consumed:
+        previous = state.inputs[-1]
+        # Consumer recovery may mark the same immutable source book as a rebase.
+        # Authenticate everything else before skipping it; never reset liquidity
+        # or reapply a consumed input merely to change that consumer flag.
+        if (
+            not isinstance(previous, BookState)
+            or (previous != market and previous != replace(market, rebase=True))
+            or state.input_constraints[-1] != record.metadata.limit
+            or (state.input_market_constraints or state.input_constraints)[-1]
+            != record.metadata.market
+        ):
+            raise OrderConflictError("market identity payload conflict")
     following = await read_inputs(session, state.pair, after=market.input_id, limit=19)
-    return (
-        _InputDecision(record, replace(market, rebase=True)),
-        *(_InputDecision(value, value.market) for value in following),
-    )
+    if consumed and not following:
+        raise NoNewExecutionInputError("no new verified execution input")
+    decisions = tuple(_InputDecision(value, value.market) for value in following)
+    if consumed:
+        return decisions
+    return (_InputDecision(record, replace(market, rebase=True)), *decisions)
 
 
 async def _admission_record(session: UserSession, state: MatchingState) -> StoredExecutionInput:

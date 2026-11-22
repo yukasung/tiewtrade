@@ -2529,3 +2529,41 @@ checks passed, no financial/risk rule or timeout increase. Correction is unpubli
 V19 remains Failed. Next: owner-authorized additional publication/CI round. Public
 attempt8 remains separately unapproved; attempt7Partial and owner/independent/
 deployment and Batch/Release gates remain open. No merge/Completed claim.
+
+
+### Risk cleanup required CI passed —2026-11-23
+
+Stable candidate c435dad12e9427c51f75990b7ed39c9c0e8a1db7 passed required
+CI45048519021 and Security45048518987, including full backend required steps and
+F21/Paper Test Entry E2E. V19 Passed; previous Failed/Partial evidence retained.
+Draft PR85 remains unmerged, with owner/independent/deployment gates open. Public
+attempt7 remains Partial; attempt8 is not authorized or run. Next: separately
+authorized bounded public-source Paper acceptance on this candidate. Batch/Release
+remain Pending Full Validation; no Completed claim.
+
+
+### Public Paper attempt8 —2026-11-23
+
+On CI-passed c435dad1, one bounded actual-source campaign reached both ready F11
+heads and account setup:7verified closure proofs,6decisions,1BTC Paper Test Entry
+BUY. Preparation152.58s/capture360s. BUY stayed ACCEPTED with100USDT reserved,
+0fills/positions and no frozen TP/SL. Matcher rejected a market input identity/
+payload conflict; exact differing field remains to isolate offline. ResultPartial,
+V19 stillPassed. Owned campaign services stopped; financial ledger unchanged and
+no duplicate linked order observed. Next: offline replay diagnosis/fix before any
+new public attempt; attempt9/merge/CI not authorized. Remaining gates unchanged.
+
+
+### Offline matcher recovery correction —2026-11-23
+
+Authenticated attempt8 retained input/checkpoint reproduces a consumer rebase-only
+identity conflict. Worker now skips the verified consumed book, consumes subsequent
+inputs or waits; strict source/core equality and financial rules remain intact.
+166 distinct targeted cases passed, including real PostgreSQL concurrent/restart
+replay; scoped static checks and7 import contracts passed. Scoped review tightened
+source-flag validation. Evidence: candle-closure-proof/evidence/offline-same-book-recovery.json.
+This is a reproduced mechanism; failed runtime call arguments were not captured.
+Public fill/TP/SL acceptance remains Partial. V19 Pending for unpublished correction;
+prior c435dad1 CI pass remains historical. Next is separately authorized publication
+and required CI, followed by separately authorized public acceptance. Owner/reviewer/
+deployment and Batch/Release gates remain open. No merge or Completed claim.

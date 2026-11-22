@@ -1,0 +1,122 @@
+{
+  "candidate_commit": "c435dad12e9427c51f75990b7ed39c9c0e8a1db7",
+  "result": "PARTIAL",
+  "preparation_seconds": 152.576756,
+  "capture_seconds_including_shutdown": 360.391291,
+  "candles": 2012,
+  "other_database_sessions_after_cleanup": 0,
+  "matcher_error": "tiewtrade.core.orders.OrderConflictError: market identity payload conflict",
+  "matcher_error_count": 1,
+  "matcher_location": "core/paper_matching.py:409",
+  "cause_limit": "Matcher identity/payload mismatch observed; the differing field and upstream cause are not yet isolated.",
+  "dispatch": [
+    {
+      "command_id": "c9dd2d37-6db8-4f5c-9d41-126bf97fa9e8",
+      "user_id": "b5340ddb-b90c-4944-9d30-49d345772e55",
+      "episode_id": "c2d88d1f-8a62-4a90-8656-70e43e5b4641",
+      "state": "PENDING",
+      "worker": null,
+      "claim_id": null,
+      "claim_revision": 15,
+      "lease_until": null,
+      "attempts": 4,
+      "next_attempt_at": "2026-11-22T18:01:40.435123+00:00",
+      "routing_action": "NEW",
+      "routing_base": "BTC",
+      "routing_quote": "USDT",
+      "routing_stage": "ACTIVE",
+      "preferred_for_due": null,
+      "source_wait_since": null,
+      "source_wait_revision": null,
+      "source_resume_used": false,
+      "source_resume_claim": false
+    }
+  ],
+  "events": [
+    {
+      "sequence": 1,
+      "event_kind": "ACCEPTED",
+      "occurred_at": "2026-11-22T17:55:36.367289+00:00",
+      "input_recorded_at": "2026-11-22T17:55:35.967419+00:00",
+      "input_evidence_id": "4653919a-7e05-5140-a753-50bda3b65a02"
+    },
+    {
+      "sequence": 2,
+      "event_kind": "INPUT_APPLIED",
+      "occurred_at": "2026-11-22T17:55:19.635948+00:00",
+      "input_recorded_at": "2026-11-22T17:55:37.183413+00:00",
+      "input_evidence_id": "2bbdea4b-c964-5af1-83fd-7bfe578ba148"
+    },
+    {
+      "sequence": 3,
+      "event_kind": "INPUT_APPLIED",
+      "occurred_at": "2026-11-22T17:55:19.734668+00:00",
+      "input_recorded_at": "2026-11-22T17:55:39.513605+00:00",
+      "input_evidence_id": "e538d573-4adc-5bc1-8ccd-b7f6fbdd841e"
+    },
+    {
+      "sequence": 4,
+      "event_kind": "INPUT_APPLIED",
+      "occurred_at": "2026-11-22T17:55:22.830986+00:00",
+      "input_recorded_at": "2026-11-22T17:55:43.439259+00:00",
+      "input_evidence_id": "e58fb0c5-be03-597d-82fb-9ca411fa611e"
+    },
+    {
+      "sequence": 5,
+      "event_kind": "INPUT_APPLIED",
+      "occurred_at": "2026-11-22T17:55:24.041687+00:00",
+      "input_recorded_at": "2026-11-22T17:55:45.403318+00:00",
+      "input_evidence_id": "79260715-b2e0-5d72-a942-7bee75a24a37"
+    },
+    {
+      "sequence": 6,
+      "event_kind": "INPUT_APPLIED",
+      "occurred_at": "2026-11-22T17:55:24.632651+00:00",
+      "input_recorded_at": "2026-11-22T17:55:47.118025+00:00",
+      "input_evidence_id": "5f22e417-d1dc-5e0d-b98d-5aaf53e0e8c7"
+    },
+    {
+      "sequence": 7,
+      "event_kind": "INPUT_APPLIED",
+      "occurred_at": "2026-11-22T17:55:28.612057+00:00",
+      "input_recorded_at": "2026-11-22T17:55:52.023558+00:00",
+      "input_evidence_id": "84d19e59-e06a-5f4f-8d27-0325ed2b59fe"
+    },
+    {
+      "sequence": 8,
+      "event_kind": "INPUT_APPLIED",
+      "occurred_at": "2026-11-22T17:55:28.982836+00:00",
+      "input_recorded_at": "2026-11-22T17:55:54.245294+00:00",
+      "input_evidence_id": "33701ee5-4501-53ef-8f69-88add39ac700"
+    },
+    {
+      "sequence": 9,
+      "event_kind": "INPUT_APPLIED",
+      "occurred_at": "2026-11-22T17:55:29.66696+00:00",
+      "input_recorded_at": "2026-11-22T17:55:56.348023+00:00",
+      "input_evidence_id": "104f29d6-1015-5303-9d69-1cd27fe9b62d"
+    },
+    {
+      "sequence": 10,
+      "event_kind": "INPUT_APPLIED",
+      "occurred_at": "2026-11-22T17:55:30.703047+00:00",
+      "input_recorded_at": "2026-11-22T17:55:58.727162+00:00",
+      "input_evidence_id": "e4e8da46-5456-52db-ba6a-6865b39bd7b8"
+    }
+  ],
+  "wallet_ledger_balance": "10000USDT each",
+  "btc_reserved": "100USDT",
+  "btc_available": "9900USDT",
+  "fills": 0,
+  "positions": 0,
+  "frozen_tp_sl": "not exercised",
+  "owned_services_stopped": [
+    "closure-campaign-8-pg",
+    "closure-campaign-8-redis"
+  ],
+  "retained_local_evidence": {
+    "order_events_sha256": "cbe07124f986a837ff87d4d47f7ffd5fd18243912db77b6e3c8f0d05782c78bb",
+    "runtime_log_sha256": "136529b16e1ee549b70f45c40685d9c81142a7cb381bee9d55670cdcfa28ca45"
+  },
+  "verifier_correction": "Non-order pending-state decisions may omit closure proof; each linked NEW must have a verified proof. No fill may retain a valid accepted-order reservation; verified against exact order/anchor/ledger facts."
+}

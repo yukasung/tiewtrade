@@ -992,3 +992,50 @@ correction and track one additional required-CI round on the resulting candidate
 Publish the fingerprint-matched source/tests with existing evidence to draft PR85.
 Retain the a46dbe0d failure history; report final SHA/run links without a separate
 documentation-only publication loop. No public attempt8, merge or activation.
+
+
+## Owner-authorized public-source Paper attempt8 —2026-11-23
+
+Owner replied "approve" after c435dad1 passed CI45048519021/Security45048518987
+and the proposal to validate actual-source Paper BUY/fill/TP/SL. Authorize exactly
+one attempt on c435dad12e9427c51f75990b7ed39c9c0e8a1db7 using the existing
+bounded campaign: BTC Paper Test Entry and ETH RSI Step Grid,1m,100USDT per entry,
+new isolated Paper users/database/Redis, preparation<=300s and capture<=360s.
+No extension/restart, owner account, Live, merge or further CI round.
+
+Reuse the committed profile_candle_closure.py and external attempt7 launcher/proof
+verifier with only candidate, attempt identity, isolated ports55428/56398 and output
+paths changed. Keep exclusive attempt marker, clean runtime/test/migration check,
+source manifest and read-only administrator audit. Preserve prior Partial results.
+Stop only owned attempt8 services after audit. If BUY/fill/frozen protection is not
+proved within bounds, report Partial rather than manufacturing candles or signals.
+
+
+## Approved offline matcher recovery investigation —2026-11-23
+
+Owner approved the proposed offline plan with "Please implement the plan". Start
+from attempt8 retained facts and an isolated copy of its stopped PostgreSQL data;
+never resume original workers or mutate original campaign evidence. Match source
+content/digests/constraints to checkpoint and reproduce the recovery path before
+source edits. Ten checkpoint codec round trips are lossless. Pure reproduction
+using checkpoint input6056 changes only rebaseFalse→True and raises the same
+OrderConflictError, while identical replay is a no-op. This is a demonstrated
+mechanism, not yet proof of the exact failed runtime input.
+
+If retained facts cannot establish that recovery's only change is consumer rebase
+intent, stop at evidence/report and refine the plan rather than relaxing identity.
+Otherwise fix the worker input selection: an already consumed identical verified
+book is not applied again; consume only contiguous subsequent inputs, or use the
+existing no-new-input wait. Preserve strict core payload/capability equality and
+all source freshness/generation, financial, admission/expiry/risk/STOP gates.
+Use existing evidence codec/provenance routines and targeted recovery/worker tests;
+verify PostgreSQL transaction/restart/concurrency and first-fill protection paths.
+No public attempt9, publication/CI/merge or original-order resumption.
+
+
+## Owner-authorized offline recovery publication —2026-11-23
+
+Owner replied "approve" to publish the reviewed offline matcher correction and
+track one required-CI round. Publish fingerprint-matched source/tests and related
+existing evidence to draft PR85. No public attempt9, merge or Live action. Report
+CI against the resulting SHA without a documentation-only publication loop.
