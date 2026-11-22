@@ -2505,3 +2505,15 @@ Attempt7's exact blocker remains unproven; public BUY/fill/protection and owner/
 independent/deployment gates stay Partial. New local runtime diff needs required CI;
 ddcd469c's Passed CI is historical. Next: authorized publication/CI, then separately
 bounded public validation; no campaign8/CI/merge performed in this checkpoint.
+
+
+### Recovery publication CI compatibility checkpoint —2026-11-22
+
+Draft PR85 candidate9e992141: CI45042222741 backend failed full mypy at six diagnostic
+transaction wrappers; Security45042222782 passed. Local correction forwards the new
+strict_rollback parameter through observer/test wrappers;160 targeted cases, full
+mypy805 and changed-file lint/format passed. The correction remains unpublished;
+required CI is not passed. E2E (including F21/Paper Test Entry), frontend, API contract and container passed;
+the run is complete with overall Failure due to backend mypy.
+Next: another authorized publication/CI round, then separately authorized public
+acceptance. Attempt7 stays Partial; no attempt8, merge or Completed claim.

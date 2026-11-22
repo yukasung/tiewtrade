@@ -935,3 +935,25 @@ and retained attempt7 artifacts together to existing draft PR85, then track one
 required-CI round on the resulting SHA. Public attempt8 remains separately bounded
 and unapproved. No merge or owner deployment activation. Preserve Partial acceptance
 gates; report CI links/SHA without a documentation-only publication loop.
+
+
+## CI wrapper compatibility correction —2026-11-22
+
+CI45042222741 on9e992141 failed full mypy at six diagnostic wrappers assigning
+_db._begin: their signatures omit strict_rollback. Scoped type checks missed these
+reverse callers. Under delegated engineering authority, forward strict_rollback
+(defaultFalse) through every affected observer wrapper, including fake wrapper
+helpers used by their tests. Preserve observation/transaction behavior and add a
+forwarding regression. Run full mypy to discover any remaining reverse callers,
+scoped lint/format and affected diagnostic tests. No runtime safety relaxation or
+new CI/public round; publication of a corrected candidate needs a further CI round.
+
+
+## Owner-authorized wrapper publication —2026-11-22
+
+Owner replied "approve" to commit/push the reviewed wrapper compatibility patch
+and run one additional required-CI round. Publish the existing correction and
+evidence to draft PR85 and track the resulting candidate to completion. Prior
+9e992141 CI failure remains recorded. This does not authorize public attempt8,
+merge or deployment activation. Report final CI links/SHA without creating a
+documentation-only publication loop.

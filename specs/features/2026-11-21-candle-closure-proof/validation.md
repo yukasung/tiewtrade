@@ -26,7 +26,7 @@
 | V16 | End-to-end deterministic composition CP01–16 | rawactualadapterpayload→PGnativeproof→RESTpublication→F11→strategy→actualPaperBUY/protection;BTCpositive/ETHnegative plus syntheticedgefixtures clearlylabelled;RSIpositiveARM/FIREregressionและtestgreenoneposition | Feature | Partial — deterministic path passed; actual API/proof/strategy/command chain verified, actual fill/protection not reached |
 | V17 | Current-candidate real public-source campaign CP01–16 | oneboundedownedPapercampaignตามด้านล่าง actualWS+REST/PG/API/engine;closedproofchain+testgreenBUYจริงถ้าเกิดeligiblegreen;RSIevaluateตามactualconditions ไม่มีforceARM;noLive/useraccountorders | Feature | Partial — attempt7 on ddcd469c stopped during F11 preparation after PostgreSQL lock timeout; no accounts/orders/fills; authorized attempt consumed |
 | V18 | Static/contracts/targeted regression | ruff/format/mypy/importcontracts, migrations/source-triggerinventory, APItypesเมื่อcontractเปลี่ยน;targetedF09/F11/F12/F20/F21/Paper/F17 dependencies;UIhiddenmessages/defaultsไม่เปลี่ยน | Feature | Passed — final full mypy804, Ruff/format885, import contracts7, unchanged API contract; prior90-error failure retained |
-| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Partial — prior ddcd469c required CI45035954903/Security45035954851 Passed; new offline coalescing-recovery runtime diff awaits final-candidate required CI |
+| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Failed — 9e992141 CI45042222741 backend full mypy rejected six diagnostic wrappers; local compatibility fix passed full mypy805 and160 targeted tests but is unpublished; Security45042222782 and E2E/frontend/API/container Passed |
 | V20 | Review/owner acceptance/rollout | ReadyforCodeReview→diff+callers+DB/financial/stateless/concurrencyreview→fix/refactor→affectedchecks;ownerตรวจscope/candidate/activationความหมายจริงก่อนmerge ไม่ใช้automatedreviewแทนowner | Feature | Partial — Ready for Code Review announced, review/fixes done; owner/independent acceptance pending |
 | V21 | Combined source/strategy cross-feature E2E | candidateรวมF09/F11/F12/F17/F20/F21/Paperที่นิ่ง พร้อมfullfront/cross-featureprofilesตามBatchscope ไม่รันซ้ำทุกpatch | Batch | Not Run — Pending Full Validation |
 | V22 | Production/Live/release gates | approvedrestore/deployment/rate/load/endurance/venuecontractcoverageที่เกี่ยวข้อง;ไม่activateproduction/Liveในงานนี้ ไม่เรียกCompletedก่อนReleasecriteriaครบ | Release | Not Run — Pending Full Validation |
@@ -962,3 +962,35 @@ acceptance remain open, V21/V22 Pending Full Validation. V19 now marks the new r
 diff pending rather than inheriting ddcd469c CI. Next: present the reviewed correction
 for one authorized publication/required-CI round, followed by a separately bounded
 public campaign only after that gate. No extra experiment/merge is inferred.
+
+
+## Published recovery candidate and wrapper compatibility —2026-11-22
+
+Published9e992141d39c59a738275822d103e2734804958f to draft PR85 in the authorized
+one-round publication. CI45042222741 backend failed full mypy: six diagnostic
+wrappers did not accept the new optional strict_rollback keyword. The earlier
+11-file scoped check missed these reverse callers; its passing result is retained
+as scoped evidence only. No backend pytest acceptance is inferred from this run.
+Security45042222782 passed on the published candidate. CI is now complete: E2E (including F17/F20/F21/Paper Test Entry/F18), frontend,
+API contract and container passed. Overall CI remains Failed; this failure is not waived.
+
+Under the recorded engineering amendment, all six observer wrappers and two test
+helpers now forward strict_rollback in every active/inactive delegate path. An
+existing transaction identity/outcome/restoration test now checks both boolean
+values across commit/error paths. Review of the nine-file Python diff found no
+change to transaction policy, observation behavior, financial rules or authority.
+
+Local unpublished correction checks:
+- Full backend mypy:805 source files passed; final parameterized test separately
+  type-checked after its addition.
+- Affected diagnostic suites:119passed in11.68s.
+- Session cleanup wrapper and workload latency regressions:41passed in0.76s.
+- Total160 distinct targeted cases; changed-file Ruff and format:9files passed.
+- Owned offline review PostgreSQL and Redis containers stopped after tests. The
+  pre-stop session-count command failed due to its local role selection; no zero-
+  session-count claim is made for this correction. No public campaign was run.
+
+V19 remains Failed for the published candidate; local fixes do not substitute for
+required CI. Further publication/CI needs another authorized round. Public attempt7
+remains Partial and attempt8 remains unapproved. Owner/independent/deployment gates
+and Batch/Release Pending Full Validation are unchanged.

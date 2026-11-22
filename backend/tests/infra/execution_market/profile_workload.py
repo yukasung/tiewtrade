@@ -842,12 +842,14 @@ async def run_worker_process(
 
     @asynccontextmanager
     async def measured_begin(
-        engine: AsyncEngine, *, cleanup_seconds: float | None = None
+        engine: AsyncEngine, *, cleanup_seconds: float | None = None, strict_rollback: bool = False
     ) -> AsyncIterator[AsyncConnection]:
         started = monotonic()
         processing = False
         try:
-            async with original_begin(engine, cleanup_seconds=cleanup_seconds) as connection:
+            async with original_begin(
+                engine, cleanup_seconds=cleanup_seconds, strict_rollback=strict_rollback
+            ) as connection:
                 info = connection.info
                 try:
                     yield connection

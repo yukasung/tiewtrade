@@ -172,13 +172,16 @@ class TransactionTrace:
             engine: Any,
             *,
             cleanup_seconds: float | None = None,
+            strict_rollback: bool = False,
         ) -> AsyncIterator[Any]:
             self.attach(engine)
             active = self.active()
             detailed = (_CURRENT.get() or {}).get("phase") in self.early_phases
             if not active and not detailed:
                 self.setup += 1
-                async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+                async with original(
+                    engine, cleanup_seconds=cleanup_seconds, strict_rollback=strict_rollback
+                ) as connection:
                     yield connection
                 return
             started = monotonic()
@@ -203,7 +206,9 @@ class TransactionTrace:
             outcome = "COMMIT"
             failure: BaseException | None = None
             try:
-                async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+                async with original(
+                    engine, cleanup_seconds=cleanup_seconds, strict_rollback=strict_rollback
+                ) as connection:
                     row["transaction_acquired_at"] = time()
                     if detailed:
                         row["transaction_acquired_monotonic"] = monotonic()

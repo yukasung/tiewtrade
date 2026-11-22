@@ -55,7 +55,7 @@ def observe_commits(path: Path) -> Iterator[None]:
 
     @asynccontextmanager
     async def begin(
-        engine: AsyncEngine, *, cleanup_seconds: float | None = None
+        engine: AsyncEngine, *, cleanup_seconds: float | None = None, strict_rollback: bool = False
     ) -> AsyncIterator[AsyncConnection]:
         nonlocal truncated
         metadata = None
@@ -63,7 +63,9 @@ def observe_commits(path: Path) -> Iterator[None]:
         error_type = None
         started = monotonic()
         try:
-            async with original_begin(engine, cleanup_seconds=cleanup_seconds) as connection:
+            async with original_begin(
+                engine, cleanup_seconds=cleanup_seconds, strict_rollback=strict_rollback
+            ) as connection:
                 body_error: BaseException | None = None
                 try:
                     yield connection

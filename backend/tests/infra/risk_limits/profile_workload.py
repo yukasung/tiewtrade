@@ -287,11 +287,13 @@ async def telemetry(path: Path, proof: RiskObserver | None = None) -> AsyncItera
 
     @asynccontextmanager
     async def measured(
-        engine: AsyncEngine, *, cleanup_seconds: float | None = None
+        engine: AsyncEngine, *, cleanup_seconds: float | None = None, strict_rollback: bool = False
     ) -> AsyncIterator[AsyncConnection]:
         sample = None
         proof_started = proof is not None and proof.window.active()
-        async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+        async with original(
+            engine, cleanup_seconds=cleanup_seconds, strict_rollback=strict_rollback
+        ) as connection:
             yield connection
             sample = connection.info.pop("f18_cursor", None)
             if sample is not None:

@@ -421,3 +421,15 @@ Limits: original holder delay/internal SQL point still unproven; old binaries or
 privileged SQL bypass this application boundary, so deployment inventory/drain gates
 remain required. Local review is not independent acceptance or required CI. Published
 CI remains Failed; no publication/new CI/campaign/merge in this local checkpoint.
+
+
+## Recovery CI reverse-caller follow-up —2026-11-22
+
+Medium — six diagnostic _begin wrappers omitted strict_rollback and therefore
+failed full mypy on9e992141; with strict callers they could also reject the keyword
+at runtime. Local correction forwards the optional boolean in every delegate path
+and updates two test helpers. Existing identity/outcome/restoration coverage now
+asserts forwarding for both values. Reviewed all nine changed Python files; no
+remaining finding in this correction. Full mypy805,160 targeted tests and scoped
+Ruff/format passed. This is automated scoped review, not independent acceptance.
+The fix is unpublished and current-candidate required CI remains Failed.

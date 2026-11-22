@@ -638,10 +638,12 @@ async def test_session_wrapper_forwards_bounded_cleanup_and_retains_primary_erro
 
     @asynccontextmanager
     async def begin(
-        engine: AsyncEngine, *, cleanup_seconds: float | None = None
+        engine: AsyncEngine, *, cleanup_seconds: float | None = None, strict_rollback: bool = False
     ) -> AsyncIterator[Any]:
         seen.append(cleanup_seconds)
-        async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+        async with original(
+            engine, cleanup_seconds=cleanup_seconds, strict_rollback=strict_rollback
+        ) as connection:
             yield connection
 
     monkeypatch.setattr(db, "_begin", begin)
