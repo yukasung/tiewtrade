@@ -554,3 +554,102 @@ new candidate is not CI-Passed until its required workflows finish. No tests rer
 for publication because source/test dependencies and environment contracts are unchanged.
 No merge, public campaign or owner acceptance waiver. Final CI result will be reported
 with SHA/run links; other Partial gates and Batch/Release stay unchanged.
+
+
+## Public-source Paper attempt 5 —2026-11-22: Partial
+
+Owner explicitly authorized exactly one additional campaign on
+`f2418d2928d7302f5e70c43541b351ec11911cbe`: fresh owned Paper database,
+BTC/USDT and ETH/USDT1m, 100USDT per entry, preparation at most5minutes and
+capture6minutes. No owner account, Live, merge, additional CI or sixth attempt authorized.
+Candidate source/test worktree was clean before launch. SHA256 manifest of backend
+Python source, migrations and the unchanged campaign harness:
+`382853ef45e497506c02589436ab73be09bec46bd87ec18d414290139d5b50e7`.
+
+Owned services used dedicated loopback PostgreSQL16/Redis containers on55425/56395
+and a new `tiewtrade_e2e_closure_campaign_5` database with existing bootstrap roles,
+production migrations and campaign guards. Both real-history F11 builds became READY.
+Boot:07:42:42.233303–07:45:08.300015UTC (within5minutes).
+Capture:07:45:08.300015–07:51:08.996838UTC (6minutes plus shutdown overhead).
+The existing harness canceled and awaited its workers, disposed all pools and captured
+facts. Follow-up read-only audit found no other database sessions. Both owned containers
+were stopped and retained for inspection; owner-preview services were not started.
+
+Results:4native/REST MATCHED proofs independently reverified with existing
+ClosureCandidate/verify_closure and Money/Quantity, including native fingerprints,
+canonical exact OHLCV, post-end request timestamps and all3decision proof references.
+Three decisions:2RSI,1Paper Test. The Paper Test decision used a green BTC07:45UTC
+candle, positive ATR37.862631085349213751 and observed_at07:46:23.891UTC.
+However there were0order links, orders, executions, positions, reservations, anchors or
+protections. Both wallets retain only their original10000USDT external-capital ledger
+entries. First-fill ATR TP/SL was not exercised. This is not a positive-entry pass or
+NO_SIGNAL result: a green candle was evaluated, but no order was produced.
+
+Audit contains12INDICATOR_NOT_READY,4BOT_CANDLE_UNCONFIRMED and
+7BOT_CANDLE_SOURCE_NOT_READY events, plus3RUN_READY events. The Paper Test
+checkpoint did not change (last_candle/pending_id remain null). Inspection of the
+existing strategy/context/recovery paths is consistent with its backfilled/recovery
+filter suppressing that decision; the exact capability and individual recovery predicate
+were not persisted in the decision and are therefore not claimed as directly observed.
+The source/readiness interruptions and why no later eligible Paper Test decision
+occurred require targeted offline diagnosis before requesting another bounded campaign.
+No runtime or strategy rules were changed to obtain a pass.
+
+Evidence: `evidence/public-paper-campaign-5.json`, `-verification.json`,
+`-diagnostics.json`, `-decision-timeline.json`, `-candidate-manifest.json`.
+A local redacted gitleaks evidence scan found no new findings in campaign5 artifacts;
+its only2findings were the previously approved campaign4 UUID occurrences, unchanged.
+No exception was broadened. Historical failures/Partial results remain retained.
+
+V12/V15/V16/V17 remain Partial for real-source entry/fill/protection evidence.
+V06/V08/V14/V20 and independent/owner acceptance gaps remain unchanged.
+V19 required CI and Security passed on the tested f2418d29 candidate:
+https://github.com/yukasung/tiewtrade/actions/runs/44996144227 and
+https://github.com/yukasung/tiewtrade/actions/runs/44996144193 (6057backend tests,
+66browser E2E, including all25new recovery/compatibility cases).
+The evidence/docs added after that run do not change runtime behavior and have not
+been committed/pushed. No CI rerun is implied. Batch/Release remain Pending Full
+Validation. Not Completed, not ready to merge. Next: offline recovery/source-readiness
+review using this evidence; any public attempt6 requires separate bounded owner approval.
+
+
+## Recovery/proof-wait correction checkpoint —2026-11-22
+
+Owner requested completing the no-entry correction without repeated permission requests.
+Before edits, plan records the diagnosis, alternatives, reuse, engineering delegation and
+unchanged CP05/10/11 safety contract. Two new PostgreSQL matrix cases reproduced the
+normal-proof-wait cutoff corruption on unmodified runtime (2failed). With the correction,
+both passed: pre-proof repeated polling leaves progress/balance unchanged and emits no
+command; verified green signal subsequently produces exactly one command and real Paper
+fill; an actual source disconnect/reconnect still advances cutoff and emits no stale BUY.
+An added RSI UNCONFIRMED-wait variant also preserves the boundary and arms correctly.
+
+45selected real-PG correctness/safety regressions passed, including existing queued,
+accepted/SELL-driven matching, STOP/risk/source/financial authority and recovery cases.
+Ruff/format/mypy3files and import contracts7/7 passed. Initial mypy2new naming errors were
+fixed; test behavior unchanged. Reviewed source/callers: no remaining issue in this narrow
+correction, no new persistent/session authority or changes to financial/strategy rules.
+Evidence: evidence/recovery-proof-wait-fix.txt with file fingerprints and exact selection.
+Only ordinary UNCONFIRMED waiting is reclassified; genuine source recovery, invalidation,
+proof expiry and freshness guards remain active. Network/source availability can still
+legitimately block orders; actual campaign5 source interruptions are not relabeled Passed.
+
+This is a local bugfix checkpoint, not completion of Feature gates. V17 real corrected-
+candidate public BUY/fill/protection remains Partial; no attempt6 was run or authorized.
+Required CI on f2418d29 remains historical and does not cover this runtime correction.
+Owner/independent acceptance and other outstanding Feature gates remain open;
+Batch/Release Pending Full Validation. No publication/merge or owner-preview activation.
+Next: review this local correction and include it in a final candidate for required CI;
+any additional public campaign retains its separate bounded approval requirement.
+
+
+### Authorized proof-wait patch publication —2026-11-22
+
+Owner authorizes one commit/push and one additional required CI round for the reviewed
+correction plus existing campaign5/checkpoint evidence. Source fingerprints still match
+recovery-proof-wait-fix.txt;45targeted PostgreSQL tests and scoped static/import checks
+remain applicable. This does not mark the unpublished correction CI-Passed: required CI
+and Security must complete on the new SHA. Prior green f2418d29 results stay historical.
+No public attempt6, owner-preview activation, merge or owner/independent acceptance waiver.
+Other Partial Feature gates and Pending Full Validation remain unchanged. CI results will
+be reported with SHA/run links at the publication checkpoint, without a doc-only CI loop.

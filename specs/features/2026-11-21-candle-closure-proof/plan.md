@@ -695,3 +695,49 @@ owner-preview activation or merge. Local evidence fingerprints were rechecked be
 staging. Required CI and Security must run on the new head; keep historical results and
 remaining Partial Feature/deployment/public-fill/acceptance gates unchanged. Report
 final SHA and workflow links in the PR/checkpoint without doc-only CI commit loops.
+
+
+## Campaign5 recovery/readiness correction —2026-11-22 (before edits)
+
+Owner requests fixing the reported no-entry issue through a reviewed/tested checkpoint
+without repeated permission requests. Campaign5 observed a green, proven BTC candle and
+one no-op Paper Test decision; repeated UNCONFIRMED/indicator/source readiness pauses
+occurred. Code inspection identifies a concrete defect: evaluation._write_status treats
+BOT_CANDLE_UNCONFIRMED as a recovery event, advancing eligible_after/recovery_required.
+Normal native-close/post-end REST publication latency therefore makes a fresh candle
+backfilled when its proof arrives. This differs from normal F11 preparation waiting,
+which already preserves the live boundary. CP05 still requires no trading before proof;
+CP10 still requires durable cutoffs after real disconnect/conflict/source recovery.
+
+Under the engineering delegation, reuse the existing indicator_wait classification in
+infra/bots/evaluation.py for ordinary BOT_CANDLE_UNCONFIRMED waits. Do not alter ready(),
+price/source recovery timestamps, closure health, proof admission or strategy rules.
+Alternative: permit backfilled entries or move cutoffs backward; rejected because it
+would weaken CP10/11. Source-not-ready and actual recovery remain fail closed. No new
+session/global state, schema, financial arithmetic, infrastructure or UI behavior.
+
+Before production edits extend the existing real-PG proof→F11→strategy→matcher matrix in
+tests/infra/execution_market/test_candle_closure_proof.py with pre-proof polling, exact
+progress/capital preservation and subsequent one-order/fill assertions. Cover repeated
+polls and a real disconnect before proof (unchanged cutoffs block replay), reusing runtime,
+f21_run, native adapter/supervisor and verify_queued_result. Run affected tail/recovery,
+closure/queued safety cases and scoped Ruff/mypy/import checks. Capture failures honestly.
+No public attempt6, owner-preview activation, commit/push/CI/merge authorization is inferred;
+existing final-candidate/owner/independent/public-fill gates remain required.
+
+Also extend test_strategy_tail_inputs.py's existing normal-wait case with an explicit
+UNCONFIRMED signal before publication, proving the same preserved boundary and RSI ARM
+transition through the shared path. Reuse its seed/append/F11 comparison helpers.
+
+
+## Owner-authorized proof-wait patch publication —2026-11-22
+
+Owner replied approve to commit/push the reviewed proof-wait patch into draft PR85 and
+run exactly one additional required CI candidate round (approximately25–35minutes).
+Include the existing campaign5 evidence, scoped fix/tests and their plan/validation/
+review/roadmap checkpoint together. No source changes after the45case regression and
+scoped static/import checks; fingerprints revalidated before staging. No new tests run
+merely for publication. This supersedes only the prior local/unpublished boundary for
+this patch, not the public campaign limits, owner-preview activation or merge gates.
+No merge or public attempt6. Report final SHA/CI URLs and remaining gates without
+creating a documentation-only commit loop to record the resulting CI.

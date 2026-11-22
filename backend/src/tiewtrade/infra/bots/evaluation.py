@@ -108,14 +108,15 @@ async def _write_status(
                 "SELECT strategy_name FROM bot_runs WHERE id=:run", {"run": run_id}
             )
         ).scalar_one()
-        indicator_wait = reason in (
+        preparation_wait = reason in (
             "INDICATOR_NOT_READY",
             "INDICATOR_SOURCE_CHANGED",
             "BOT_CANDLE_WARM_UP",
             "BOT_CANDLE_NOT_READY",
             "BOT_CANDLE_AUTHORITY_CHANGED",
+            "BOT_CANDLE_UNCONFIRMED",  # Proof latency is not a source recovery.
         )
-        if name in CANDLE_STRATEGIES and (target is BotStatus.RECOVERING or not indicator_wait):
+        if name in CANDLE_STRATEGIES and (target is BotStatus.RECOVERING or not preparation_wait):
             await session.execute(
                 "UPDATE bot_strategy_progress SET eligible_after=clock_timestamp(),"
                 "recovery_required=true "

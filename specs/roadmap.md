@@ -2370,3 +2370,30 @@ tests remain local/unpublished, so prior green e193fd32CI is not their final-hea
 V14actual deployed inventory/historical-binary evidence, owner/independent acceptance,
 public actual fill and other Partial Feature gates remain open. No campaign5 or owner
 preview activation. Batch/Release Pending Full Validation; not Completed/merge-ready.
+
+
+### Candle closure public Paper attempt5 checkpoint —2026-11-22
+
+Owner-authorized single attempt on f2418d29 completed within the5minute preparation /
+6minute capture budget using a fresh owned Paper database.4native/REST proofs and
+3decisions independently verified, but0orders/fills/positions/reservations; balances
+remain10000USDT each. Paper Test evaluated a green candle yet produced no order;
+source/readiness and recovery filtering require offline diagnosis. Evidence and limits:
+[validation](features/2026-11-21-candle-closure-proof/validation.md#public-source-paper-attempt-5-2026-11-22-partial).
+Owned containers stopped; no owner-preview/Live/merge or extra attempt. Required CI
+44996144227 and Security44996144193 passed on f2418d29; remaining Feature/owner/
+independent acceptance and public-fill gates stay Partial. Batch/Release Pending Full
+Validation. Next: offline source/recovery review; attempt6 needs separate owner approval.
+
+
+### F21/Paper Test proof-wait correction —2026-11-22
+
+Campaign5 follow-up reproduced ordinary UNCONFIRMED waits corrupting the recovery cutoff
+(2new PostgreSQL cases failed before runtime fix). Reclassified only this preparation wait;
+45targeted real-PG regressions and scoped static/import checks passed. RSI resumes ARM;
+Paper proof→one command→real matcher fill passes deterministic composition; real reconnect
+still rejects old entry. [Evidence](features/2026-11-21-candle-closure-proof/evidence/recovery-proof-wait-fix.txt).
+Local/unpublished: final-candidate CI, owner/independent acceptance and actual corrected-
+candidate public fill remain open. No attempt6, owner-preview activation or merge.
+Batch/Release Pending Full Validation. Next: review/publish final candidate for required
+CI; new public campaign remains separately bounded by owner approval.

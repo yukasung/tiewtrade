@@ -1,0 +1,895 @@
+{
+  "candidate_fingerprint": "382853ef45e497506c02589436ab73be09bec46bd87ec18d414290139d5b50e7",
+  "result": "PARTIAL",
+  "boot_started_at": "2026-11-22T07:42:42.233303+00:00",
+  "phase": "CAMPAIGN",
+  "builds": [
+    "READY",
+    "SUPERSEDED",
+    "NO_JOB",
+    "NO_JOB",
+    "NO_JOB",
+    "READY"
+  ],
+  "campaign_started_at": "2026-11-22T07:45:08.300015+00:00",
+  "api_status": [
+    {
+      "mode": "PAPER",
+      "snapshot_at": "2026-11-22T07:51:08.373153Z",
+      "pending_request_id": null,
+      "run_id": "d284e74c-5b18-57c3-a709-d7e12d6920fb",
+      "status": "PAUSED",
+      "revision": 11,
+      "strategy_name": "paper-green-atr-test",
+      "strategy_version": 1,
+      "configuration_version": 1,
+      "stop_reason": null,
+      "can_start": false,
+      "unavailable_reason": null,
+      "exposure_available": true,
+      "positions": [],
+      "protections": [],
+      "protections_more": false,
+      "readiness_reason": "INDICATOR_NOT_READY",
+      "pinned_configuration": {
+        "strategy_name": "paper-green-atr-test",
+        "base": "BTC",
+        "timeframe": "1m",
+        "capital_per_entry": "100"
+      },
+      "basket_target": null,
+      "basket_triggered": false,
+      "open_entries": 0,
+      "replacement": null
+    },
+    {
+      "mode": "PAPER",
+      "snapshot_at": "2026-11-22T07:51:08.655441Z",
+      "pending_request_id": null,
+      "run_id": "41b30360-45ed-5836-ba1e-b3f00ff34490",
+      "status": "PAUSED",
+      "revision": 20,
+      "strategy_name": "rsi-step-grid-ema-single-tp",
+      "strategy_version": 1,
+      "configuration_version": 1,
+      "stop_reason": null,
+      "can_start": false,
+      "unavailable_reason": null,
+      "exposure_available": true,
+      "positions": [],
+      "protections": [],
+      "protections_more": false,
+      "readiness_reason": "INDICATOR_NOT_READY",
+      "pinned_configuration": {
+        "base": "ETH",
+        "timeframe": "1m",
+        "capital_per_entry": "100",
+        "max_entries": 1
+      },
+      "basket_target": null,
+      "basket_triggered": false,
+      "open_entries": 0,
+      "replacement": null
+    }
+  ],
+  "stopped_at": "2026-11-22T07:51:08.996838+00:00",
+  "users": [
+    {
+      "id": "273fafb0-ed68-43ef-a39e-6cf204943654"
+    },
+    {
+      "id": "b3a3e8fa-d348-41ab-afcc-9df243e08d1f"
+    }
+  ],
+  "wallets": [
+    {
+      "id": "befc6560-a5d5-48a1-886b-663bc61aa10e",
+      "user_id": "273fafb0-ed68-43ef-a39e-6cf204943654"
+    },
+    {
+      "id": "f01b0902-a6e7-4ba6-adfd-490f681a3795",
+      "user_id": "b3a3e8fa-d348-41ab-afcc-9df243e08d1f"
+    }
+  ],
+  "runs": [
+    {
+      "id": "41b30360-45ed-5836-ba1e-b3f00ff34490",
+      "strategy_name": "rsi-step-grid-ema-single-tp",
+      "status": "PAUSED"
+    },
+    {
+      "id": "d284e74c-5b18-57c3-a709-d7e12d6920fb",
+      "strategy_name": "paper-green-atr-test",
+      "status": "PAUSED"
+    }
+  ],
+  "build_jobs": [
+    {
+      "base": "BTC",
+      "timeframe": "1m",
+      "status": "READY",
+      "attempts_used": 0,
+      "failure_reason": null,
+      "failure_category": null,
+      "availability_deadline": "2026-11-22 07:52:49.935369+00:00",
+      "retry_not_before": null
+    },
+    {
+      "base": "ETH",
+      "timeframe": "1m",
+      "status": "READY",
+      "attempts_used": 0,
+      "failure_reason": null,
+      "failure_category": null,
+      "availability_deadline": "2026-11-22 07:52:49.935369+00:00",
+      "retry_not_before": null
+    }
+  ],
+  "execution_sources": [
+    {
+      "base": "ETH",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 2,
+      "last_input_id": 9614,
+      "received_at": "2026-11-22 07:51:00.590637+00:00",
+      "verified_at": "2026-11-22 07:51:00.590637+00:00"
+    },
+    {
+      "base": "BTC",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 5,
+      "last_input_id": 10329,
+      "received_at": "2026-11-22 07:50:47.571548+00:00",
+      "verified_at": "2026-11-22 07:50:47.571548+00:00"
+    }
+  ],
+  "closure_states": [
+    {
+      "source": "primary_spot",
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:45:00+00:00",
+      "observation_id": "7052a893-ed45-57f9-8a21-d3d7801586fb",
+      "result_id": "7a90e0e7-e7d2-559e-87e1-639f5a71391e",
+      "recovery_at": null,
+      "status": "MATCHED"
+    },
+    {
+      "source": "primary_spot",
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:45:00+00:00",
+      "observation_id": "f3e21f22-af21-5d1e-9ae4-3151a8ac0b0c",
+      "result_id": "521cc15e-77ef-528a-9ee1-4bf024476759",
+      "recovery_at": null,
+      "status": "MATCHED"
+    },
+    {
+      "source": "primary_spot",
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:46:00+00:00",
+      "observation_id": "7aec98a2-84ec-5326-bfb2-0184078d59cd",
+      "result_id": null,
+      "recovery_at": null,
+      "status": "WAITING_REST"
+    },
+    {
+      "source": "primary_spot",
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:48:00+00:00",
+      "observation_id": "25432664-4fb6-5252-a3f3-0946af31c819",
+      "result_id": null,
+      "recovery_at": null,
+      "status": "WAITING_REST"
+    },
+    {
+      "source": "primary_spot",
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:48:00+00:00",
+      "observation_id": "3bbd6046-e473-5dae-b03e-688021d90e53",
+      "result_id": "8bc36d13-6954-51c8-b875-9c90ef07e52e",
+      "recovery_at": null,
+      "status": "MATCHED"
+    },
+    {
+      "source": "primary_spot",
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:49:00+00:00",
+      "observation_id": "f2171583-a04b-5a11-a0fc-ea881c8aff7a",
+      "result_id": null,
+      "recovery_at": null,
+      "status": "WAITING_REST"
+    },
+    {
+      "source": "primary_spot",
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:49:00+00:00",
+      "observation_id": "0fc140e4-a128-5586-bc13-4fb8388bbc2b",
+      "result_id": "75f85ad4-af4d-5ebf-9069-255195e442b6",
+      "recovery_at": null,
+      "status": "MATCHED"
+    }
+  ],
+  "closure_results": [
+    {
+      "id": "7a90e0e7-e7d2-559e-87e1-639f5a71391e",
+      "observation_id": "7052a893-ed45-57f9-8a21-d3d7801586fb",
+      "outcome": "MATCHED",
+      "fingerprint": "c7071ba1d5d23f225281b39466908c02df993314e5ddbd0490bdd0c9936de74b",
+      "previous_result_id": null,
+      "canonical": {
+        "low": "59035",
+        "base": "BTC",
+        "high": "59076.22",
+        "open": "59054.13",
+        "close": "59067.16",
+        "quote": "USDT",
+        "end_at": "2026-11-22T07:46:00+00:00",
+        "volume": "6.76812",
+        "open_at": "2026-11-22T07:45:00+00:00",
+        "timeframe": "1m"
+      },
+      "fetch_started_at": "2026-11-22 07:46:01.832028+00:00",
+      "observed_at": "2026-11-22 07:46:08.303261+00:00",
+      "policy_version": 1,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "source_epoch": "11176f70-c89a-43f9-9108-e0004a245f88",
+      "source_fence": 29,
+      "recorded_at": "2026-11-22 07:46:08.527029+00:00"
+    },
+    {
+      "id": "521cc15e-77ef-528a-9ee1-4bf024476759",
+      "observation_id": "f3e21f22-af21-5d1e-9ae4-3151a8ac0b0c",
+      "outcome": "MATCHED",
+      "fingerprint": "9a49bca3ba4ea068b1843676a9870c59466391e7f135013709570d777ec39f3d",
+      "previous_result_id": null,
+      "canonical": {
+        "low": "1663.66",
+        "base": "ETH",
+        "high": "1665.18",
+        "open": "1664.33",
+        "close": "1665.17",
+        "quote": "USDT",
+        "end_at": "2026-11-22T07:46:00+00:00",
+        "volume": "36.68",
+        "open_at": "2026-11-22T07:45:00+00:00",
+        "timeframe": "1m"
+      },
+      "fetch_started_at": "2026-11-22 07:46:08.667139+00:00",
+      "observed_at": "2026-11-22 07:46:08.881847+00:00",
+      "policy_version": 1,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "source_epoch": "11176f70-c89a-43f9-9108-e0004a245f88",
+      "source_fence": 32,
+      "recorded_at": "2026-11-22 07:46:09.254543+00:00"
+    },
+    {
+      "id": "8bc36d13-6954-51c8-b875-9c90ef07e52e",
+      "observation_id": "3bbd6046-e473-5dae-b03e-688021d90e53",
+      "outcome": "MATCHED",
+      "fingerprint": "95f359b548496de06015dabaa458f32f0ceee7bf4cc7b519cf966b85ec2b09df",
+      "previous_result_id": null,
+      "canonical": {
+        "low": "1666.68",
+        "base": "ETH",
+        "high": "1668.47",
+        "open": "1666.8",
+        "close": "1667.48",
+        "quote": "USDT",
+        "end_at": "2026-11-22T07:49:00+00:00",
+        "volume": "239.5716",
+        "open_at": "2026-11-22T07:48:00+00:00",
+        "timeframe": "1m"
+      },
+      "fetch_started_at": "2026-11-22 07:49:22.627912+00:00",
+      "observed_at": "2026-11-22 07:49:26.836772+00:00",
+      "policy_version": 1,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "source_epoch": "11176f70-c89a-43f9-9108-e0004a245f88",
+      "source_fence": 53,
+      "recorded_at": "2026-11-22 07:49:26.943401+00:00"
+    },
+    {
+      "id": "75f85ad4-af4d-5ebf-9069-255195e442b6",
+      "observation_id": "0fc140e4-a128-5586-bc13-4fb8388bbc2b",
+      "outcome": "MATCHED",
+      "fingerprint": "cc95dae712230cd6112421953aae87970b5fb8ba3b04c102dffdba0aaed3b64e",
+      "previous_result_id": null,
+      "canonical": {
+        "low": "1667.23",
+        "base": "ETH",
+        "high": "1668.16",
+        "open": "1667.48",
+        "close": "1667.81",
+        "quote": "USDT",
+        "end_at": "2026-11-22T07:50:00+00:00",
+        "volume": "92.1001",
+        "open_at": "2026-11-22T07:49:00+00:00",
+        "timeframe": "1m"
+      },
+      "fetch_started_at": "2026-11-22 07:50:28.277147+00:00",
+      "observed_at": "2026-11-22 07:50:29.190686+00:00",
+      "policy_version": 1,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "source_epoch": "11176f70-c89a-43f9-9108-e0004a245f88",
+      "source_fence": 58,
+      "recorded_at": "2026-11-22 07:50:29.664422+00:00"
+    }
+  ],
+  "closure_observations": [
+    {
+      "id": "7052a893-ed45-57f9-8a21-d3d7801586fb",
+      "source": "primary_spot",
+      "venue": "BINANCE_TH",
+      "market": "SPOT",
+      "symbol_revision": 1,
+      "catalog_revision": 2,
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:45:00+00:00",
+      "end_at": "2026-11-22 07:46:00+00:00",
+      "open": "59054.13",
+      "high": "59076.22",
+      "low": "59035",
+      "close": "59067.16",
+      "volume": "6.76812",
+      "trade_count": 1118,
+      "first_trade_id": 6894301928,
+      "last_trade_id": 6894303045,
+      "closed_hint": true,
+      "event_at": "2026-11-22 07:46:00.014000+00:00",
+      "received_at": "2026-11-22 07:46:00.137139+00:00",
+      "writer_id": "c00362fb-5ed7-4382-b6c7-a2d6eb9adb39",
+      "writer_epoch": 5,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "fingerprint": "7239523541e8b836285c780ac88ce175a1548f057bb01baf485e3ba981c6bde0",
+      "created_at": "2026-11-22 07:46:00.372328+00:00"
+    },
+    {
+      "id": "f3e21f22-af21-5d1e-9ae4-3151a8ac0b0c",
+      "source": "primary_spot",
+      "venue": "BINANCE_TH",
+      "market": "SPOT",
+      "symbol_revision": 2,
+      "catalog_revision": 2,
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:45:00+00:00",
+      "end_at": "2026-11-22 07:46:00+00:00",
+      "open": "1664.33",
+      "high": "1665.18",
+      "low": "1663.66",
+      "close": "1665.17",
+      "volume": "36.68",
+      "trade_count": 541,
+      "first_trade_id": 4532309485,
+      "last_trade_id": 4532310025,
+      "closed_hint": true,
+      "event_at": "2026-11-22 07:46:00.016000+00:00",
+      "received_at": "2026-11-22 07:46:00.493678+00:00",
+      "writer_id": "c00362fb-5ed7-4382-b6c7-a2d6eb9adb39",
+      "writer_epoch": 5,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "fingerprint": "d52512ba0ed06308a2c4dc9cffbbb9ffb5b0f5e41722560b6db7ced25c8c2135",
+      "created_at": "2026-11-22 07:46:00.671175+00:00"
+    },
+    {
+      "id": "7aec98a2-84ec-5326-bfb2-0184078d59cd",
+      "source": "primary_spot",
+      "venue": "BINANCE_TH",
+      "market": "SPOT",
+      "symbol_revision": 1,
+      "catalog_revision": 2,
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:46:00+00:00",
+      "end_at": "2026-11-22 07:47:00+00:00",
+      "open": "59067.15",
+      "high": "59101",
+      "low": "59067.15",
+      "close": "59089.68",
+      "volume": "11.40904",
+      "trade_count": 1109,
+      "first_trade_id": 6894303046,
+      "last_trade_id": 6894304154,
+      "closed_hint": true,
+      "event_at": "2026-11-22 07:47:00.050000+00:00",
+      "received_at": "2026-11-22 07:47:00.762144+00:00",
+      "writer_id": "c00362fb-5ed7-4382-b6c7-a2d6eb9adb39",
+      "writer_epoch": 5,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "fingerprint": "320be6afb3dd9c1431f9fd543d8bff4cd2b1612f3ef1a6b0b70cc334ca637c14",
+      "created_at": "2026-11-22 07:47:00.947604+00:00"
+    },
+    {
+      "id": "25432664-4fb6-5252-a3f3-0946af31c819",
+      "source": "primary_spot",
+      "venue": "BINANCE_TH",
+      "market": "SPOT",
+      "symbol_revision": 1,
+      "catalog_revision": 2,
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:48:00+00:00",
+      "end_at": "2026-11-22 07:49:00+00:00",
+      "open": "59109.94",
+      "high": "59140.31",
+      "low": "59091.1",
+      "close": "59120.95",
+      "volume": "17.51379",
+      "trade_count": 1544,
+      "first_trade_id": 6894305834,
+      "last_trade_id": 6894307377,
+      "closed_hint": true,
+      "event_at": "2026-11-22 07:49:00.036000+00:00",
+      "received_at": "2026-11-22 07:49:00.092628+00:00",
+      "writer_id": "c00362fb-5ed7-4382-b6c7-a2d6eb9adb39",
+      "writer_epoch": 10,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "fingerprint": "9a7ec263a7746b7c2e64a7785a538ebf7db4bdc0c829111ef43c3ee589bf530f",
+      "created_at": "2026-11-22 07:49:00.139837+00:00"
+    },
+    {
+      "id": "3bbd6046-e473-5dae-b03e-688021d90e53",
+      "source": "primary_spot",
+      "venue": "BINANCE_TH",
+      "market": "SPOT",
+      "symbol_revision": 2,
+      "catalog_revision": 2,
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:48:00+00:00",
+      "end_at": "2026-11-22 07:49:00+00:00",
+      "open": "1666.8",
+      "high": "1668.47",
+      "low": "1666.68",
+      "close": "1667.48",
+      "volume": "239.5716",
+      "trade_count": 1155,
+      "first_trade_id": 4532311650,
+      "last_trade_id": 4532312804,
+      "closed_hint": true,
+      "event_at": "2026-11-22 07:49:00.037000+00:00",
+      "received_at": "2026-11-22 07:49:00.258209+00:00",
+      "writer_id": "c00362fb-5ed7-4382-b6c7-a2d6eb9adb39",
+      "writer_epoch": 10,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "fingerprint": "c19c45daccb59780126b71157e252dc39dd15b185a80773048a07de15f2b2ebe",
+      "created_at": "2026-11-22 07:49:00.375963+00:00"
+    },
+    {
+      "id": "f2171583-a04b-5a11-a0fc-ea881c8aff7a",
+      "source": "primary_spot",
+      "venue": "BINANCE_TH",
+      "market": "SPOT",
+      "symbol_revision": 1,
+      "catalog_revision": 2,
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:49:00+00:00",
+      "end_at": "2026-11-22 07:50:00+00:00",
+      "open": "59120.96",
+      "high": "59145.74",
+      "low": "59114.43",
+      "close": "59141.12",
+      "volume": "15.20277",
+      "trade_count": 1202,
+      "first_trade_id": 6894307378,
+      "last_trade_id": 6894308579,
+      "closed_hint": true,
+      "event_at": "2026-11-22 07:50:00.096000+00:00",
+      "received_at": "2026-11-22 07:50:00.539564+00:00",
+      "writer_id": "c00362fb-5ed7-4382-b6c7-a2d6eb9adb39",
+      "writer_epoch": 10,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "fingerprint": "770d246807855ae95c899cd28d8d47b1132b8c3da9b7baacbfb730a9c665ff82",
+      "created_at": "2026-11-22 07:50:00.750929+00:00"
+    },
+    {
+      "id": "0fc140e4-a128-5586-bc13-4fb8388bbc2b",
+      "source": "primary_spot",
+      "venue": "BINANCE_TH",
+      "market": "SPOT",
+      "symbol_revision": 2,
+      "catalog_revision": 2,
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:49:00+00:00",
+      "end_at": "2026-11-22 07:50:00+00:00",
+      "open": "1667.48",
+      "high": "1668.16",
+      "low": "1667.23",
+      "close": "1667.81",
+      "volume": "92.1001",
+      "trade_count": 896,
+      "first_trade_id": 4532312805,
+      "last_trade_id": 4532313700,
+      "closed_hint": true,
+      "event_at": "2026-11-22 07:50:00.097000+00:00",
+      "received_at": "2026-11-22 07:50:00.848151+00:00",
+      "writer_id": "c00362fb-5ed7-4382-b6c7-a2d6eb9adb39",
+      "writer_epoch": 10,
+      "activation_epoch": "e0666d03-757f-4883-af60-84a8cdd188de",
+      "fingerprint": "dd096acc981e1b773fa91f43c27710489b86935b612ae809dfbf22582fafe984",
+      "created_at": "2026-11-22 07:50:01.017798+00:00"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "3a847d62-6fa0-58a9-80f2-eb42d37c41cb",
+      "strategy_name": "rsi-step-grid-ema-single-tp",
+      "input_provenance": {
+        "signal_atr": "1.248201896801739095",
+        "observed_at": "2026-11-22T07:46:10.236000+00:00",
+        "source_fence": 33,
+        "risk_revision": 1,
+        "rollout_epoch": "4478791f-49a4-49ed-b208-ee53eb3c7670",
+        "candle_open_at": "2026-11-22T07:45:00+00:00",
+        "guard_revision": 0,
+        "market_revision": 183,
+        "account_revision": 2,
+        "closure_proof_id": "521cc15e-77ef-528a-9ee1-4bf024476759",
+        "lease_generation": 1,
+        "indicator_revision": "indicators-v2:3e25d3b9-1091-49b9-b338-3d255cbd7a89:c69a94885cc7b1f262c86ad446c9ba916297c582f8d181aa18e74cd362c41071:tail:deca1ee5c34816ba3dd528e702b77a3f235014b0adc2e1a514f3600ecc0c648e:2026-11-22T07:45:00+00:00",
+        "closure_fingerprint": "9a49bca3ba4ea068b1843676a9870c59466391e7f135013709570d777ec39f3d",
+        "indicator_generation": "3e25d3b9-1091-49b9-b338-3d255cbd7a89",
+        "indicator_prefix_end": "2026-11-22T07:44:00+00:00",
+        "closure_policy_version": 1
+      },
+      "state_before": {
+        "fields": [
+          [
+            "reset_close",
+            null
+          ],
+          [
+            "reset_open_at",
+            null
+          ],
+          [
+            "pending_id",
+            null
+          ],
+          [
+            "pending_filled",
+            false
+          ],
+          [
+            "entry_sequence",
+            0
+          ],
+          [
+            "last_candle",
+            null
+          ]
+        ],
+        "version": 1
+      },
+      "state_after": {
+        "fields": [
+          [
+            "reset_close",
+            null
+          ],
+          [
+            "reset_open_at",
+            null
+          ],
+          [
+            "pending_id",
+            null
+          ],
+          [
+            "pending_filled",
+            false
+          ],
+          [
+            "entry_sequence",
+            0
+          ],
+          [
+            "last_candle",
+            null
+          ]
+        ],
+        "version": 1
+      }
+    },
+    {
+      "id": "a2db1db6-a86a-51ad-b3ff-3dd905244288",
+      "strategy_name": "paper-green-atr-test",
+      "input_provenance": {
+        "signal_atr": "37.862631085349213751",
+        "observed_at": "2026-11-22T07:46:23.891000+00:00",
+        "source_fence": 33,
+        "risk_revision": 1,
+        "rollout_epoch": "4478791f-49a4-49ed-b208-ee53eb3c7670",
+        "candle_open_at": "2026-11-22T07:45:00+00:00",
+        "guard_revision": 0,
+        "market_revision": 352,
+        "account_revision": 2,
+        "closure_proof_id": "7a90e0e7-e7d2-559e-87e1-639f5a71391e",
+        "lease_generation": 1,
+        "indicator_revision": "indicators-v2:d6a2b24f-f17c-40cf-a592-80d516d764c9:ed14022e710ddb297cff2fd1a9c7a8fc6767e0b6e58374b661f81cb739699918:tail:3b0b52d0532d8ccc9872b9bd44e48a004c58cffea666c7351510f5b25ce12f50:2026-11-22T07:45:00+00:00",
+        "closure_fingerprint": "c7071ba1d5d23f225281b39466908c02df993314e5ddbd0490bdd0c9936de74b",
+        "indicator_generation": "d6a2b24f-f17c-40cf-a592-80d516d764c9",
+        "indicator_prefix_end": "2026-11-22T07:42:00+00:00",
+        "closure_policy_version": 1
+      },
+      "state_before": {
+        "fields": [
+          [
+            "pending_id",
+            null
+          ],
+          [
+            "pending_filled",
+            false
+          ],
+          [
+            "entry_sequence",
+            0
+          ],
+          [
+            "last_candle",
+            null
+          ]
+        ],
+        "version": 1
+      },
+      "state_after": {
+        "fields": [
+          [
+            "pending_id",
+            null
+          ],
+          [
+            "pending_filled",
+            false
+          ],
+          [
+            "entry_sequence",
+            0
+          ],
+          [
+            "last_candle",
+            null
+          ]
+        ],
+        "version": 1
+      }
+    },
+    {
+      "id": "193cbf7e-7853-5b73-a8c1-6024863cecf5",
+      "strategy_name": "rsi-step-grid-ema-single-tp",
+      "input_provenance": {
+        "signal_atr": "1.31707345746115918",
+        "observed_at": "2026-11-22T07:49:27.498000+00:00",
+        "source_fence": 54,
+        "risk_revision": 1,
+        "rollout_epoch": "4478791f-49a4-49ed-b208-ee53eb3c7670",
+        "candle_open_at": "2026-11-22T07:48:00+00:00",
+        "guard_revision": 0,
+        "market_revision": 411,
+        "account_revision": 2,
+        "closure_proof_id": "8bc36d13-6954-51c8-b875-9c90ef07e52e",
+        "lease_generation": 1,
+        "indicator_revision": "indicators-v2:3e25d3b9-1091-49b9-b338-3d255cbd7a89:c69a94885cc7b1f262c86ad446c9ba916297c582f8d181aa18e74cd362c41071:tail:657c8261c8efd9bb981b1656a5684e9b531891182b1bc3d15d63e487660a2b32:2026-11-22T07:48:00+00:00",
+        "closure_fingerprint": "95f359b548496de06015dabaa458f32f0ceee7bf4cc7b519cf966b85ec2b09df",
+        "indicator_generation": "3e25d3b9-1091-49b9-b338-3d255cbd7a89",
+        "indicator_prefix_end": "2026-11-22T07:44:00+00:00",
+        "closure_policy_version": 1
+      },
+      "state_before": {
+        "fields": [
+          [
+            "reset_close",
+            null
+          ],
+          [
+            "reset_open_at",
+            null
+          ],
+          [
+            "pending_id",
+            null
+          ],
+          [
+            "pending_filled",
+            false
+          ],
+          [
+            "entry_sequence",
+            0
+          ],
+          [
+            "last_candle",
+            null
+          ]
+        ],
+        "version": 1
+      },
+      "state_after": {
+        "fields": [
+          [
+            "reset_close",
+            null
+          ],
+          [
+            "reset_open_at",
+            null
+          ],
+          [
+            "pending_id",
+            null
+          ],
+          [
+            "pending_filled",
+            false
+          ],
+          [
+            "entry_sequence",
+            0
+          ],
+          [
+            "last_candle",
+            null
+          ]
+        ],
+        "version": 1
+      }
+    }
+  ],
+  "links": [],
+  "canonical": [
+    {
+      "source": "primary_spot",
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:45:00+00:00",
+      "end_at": "2026-11-22 07:46:00+00:00",
+      "open": "59054.13",
+      "high": "59076.22",
+      "low": "59035",
+      "close": "59067.16",
+      "volume": "6.76812",
+      "finality": "CLOSED",
+      "observed_at": "2026-11-22 07:46:08.303261+00:00",
+      "fetch_started_at": "2026-11-22 07:46:01.832028+00:00",
+      "last_checked_at": "2026-11-22 07:46:08.369303+00:00",
+      "ingestion_generation": 12,
+      "closure_proof_id": "7a90e0e7-e7d2-559e-87e1-639f5a71391e"
+    },
+    {
+      "source": "primary_spot",
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:45:00+00:00",
+      "end_at": "2026-11-22 07:46:00+00:00",
+      "open": "1664.33",
+      "high": "1665.18",
+      "low": "1663.66",
+      "close": "1665.17",
+      "volume": "36.68",
+      "finality": "CLOSED",
+      "observed_at": "2026-11-22 07:46:08.881847+00:00",
+      "fetch_started_at": "2026-11-22 07:46:08.667139+00:00",
+      "last_checked_at": "2026-11-22 07:46:09.093081+00:00",
+      "ingestion_generation": 12,
+      "closure_proof_id": "521cc15e-77ef-528a-9ee1-4bf024476759"
+    },
+    {
+      "source": "primary_spot",
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:48:00+00:00",
+      "end_at": "2026-11-22 07:49:00+00:00",
+      "open": "1666.8",
+      "high": "1668.47",
+      "low": "1666.68",
+      "close": "1667.48",
+      "volume": "239.5716",
+      "finality": "CLOSED",
+      "observed_at": "2026-11-22 07:49:26.836772+00:00",
+      "fetch_started_at": "2026-11-22 07:49:22.627912+00:00",
+      "last_checked_at": "2026-11-22 07:49:26.858484+00:00",
+      "ingestion_generation": 21,
+      "closure_proof_id": "8bc36d13-6954-51c8-b875-9c90ef07e52e"
+    },
+    {
+      "source": "primary_spot",
+      "base": "ETH",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:49:00+00:00",
+      "end_at": "2026-11-22 07:50:00+00:00",
+      "open": "1667.48",
+      "high": "1668.16",
+      "low": "1667.23",
+      "close": "1667.81",
+      "volume": "92.1001",
+      "finality": "CLOSED",
+      "observed_at": "2026-11-22 07:50:29.190686+00:00",
+      "fetch_started_at": "2026-11-22 07:50:28.277147+00:00",
+      "last_checked_at": "2026-11-22 07:50:29.311315+00:00",
+      "ingestion_generation": 24,
+      "closure_proof_id": "75f85ad4-af4d-5ebf-9069-255195e442b6"
+    },
+    {
+      "source": "primary_spot",
+      "base": "BTC",
+      "quote": "USDT",
+      "timeframe": "1m",
+      "open_at": "2026-11-22 07:46:00+00:00",
+      "end_at": "2026-11-22 07:47:00+00:00",
+      "open": "59067.15",
+      "high": "59101",
+      "low": "59067.15",
+      "close": "59089.68",
+      "volume": "11.40904",
+      "finality": "UNCONFIRMED",
+      "observed_at": "2026-11-22 07:51:00.888213+00:00",
+      "fetch_started_at": "2026-11-22 07:51:00.533816+00:00",
+      "last_checked_at": "2026-11-22 07:51:01.377208+00:00",
+      "ingestion_generation": 19,
+      "closure_proof_id": null
+    }
+  ],
+  "ledger": [
+    {
+      "id": "72660daa-c390-4654-87ce-b553ed7e0765",
+      "user_id": "273fafb0-ed68-43ef-a39e-6cf204943654",
+      "wallet_id": "befc6560-a5d5-48a1-886b-663bc61aa10e",
+      "episode_id": "57435955-bcb9-42c9-8726-a61560852006",
+      "mode": "PAPER",
+      "kind": "EXTERNAL_CAPITAL",
+      "amount": "1E+4",
+      "currency": "USDT",
+      "source_command_id": "ec97a29c-2a4e-4e59-aa9b-7d27b433855c",
+      "created_at": "2026-11-22 07:45:06.175186+00:00",
+      "source_position_event_id": null
+    },
+    {
+      "id": "cb21f918-1fe8-448b-b49b-88f5999771ad",
+      "user_id": "b3a3e8fa-d348-41ab-afcc-9df243e08d1f",
+      "wallet_id": "f01b0902-a6e7-4ba6-adfd-490f681a3795",
+      "episode_id": "6e0c9330-e933-408b-a014-594d1bda8d66",
+      "mode": "PAPER",
+      "kind": "EXTERNAL_CAPITAL",
+      "amount": "1E+4",
+      "currency": "USDT",
+      "source_command_id": "f9960e53-a261-40ce-844b-05988662915c",
+      "created_at": "2026-11-22 07:45:07.593302+00:00",
+      "source_position_event_id": null
+    }
+  ],
+  "executions": [],
+  "orders": [],
+  "positions": [],
+  "reservations": [],
+  "anchors": []
+}

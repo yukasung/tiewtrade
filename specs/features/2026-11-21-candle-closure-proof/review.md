@@ -378,3 +378,23 @@ Positive compatibility claim is limited to current proof v1. Legacy-style SQL re
 is not proof of compatibility with an historical binary or actual deployed inventory.
 V14 remains Partial for owner deployment evidence; new tests have no final-head CI.
 No public campaign/preview activation/publication or merge occurred this turn.
+
+
+## Proof-wait correction deep review —2026-11-22
+
+Reviewed the narrow runtime correction, both modified PostgreSQL test modules, campaign5
+artifacts, approved requirements/plan/validation and affected input/recovery/decision/
+queued/matching dependencies. No unresolved Critical/High/Medium/Low finding in this
+correction. UNCONFIRMED remains non-tradable until native/REST proof is current; normal
+preparation waiting no longer resets the durable cutoff. Actual recovery, source/price/
+indicator epoch changes and freshness/proof/owner/revision locks retain their authority.
+No changes to financial formulas, session authority, role access or Live capability.
+
+45selected PostgreSQL correctness/safety cases and Ruff/format/mypy3files plus7import
+contracts passed. Reproduction before correction failed both new wait cases. Afterward,
+normal wait→one command/Paper fill and reconnect→no stale BUY passed; RSI ARM/tail and
+queued/matching/source/risk/STOP regressions passed. Evidence fingerprints match current
+files. The review does not certify market availability: corrected-candidate public fill/
+first-fill protection, final-SHA required CI and owner/independent acceptance remain open.
+Owner now permits one publication/CI round for this reviewed patch, with no merge or new
+public campaign. Keep this automated review distinct from independent human acceptance.

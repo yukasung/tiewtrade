@@ -683,7 +683,18 @@ async def test_duplicate_conflict_refresh_cannot_revive_exhausted_claim(
 
 
 @pytest.mark.parametrize(
-    "stage", ["unchanged", "commit", "queued", "expired", "accepted", "accepted_sell", "filled"]
+    "stage",
+    [
+        "unchanged",
+        "commit",
+        "queued",
+        "expired",
+        "accepted",
+        "accepted_sell",
+        "filled",
+        "awaiting_proof",
+        "awaiting_proof_reconnect",
+    ],
 )
 async def test_proof_to_prepared_indicators_strategy_and_paper_admission(
     stage: str,
@@ -807,6 +818,56 @@ async def test_proof_to_prepared_indicators_strategy_and_paper_admission(
                 },
             },
         }
+        registry = bot.StrategyRegistry(enable_f21=True, enable_paper_test=True)
+        if stage in ("awaiting_proof", "awaiting_proof_reconnect"):
+            await source.price("110")
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                progress_before = (
+                    await session.execute(
+                        "SELECT eligible_after,recovery_required FROM bot_strategy_progress"
+                    )
+                ).one()
+            for _ in range(2):
+                assert (
+                    await bot.run_bot_quote(
+                        engine=engine_engine,
+                        owner=owner,
+                        run_id=run,
+                        registry=registry,
+                        worker_id=worker,
+                    )
+                    is None
+                )
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                progress_after = (
+                    await session.execute(
+                        "SELECT eligible_after,recovery_required FROM bot_strategy_progress"
+                    )
+                ).one()
+                assert progress_after == progress_before
+                assert (
+                    await session.execute(
+                        "SELECT details->>'reason' FROM bot_run_events "
+                        "WHERE event='SOURCE_NOT_READY' ORDER BY revision DESC LIMIT 1"
+                    )
+                ).scalar_one() == "BOT_CANDLE_UNCONFIRMED"
+                assert (
+                    await session.execute("SELECT count(*) FROM paper_order_commands")
+                ).scalar_one() == 0
+                current = await get_wallet(session, include_reset_readiness=False)
+                assert current is not None and current.balance == wallet.balance
+            if stage == "awaiting_proof_reconnect":
+                from tiewtrade.infra.market_data.candle_preview import complete_bootstrap
+
+                async with market_data_session(source.market) as market_session:
+                    await closure.prepare_write(market_session, acquire=True)
+                    lease = await connection(market_session, lease, False)
+                    await closure.connection_changed(market_session)
+                async with market_data_session(source.market) as market_session:
+                    await closure.prepare_write(market_session, acquire=True)
+                    lease = await connection(market_session, lease, True)
+                    await closure.connection_changed(market_session)
+                    await complete_bootstrap(market_session, lease)
         native = candle_from_stream(
             payload=payload, series=(CandleSeries("BTC", "USDT", Timeframe.M1),), received_at=now
         )
@@ -824,7 +885,6 @@ async def test_proof_to_prepared_indicators_strategy_and_paper_admission(
             ).scalar_one() == "CLOSED"
             assert await closure.current_proof(market_session, c) is not None
         await source.price("110")
-        registry = bot.StrategyRegistry(enable_f21=True, enable_paper_test=True)
         from tiewtrade.infra.bots.evaluation import evaluate_published_quote
 
         original = evaluate_published_quote
@@ -858,6 +918,20 @@ async def test_proof_to_prepared_indicators_strategy_and_paper_admission(
             if stage == "commit":
                 assert not commands
                 return
+            if stage == "awaiting_proof_reconnect":
+                assert decision is not None and not commands
+                progress = (
+                    await session.execute(
+                        "SELECT eligible_after,recovery_required,source_recovery_at "
+                        "FROM bot_strategy_progress"
+                    )
+                ).one()
+                assert not progress.recovery_required
+                assert progress.eligible_after >= progress.source_recovery_at > c.end_at
+                assert (
+                    await session.execute("SELECT count(*) FROM paper_execution_links")
+                ).scalar_one() == 0
+                return
             diagnostics = (
                 await session.execute("SELECT event,details FROM bot_run_events ORDER BY revision")
             ).all()
@@ -870,6 +944,21 @@ async def test_proof_to_prepared_indicators_strategy_and_paper_admission(
             assert provenance["closure_proof_id"]
             assert provenance["closure_policy_version"] == 1
             assert provenance["indicator_prefix_end"]
+        if stage == "awaiting_proof":
+            assert (
+                await bot.run_bot_quote(
+                    engine=engine_engine,
+                    owner=owner,
+                    run_id=run,
+                    registry=registry,
+                    worker_id=worker,
+                )
+                == decision
+            )
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                assert (
+                    await session.execute("SELECT count(*) FROM paper_order_commands")
+                ).scalar_one() == 1
         if stage == "queued":
             await invalidate_source()
         if stage == "expired":
@@ -1022,7 +1111,7 @@ async def test_proof_to_prepared_indicators_strategy_and_paper_admission(
             commands[0],
             admission_wallet,
             source,
-            should_fill=stage in ("unchanged", "filled"),
+            should_fill=stage in ("unchanged", "filled", "awaiting_proof"),
         )
         if stage == "filled":
 

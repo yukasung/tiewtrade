@@ -1,0 +1,40 @@
+{
+  "candidate_commit": "f2418d2928d7302f5e70c43541b351ec11911cbe",
+  "candidate_fingerprint": "382853ef45e497506c02589436ab73be09bec46bd87ec18d414290139d5b50e7",
+  "report_sha256": "ab49f3b2f05c7612dbd6f9230ff2d9dac73c3703c535d9537ac736e258210bc0",
+  "result": "PARTIAL",
+  "phase": "CAMPAIGN",
+  "boot_started_at": "2026-11-22T07:42:42.233303+00:00",
+  "campaign_started_at": "2026-11-22T07:45:08.300015+00:00",
+  "stopped_at": "2026-11-22T07:51:08.996838+00:00",
+  "proofs_reverified": 4,
+  "decisions": 3,
+  "links": 0,
+  "orders": 0,
+  "executions": 0,
+  "positions": 0,
+  "reservations": 0,
+  "anchors": 0,
+  "decision_signals": [
+    {
+      "strategy": "rsi-step-grid-ema-single-tp",
+      "candle_open_at": "2026-11-22T07:45:00+00:00",
+      "green": true,
+      "signal_atr": "1.248201896801739095"
+    },
+    {
+      "strategy": "paper-green-atr-test",
+      "candle_open_at": "2026-11-22T07:45:00+00:00",
+      "green": true,
+      "signal_atr": "37.862631085349213751"
+    },
+    {
+      "strategy": "rsi-step-grid-ema-single-tp",
+      "candle_open_at": "2026-11-22T07:48:00+00:00",
+      "green": true,
+      "signal_atr": "1.31707345746115918"
+    }
+  ],
+  "ledger": "capital only; unchanged 10000 USDT per wallet",
+  "first_fill_tp_sl": "Not exercised: no fill"
+}

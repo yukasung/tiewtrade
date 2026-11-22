@@ -21,7 +21,7 @@ from tests.infra.execution_market.test_bot_indicator_inputs import (
 from tests.infra.execution_market.test_strategy_baskets import entry, f21_run
 from tests.infra.indicators.test_source import active as active
 from tests.infra.risk_limits.test_execution import Runtime, drive, runtime
-from tiewtrade.core.market_data import Candle, Timeframe, advance, align_floor
+from tiewtrade.core.market_data import Candle, CandleFinality, Timeframe, advance, align_floor
 from tiewtrade.core.money import Money, Scalar
 from tiewtrade.core.strategies import StrategyDocument, document_from_payload, document_payload
 from tiewtrade.infra.bots.evaluation import PreparedQuote, evaluate_published_quote
@@ -101,7 +101,9 @@ async def indicator_input(
     return prepared, inputs
 
 
+@pytest.mark.parametrize("awaiting_closure", [False, True])
 async def test_normal_preparation_wait_keeps_live_boundary_and_tail_matches_full_generation(
+    awaiting_closure: bool,
     active: None,
     api_engine: AsyncEngine,
     engine_engine: AsyncEngine,
@@ -116,6 +118,10 @@ async def test_normal_preparation_wait_keeps_live_boundary_and_tail_matches_full
             api_engine, engine_engine, migrator_engine, owner, wallet, source
         )
         registry = StrategyRegistry(enable_f21=True)
+        if awaiting_closure:
+            await append_recorded_candle(
+                source.market, replace(candle, finality=CandleFinality.UNCONFIRMED)
+            )
         assert (
             await run_bot_quote(
                 engine=engine_engine, owner=owner, run_id=run, worker_id=worker, registry=registry
