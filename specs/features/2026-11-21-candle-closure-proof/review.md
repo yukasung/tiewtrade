@@ -433,3 +433,16 @@ asserts forwarding for both values. Reviewed all nine changed Python files; no
 remaining finding in this correction. Full mypy805,160 targeted tests and scoped
 Ruff/format passed. This is automated scoped review, not independent acceptance.
 The fix is unpublished and current-candidate required CI remains Failed.
+
+
+## Risk timeout-restoration finding —2026-11-23
+
+High — infra/risk_limits/boundaries.py::financial_boundary released the optional
+replay savepoint before restoring its100ms statement timeout. A restoration timeout
+therefore aborted the enclosing authoritative financial transaction instead of
+deferring derived replay. CI45044685661 exposed this during risk-setting setup.
+Local fix restores the prior timeout before savepoint release, inside the existing
+error handler. Rollback/release failure and cancellation still propagate; financial
+operations are not retried. Real PostgreSQL reproduction and69 targeted cases plus
+scoped static checks passed. Source/caller review found no remaining issue in this
+fix, but it is unpublished and final-candidate CI remains Failed.

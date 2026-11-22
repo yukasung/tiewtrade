@@ -150,6 +150,12 @@ async def financial_boundary(
         try:
             await checked.execute("SET LOCAL statement_timeout='100ms'")
             await replay_monitor(checked, setting)
+            # Restoration still runs under the optional replay timeout. Keep the
+            # savepoint until it succeeds so a timeout can defer only replay.
+            await checked.execute(
+                "SELECT set_config('statement_timeout',:previous,true)",
+                {"previous": previous_timeout},
+            )
         except (InfraError, MoneyError, PositionError, ValueError, KeyError, TypeError):
             await checked.execute("ROLLBACK TO SAVEPOINT optional_risk_replay")
             _LOGGER.warning("derived risk replay deferred boundary=%s", identity)
@@ -174,7 +180,3 @@ async def financial_boundary(
               due_at=clock_timestamp() WHERE mode='PAPER'""")
         finally:
             await checked.execute("RELEASE SAVEPOINT optional_risk_replay")
-            await checked.execute(
-                "SELECT set_config('statement_timeout',:previous,true)",
-                {"previous": previous_timeout},
-            )

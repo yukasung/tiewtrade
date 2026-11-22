@@ -26,7 +26,7 @@
 | V16 | End-to-end deterministic composition CP01–16 | rawactualadapterpayload→PGnativeproof→RESTpublication→F11→strategy→actualPaperBUY/protection;BTCpositive/ETHnegative plus syntheticedgefixtures clearlylabelled;RSIpositiveARM/FIREregressionและtestgreenoneposition | Feature | Partial — deterministic path passed; actual API/proof/strategy/command chain verified, actual fill/protection not reached |
 | V17 | Current-candidate real public-source campaign CP01–16 | oneboundedownedPapercampaignตามด้านล่าง actualWS+REST/PG/API/engine;closedproofchain+testgreenBUYจริงถ้าเกิดeligiblegreen;RSIevaluateตามactualconditions ไม่มีforceARM;noLive/useraccountorders | Feature | Partial — attempt7 on ddcd469c stopped during F11 preparation after PostgreSQL lock timeout; no accounts/orders/fills; authorized attempt consumed |
 | V18 | Static/contracts/targeted regression | ruff/format/mypy/importcontracts, migrations/source-triggerinventory, APItypesเมื่อcontractเปลี่ยน;targetedF09/F11/F12/F20/F21/Paper/F17 dependencies;UIhiddenmessages/defaultsไม่เปลี่ยน | Feature | Passed — final full mypy804, Ruff/format885, import contracts7, unchanged API contract; prior90-error failure retained |
-| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Failed — 9e992141 CI45042222741 backend full mypy rejected six diagnostic wrappers; local compatibility fix passed full mypy805 and160 targeted tests but is unpublished; Security45042222782 and E2E/frontend/API/container Passed |
+| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Failed — a46dbe0d CI45044685661: backend6104Passed/1Failed during risk timeout restoration; Security45044685714/E2E/frontend/API/container Passed; local repair69 targeted cases passed, unpublished |
 | V20 | Review/owner acceptance/rollout | ReadyforCodeReview→diff+callers+DB/financial/stateless/concurrencyreview→fix/refactor→affectedchecks;ownerตรวจscope/candidate/activationความหมายจริงก่อนmerge ไม่ใช้automatedreviewแทนowner | Feature | Partial — Ready for Code Review announced, review/fixes done; owner/independent acceptance pending |
 | V21 | Combined source/strategy cross-feature E2E | candidateรวมF09/F11/F12/F17/F20/F21/Paperที่นิ่ง พร้อมfullfront/cross-featureprofilesตามBatchscope ไม่รันซ้ำทุกpatch | Batch | Not Run — Pending Full Validation |
 | V22 | Production/Live/release gates | approvedrestore/deployment/rate/load/endurance/venuecontractcoverageที่เกี่ยวข้อง;ไม่activateproduction/Liveในงานนี้ ไม่เรียกCompletedก่อนReleasecriteriaครบ | Release | Not Run — Pending Full Validation |
@@ -994,3 +994,38 @@ V19 remains Failed for the published candidate; local fixes do not substitute fo
 required CI. Further publication/CI needs another authorized round. Public attempt7
 remains Partial and attempt8 remains unapproved. Owner/independent/deployment gates
 and Batch/Release Pending Full Validation are unchanged.
+
+## Wrapper publication and risk cleanup follow-up —2026-11-23
+
+Owner-authorized candidate a46dbe0d5e460cff21d6230724624e77a6eb3068 completed
+CI45044685661: backend lint/types/imports passed, pytest6104passed/1failed/2skipped/
+32deselected in1622.58s. Security45044685714, E2E (including F21/Paper Test Entry),
+frontend, API contract and container passed. The single failure occurred before
+queued-catalog assertions, during risk-setting fixture setup: SQLSTATE57014 when
+restoring statement_timeout after releasing the optional replay savepoint.
+
+The documented local correction restores the previous timeout inside the existing
+protected try. A timeout now rolls back only optional derived replay and retains
+the existing SOURCE_UNAVAILABLE/replay_pending fallback. The100ms budget, financial
+transaction, authoritative facts and all admission/risk rules are unchanged.
+A real PostgreSQL delayed-restoration test reproduced the pre-fix failure. Final
+coverage uses normal/timeout × prior0/500ms × commit/outer rollback; verifies one
+financial event, finalized marker, exact Money cost, restored timeout, pending
+evaluation and no surviving financial facts on outer rollback.
+
+Final distinct targeted coverage69cases: boundaries12, monitor19, authority and
+execution38. The first combined run had44passing cases and two new fixture failures;
+fixture initialization and UUID normalization were corrected. An added rollback
+case indentation and conditional-context type warning were corrected; final boundary
+run12passed in3.87s, monitor19 retained from31passed combined run13.08s. Changed-file
+Ruff/format/mypy passed. Focused source/caller/savepoint/transaction review found no
+remaining finding in this correction. PostgreSQL remains the authority; no new
+process-local business state, schema, infrastructure, retry or financial formula.
+Review is automated and does not replace independent/owner acceptance.
+
+Receipt: evidence/risk-replay-restoration-ci.json. Zero other review database sessions
+before stopping the two owned offline containers. This correction is unpublished;
+V19 stays Failed until a corrected candidate passes required CI. One additional
+publication/CI round needs owner authorization. Attempt7 remains Partial; no public
+attempt8, deployment activation or merge. Other Feature and Batch/Release gates
+remain open as previously recorded.

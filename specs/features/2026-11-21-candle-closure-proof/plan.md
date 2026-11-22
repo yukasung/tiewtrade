@@ -957,3 +957,38 @@ evidence to draft PR85 and track the resulting candidate to completion. Prior
 9e992141 CI failure remains recorded. This does not authorize public attempt8,
 merge or deployment activation. Report final CI links/SHA without creating a
 documentation-only publication loop.
+
+
+## CI financial-boundary cleanup correction —2026-11-23
+
+CI45044685661 on a46dbe0d passed mypy but failed one of6105 backend tests:
+queued-catalog authority fixture setup timed out (SQLSTATE57014) restoring
+statement_timeout in risk_limits/boundaries.py after RELEASE SAVEPOINT. The
+optional100ms replay budget still applied to restoration, but the savepoint had
+already been released, so the intended deferred-replay fallback could not run.
+6104 passed;2skipped;32deselected. Other CI jobs and Security passed.
+
+Delegated engineering authority permits the necessary shared dependency bug fix.
+Reuse financial_boundary's existing savepoint and SOURCE_UNAVAILABLE/replay_pending
+fallback: restore the prior timeout inside the protected try, before release.
+If restoration itself times out, rollback to the savepoint restores its prior
+settings and rolls back only derived replay; retain the financial marker and
+existing conservative fallback. Do not increase100ms, retry the financial operation,
+change risk rules or suppress rollback/release failures. Alternatives (rerunning CI
+without a fix or raising timeout) do not correct this uncovered cleanup gap.
+
+Before source edits, reproduce deterministic PostgreSQL timeout at restoration
+using the existing UserSession test interception pattern and real pg_sleep. Cover
+normal and failed restoration with prior timeout0/nonzero, persisted financial
+facts, restored timeout, deferred risk state and atomic rollback. Then run affected
+boundary/authority regressions and scoped static checks. No further CI/public round
+is authorized by this local repair.
+
+
+## Owner-authorized risk cleanup publication —2026-11-23
+
+Owner replied "approve" to commit/push the reviewed risk replay timeout-restoration
+correction and track one additional required-CI round on the resulting candidate.
+Publish the fingerprint-matched source/tests with existing evidence to draft PR85.
+Retain the a46dbe0d failure history; report final SHA/run links without a separate
+documentation-only publication loop. No public attempt8, merge or activation.

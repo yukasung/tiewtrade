@@ -1,0 +1,103 @@
+{
+  "candidate": "a46dbe0d5e460cff21d6230724624e77a6eb3068",
+  "ci_run": 45044685661,
+  "ci": "failed",
+  "security_run": 45044685714,
+  "security": "passed",
+  "jobs": [
+    {
+      "name": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "backend execution",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "api-contract execution",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "e2e execution",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "frontend execution",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "docker execution",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "หน้าบ้าน — lint, types, tests",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "container — ทั้งสองฝั่งรันใน container ได้",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "หลังบ้าน — lint, types, imports, tests",
+      "status": "completed",
+      "conclusion": "failure"
+    }
+  ],
+  "backend_tests": {
+    "passed": 6104,
+    "failed": 1,
+    "skipped": 2,
+    "deselected": 32,
+    "seconds": 1622.58
+  },
+  "failure": {
+    "test": "test_buy_rechecks_current_authority[queued-catalog]",
+    "phase": "fixture runtime setup risk setting",
+    "location": "infra/risk_limits/boundaries.py:177",
+    "sqlstate": "57014",
+    "statement": "SELECT set_config('statement_timeout',:previous,true)",
+    "previous": "0"
+  },
+  "local_fix": "unpublished_timeout_restoration_inside_savepoint",
+  "checks": {
+    "distinct_targeted_cases_passed": 69,
+    "boundary_cases": 12,
+    "monitor_cases": 19,
+    "authority_and_execution_cases": 38,
+    "ruff_format_mypy_files": 2
+  },
+  "pre_fix_reproduction": "real PostgreSQL pg_sleep under unchanged 100ms timeout failed at restoration",
+  "failure_history": [
+    "new test initially expected risk_owner_state without initializing it",
+    "fixture UUID normalization corrected to existing UUID(str(...)) pattern",
+    "new outer-rollback test indentation corrected before successful run",
+    "conditional pytest.raises/nullcontext caused mypy unreachable warning; explicit try/except/else retained assertions"
+  ],
+  "cleanup": {
+    "other_database_sessions": 0,
+    "owned_review_containers": "stopped"
+  },
+  "public_attempt8": "not_run",
+  "files_sha256": {
+    "backend/src/tiewtrade/infra/risk_limits/boundaries.py": "1e439f06c6a2bc5818b2631a08ec50e5bc86c11069b5529a11685df365bf174b",
+    "backend/tests/infra/risk_limits/test_boundaries.py": "95cb1cf3007ff6588c1dc43c6e884ec10f9799e8d4ebb420dd3732f673880d54"
+  }
+}

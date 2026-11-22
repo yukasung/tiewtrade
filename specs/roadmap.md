@@ -2517,3 +2517,15 @@ required CI is not passed. E2E (including F21/Paper Test Entry), frontend, API c
 the run is complete with overall Failure due to backend mypy.
 Next: another authorized publication/CI round, then separately authorized public
 acceptance. Attempt7 stays Partial; no attempt8, merge or Completed claim.
+
+
+### Wrapper CI and optional risk replay cleanup —2026-11-23
+
+Candidate a46dbe0d: CI45044685661 backend6104passed/1failed; full types now passed.
+Security45044685714, E2E including F21/Paper Test Entry, frontend/API/container passed.
+Failure exposed timeout restoration outside the optional risk replay savepoint.
+Local correction keeps restoration protected;69 targeted cases and scoped static
+checks passed, no financial/risk rule or timeout increase. Correction is unpublished;
+V19 remains Failed. Next: owner-authorized additional publication/CI round. Public
+attempt8 remains separately unapproved; attempt7Partial and owner/independent/
+deployment and Batch/Release gates remain open. No merge/Completed claim.
