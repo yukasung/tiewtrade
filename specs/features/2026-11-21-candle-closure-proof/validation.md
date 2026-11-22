@@ -403,3 +403,21 @@ formatting changes. `git diff --check origin/main HEAD -- .
 ':!specs/features/2026-11-21-candle-closure-proof/evidence'` passes for the integrated
 source/docs candidate. Do not report the raw-evidence-inclusive whitespace check as passed.
 No scanner, CI gate or runtime safety criterion is bypassed or reconfigured.
+
+
+## Exact Security exception correction —2026-11-22
+
+Draft PR85 published c864411eb730d200cbb8dad3410a356e20579e88. Initial Security run
+44985466615 failed secrets/gate for two new generic-api-key occurrences; other Security
+components passed. Owner explicitly approved only those two Paper order UUID occurrences
+(lines12/17, exact commit/blob/count/digest recorded in plan.md). Added one entry to the
+existing immutable-evidence registry; scanner/matcher/severity/coverage are unchanged.
+
+Existing resolver unittest suite:11passed/1skipped (12run; optional real-scanner fixture
+not configured). Evaluating the complete captured pinned history/tree findings against
+the updated registry yields0blocked/0triage,48494deduplicated approved occurrences. No
+credential values were displayed or tested against any service. Full pinned scan must
+still run on the correction commit before push, then required CI on the final SHA.
+Runtime/trading source is unchanged; earlier manifests and first Security failure remain
+historical. CI outcome will be reported with links/SHA without a doc-only commit loop.
+No merge, owner acceptance, public campaign5 or preview/Live activation is authorized.

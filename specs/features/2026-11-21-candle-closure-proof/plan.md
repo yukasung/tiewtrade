@@ -553,3 +553,18 @@ reviewed commit with exactly the same tree on main005ec483, as permitted by the 
 materialization plan. This also avoids publishing intermediary local dependency snapshots.
 Source/evidence bytes and historical manifests remain intact; only unpublished topology
 changes. Run the unchanged scanner on that final candidate before pushing.
+
+
+## Owner-approved exact evidence exception —2026-11-22 (before registry edit)
+
+Owner explicitly replied “อนุมัติข้อยกเว้นเฉพาะ 2 จุดนี้” for generic-api-key at lines12/17
+of evidence/public-paper-campaign-4-diagnostics.json introduced by
+c864411eb730d200cbb8dad3410a356e20579e88. Both values exactly equal the actual disposable
+Paper order_id and intent.order_id, not authentication credentials. Add one immutable
+binding to .github/security/evidence-exceptions.json using existing schema/resolver:
+blobefa230cc4f1a248517af06f124cde0083936cb9b, deduplicatedcount2, occurrence-setdigest
+39300c3e82add96b48536196bda5185f27485de40840e12f45b5a0622e43f892.
+Preserve every previous approval; no new regex/path-wide suppression, identity/coverage
+change or secret-scanner code change. Existing Security RQ7/approved immutable-evidence
+contract applies. Run evidence resolver tests and full pinned history/tree scan on the
+new commit before push, then required CI on that SHA. Other gates remain unchanged.
