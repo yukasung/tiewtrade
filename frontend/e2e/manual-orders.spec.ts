@@ -341,6 +341,7 @@ test("DB connection loss before intake commit rolls back and same-key recovery c
 
 test("reset replaces an unsent draft and a lost closed-episode refusal recovers with the same key", async ({ page }) => {
   await register(page);
+  const draftBudget = page.locator("#paper-bot-budget");
   async function reset() {
     const wallet = (await (await page.request.get("/api/paper-wallet")).json() as { wallet: { episode_id: string } }).wallet;
     const csrf = (await page.context().cookies()).find(cookie => cookie.name === "tiewtrade_csrf")!.value;
@@ -351,10 +352,10 @@ test("reset replaces an unsent draft and a lost closed-episode refusal recovers 
     expect(await (await page.request.get(`/api/paper-wallet/commands/${command.command_id}`)).json()).toMatchObject({ state: "SUCCEEDED" });
   }
   await fresh(page);
-  await page.getByLabel("งบรวม (USDT)").fill("100");
+  await draftBudget.fill("100");
   await reset();
   await fresh(page);
-  await expect(page.getByLabel("งบรวม (USDT)")).toHaveValue("");
+  await expect(draftBudget).toHaveValue("");
   let original: string | null = null;
   let originalKey: string | undefined;
   let refusalLost = false;
@@ -386,5 +387,5 @@ test("reset replaces an unsent draft and a lost closed-episode refusal recovers 
   await waitResolved(page);
   expect((await page.request.get(`/api/paper/order-requests/by-key/${originalKey}?action=NEW`)).status()).toBe(404);
   await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
-  await expect(page.getByLabel("งบรวม (USDT)")).toHaveValue("");
+  await expect(draftBudget).toHaveValue("");
 });

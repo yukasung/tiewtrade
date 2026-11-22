@@ -332,3 +332,15 @@ See evidence/publication-e2e-corrections.txt. No runtime, strategy, trading safe
 timeout or environment guard was loosened. Original CI44986019642 E2E34/2 result is
 preserved. Push this in-scope test correction and evaluate required CI on the final head;
 no merge/public campaign5/owner-preview activation. Other acceptance gates remain open.
+
+
+## F16 stable draft-control checkpoint —2026-11-22
+
+The one failing reset/recovery browser case passed locally in10.5s on disposable services.
+Scoped ESLint and frontend typecheck passed. The existing test already used the bot-card
+draft field; use one #paper-bot-budget locator instead of the pre-F21 label at all three
+assertions. Reset/409/UNKNOWN/original-body-and-key/404/empty-journal checks are unchanged.
+No runtime/safety/timeout change. See evidence/publication-manual-draft-correction.txt.
+Search found no remaining E2E references to that obsolete label or the corrected loose
+Timeframe/strategy-disabled expectations. Push the test-only fix and follow final-SHA CI;
+keep previous failures, owner/independent/public-fill gates and no-merge scope unchanged.

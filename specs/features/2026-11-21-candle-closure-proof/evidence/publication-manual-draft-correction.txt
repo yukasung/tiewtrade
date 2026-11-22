@@ -1,0 +1,7 @@
+F16 draft selector regression —2026-11-22
+Fresh disposable E2E PostgreSQL/Redis; real browser/API/wallet reset and request-recovery UI.
+Command:playwright test --config=playwright.manual-orders.config.ts --grep "reset replaces an unsent draft"
+Result:1passed in10.5s. Scoped ESLint and frontend tsc --noEmit passed.
+Only obsolete budget-label lookup replaced by one stable paper-bot-budget locator.
+All reset, exact request/key, UNKNOWN,409,404 and empty-journal assertions retained.
+Original CI44987001408 F16 result:7passed/1failed; browser-general stage passed.

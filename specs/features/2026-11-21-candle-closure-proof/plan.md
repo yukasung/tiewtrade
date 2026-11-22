@@ -583,3 +583,19 @@ zero-mutating-request assertions. Do not alter runtime UI, admission, feature fl
 timeouts or financial safety. These are harness corrections under engineering delegation
 for approved F21/Paper dependencies. Run the two failing browser tests on a fresh isolated
 local E2E database/Redis, plus frontend static checks, then push and track final required CI.
+
+
+## F16 draft selector correction —2026-11-22 (before edits)
+
+CI44987001408 general browser suite passed, then F16 manual suite7passed/1failed at
+manual-orders.spec.ts354: obsolete label “งบรวม (USDT)” no longer exists. Main's
+PaperBotPanel used that copy for the same paper-bot-budget control; approved F21 renamed
+it to capital per entry. The existing test's unsent draft is that bot card, while its
+manual BUY recovery uses seedLegacyBuy and the real request UI/API. Reuse the stable
+#paper-bot-budget locator already used by related tests, named once locally, for all three
+existing draft assertions. Retain reset success, original body/key equality, UNKNOWN,
+409closed-episode response, empty journal and404no-request assertions unchanged. No runtime
+change, manual order UI restoration, safety/assertion/timeout relaxation. Search of E2E
+found no other obsolete budget label or matching strategy/Timeframe expectation remaining.
+Run only this failing real browser case locally on disposable E2E services (about1–2min),
+scoped ESLint/types, then final-candidate required CI under engineering delegation.
