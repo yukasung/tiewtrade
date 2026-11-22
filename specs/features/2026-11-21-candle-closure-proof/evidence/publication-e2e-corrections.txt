@@ -1,0 +1,7 @@
+Local browser E2E correction regression — 2026-11-22
+Fresh disposable PostgreSQL/Redis; runtime guards unchanged; no public campaign.
+Tests: native 3m BTC/ETH chart and Paper card no mutation across16responsive/language/theme combinations.
+Result:2passed in23.7s. Scoped ESLint and frontend tsc --noEmit passed.
+Original CI44986019642 general browser result:34passed/2failed; original logs remain at the run.
+Changes: exact Timeframe chart locator; enabled/focusable strategy selector matching approved UI.
+Start-disabled, keyboard/budget persistence, responsive checks and zero-mutation assertions retained.

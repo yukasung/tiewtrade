@@ -496,7 +496,7 @@ test(native3mTitle, async ({ page }) => {
     const chart = page.getByTestId("candlestick-chart");
     for (const base of ["BTC", "ETH"]) {
       const open = base === "BTC" ? "200.000000000000000001" : "300.000000000000000001";
-      if (base === "BTC") await page.getByRole("combobox", { name: "Timeframe" }).selectOption("3m");
+      if (base === "BTC") await page.getByRole("combobox", { name: "Timeframe", exact: true }).selectOption("3m");
       else await page.getByRole("combobox", { name: "คู่เทรด" }).selectOption(base);
       // The existing test timeout bounds normal UI polling. A failed observer
       // fails the test; an aborted stale request cannot count as READY evidence.

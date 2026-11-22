@@ -56,7 +56,9 @@ test("Paper bot panel has no mutation across 16 responsive language/theme combin
         await expect(panel.getByRole("tab")).toHaveCount(0);
         await panel.locator("input").focus(); await page.keyboard.press("Enter");
         await expect(panel.locator("input")).toHaveValue("123.450000000000000001");
-        await expect(panel.locator("#paper-bot-strategy")).toBeDisabled();
+        await expect(panel.locator("#paper-bot-strategy")).toBeEnabled();
+        await page.keyboard.press("Shift+Tab"); await expect(panel.locator("#paper-bot-strategy")).toBeFocused();
+        await page.keyboard.press("Tab"); await expect(panel.locator("input")).toBeFocused();
         await page.keyboard.press("Tab"); await expect(panel.locator("#paper-bot-count")).toBeFocused();
         await page.keyboard.press("Shift+Tab"); await expect(panel.locator("input")).toBeFocused();
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);

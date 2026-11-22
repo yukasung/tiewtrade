@@ -319,3 +319,16 @@ with final SHA/run links after publication, without a documentation-only commit 
 Owner/independent acceptance, remaining Partial matrices and public actual fill remain
 open. No campaign5, owner-preview/account operation, Live activation or merge is authorized.
 Batch/Release remain Pending Full Validation; not Completed or merge-ready.
+
+
+## Browser fixture correction checkpoint —2026-11-22
+
+Corrected only two E2E files: chart Timeframe lookup uses exact:true like the existing
+locators; strategy selector is required to be enabled/focusable when no run is pinned,
+with Shift+Tab/Tab assertions through it. All Start-disabled,16UI combinations, budget
+persistence, no-form/no-tabs and zero-mutating-request checks remain. Actual isolated
+local browser regression2passed in23.7s; scoped ESLint and frontend typecheck passed.
+See evidence/publication-e2e-corrections.txt. No runtime, strategy, trading safety,
+timeout or environment guard was loosened. Original CI44986019642 E2E34/2 result is
+preserved. Push this in-scope test correction and evaluate required CI on the final head;
+no merge/public campaign5/owner-preview activation. Other acceptance gates remain open.

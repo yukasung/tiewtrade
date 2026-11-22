@@ -568,3 +568,18 @@ Preserve every previous approval; no new regex/path-wide suppression, identity/c
 change or secret-scanner code change. Existing Security RQ7/approved immutable-evidence
 contract applies. Run evidence resolver tests and full pinned history/tree scan on the
 new commit before push, then required CI on that SHA. Other gates remain unchanged.
+
+
+## Combined-candidate E2E fixture correction —2026-11-22 (before edits)
+
+CI44986019642 general browser E2E:34passed/2failed. Failure1 selects chart Timeframe
+by substring and now matches the bot Timeframe too. Reuse the exact:true chart locator
+already used elsewhere in e2e/candlestick-chart.spec.ts. Failure2 still expects the
+strategy selector disabled, contradicting the approved selectable strategy UI when no
+run is pinned. Update e2e/paper-bot-panel.spec.ts to require enabled/focusable selection
+and verify keyboard navigation through that existing control. Preserve Start-disabled,
+budget persistence,16responsive/language/theme combinations, no-form/no-tabs and final
+zero-mutating-request assertions. Do not alter runtime UI, admission, feature flags,
+timeouts or financial safety. These are harness corrections under engineering delegation
+for approved F21/Paper dependencies. Run the two failing browser tests on a fresh isolated
+local E2E database/Redis, plus frontend static checks, then push and track final required CI.
