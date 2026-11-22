@@ -24,9 +24,9 @@
 | V14 | Migration/protocol compatibility CP15 | OFFpreservesoldbehavior;oldwriterrestart/missinginventory/proofguard/sourceproofnotREADY/unsupportedconsumerต้องactivationrejected;knowncompatiblemixedversionsมีหลักฐาน ไม่ยอมoldwriterเงียบskipcorrection | Feature | Partial — local typed-inventory/source readiness/subprocess OFF-legacy, ON-rejected-legacy and ON-v1/deactivation matrix passed; actual deployed inventory/old-binary compatibility and final-head CI pending |
 | V15 | Source costs/recovery CP05/10/14 | existingcoalescing/ratebudget/backoff underduplicateevents;noHTTPintransaction;pendingbounded;WSdisconnect/missingclose/REST429/5xx/timeoutsrepairไม่promoteหรือretryhotloop;resumeไม่replayentry | Feature | Partial — retry-exhaustion regression passed; public boot/source readiness incomplete |
 | V16 | End-to-end deterministic composition CP01–16 | rawactualadapterpayload→PGnativeproof→RESTpublication→F11→strategy→actualPaperBUY/protection;BTCpositive/ETHnegative plus syntheticedgefixtures clearlylabelled;RSIpositiveARM/FIREregressionและtestgreenoneposition | Feature | Partial — deterministic path passed; actual API/proof/strategy/command chain verified, actual fill/protection not reached |
-| V17 | Current-candidate real public-source campaign CP01–16 | oneboundedownedPapercampaignตามด้านล่าง actualWS+REST/PG/API/engine;closedproofchain+testgreenBUYจริงถ้าเกิดeligiblegreen;RSIevaluateตามactualconditions ไม่มีforceARM;noLive/useraccountorders | Feature | Partial — parent attempt4:8 proofs/7 decisions, one green100USDT BUY command rejected; corrected candidate public campaign Not Run; no further attempt authorized |
+| V17 | Current-candidate real public-source campaign CP01–16 | oneboundedownedPapercampaignตามด้านล่าง actualWS+REST/PG/API/engine;closedproofchain+testgreenBUYจริงถ้าเกิดeligiblegreen;RSIevaluateตามactualconditions ไม่มีforceARM;noLive/useraccountorders | Feature | Partial — attempt6 on94fcde33 stopped during public boot with ExceptionGroup; no accounts/orders/fills; child cause unrecorded; authorized attempt consumed, no further public attempt authorized |
 | V18 | Static/contracts/targeted regression | ruff/format/mypy/importcontracts, migrations/source-triggerinventory, APItypesเมื่อcontractเปลี่ยน;targetedF09/F11/F12/F20/F21/Paper/F17 dependencies;UIhiddenmessages/defaultsไม่เปลี่ยน | Feature | Passed — final full mypy804, Ruff/format885, import contracts7, unchanged API contract; prior90-error failure retained |
-| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Partial — required CI44990595087 and Security44990595105 Passed on e193fd32; later local process-crash tests not yet covered by final-head CI; historical failures retained |
+| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Passed — required CI45008230541 and Security45008230494 on94fcde334363d52f136089cc20a6749e92282cb4;6065main backend, all isolated backend gates and66browser E2E passed; historical failures retained |
 | V20 | Review/owner acceptance/rollout | ReadyforCodeReview→diff+callers+DB/financial/stateless/concurrencyreview→fix/refactor→affectedchecks;ownerตรวจscope/candidate/activationความหมายจริงก่อนmerge ไม่ใช้automatedreviewแทนowner | Feature | Partial — Ready for Code Review announced, review/fixes done; owner/independent acceptance pending |
 | V21 | Combined source/strategy cross-feature E2E | candidateรวมF09/F11/F12/F17/F20/F21/Paperที่นิ่ง พร้อมfullfront/cross-featureprofilesตามBatchscope ไม่รันซ้ำทุกpatch | Batch | Not Run — Pending Full Validation |
 | V22 | Production/Live/release gates | approvedrestore/deployment/rate/load/endurance/venuecontractcoverageที่เกี่ยวข้อง;ไม่activateproduction/Liveในงานนี้ ไม่เรียกCompletedก่อนReleasecriteriaครบ | Release | Not Run — Pending Full Validation |
@@ -717,3 +717,157 @@ type/import review remain applicable. Include the existing failed-CI receipts wi
 the correction. Local pass does not predeclare CI success; report final SHA and runs.
 No merge/new public campaign/owner activation or acceptance waiver; remaining Partial
 Feature/deployment/public-fill gates and Pending Full Validation are unchanged.
+
+
+## Final-candidate CI and acceptance handoff —2026-11-22
+
+Owner instructed continuing after the scoped read-only review approved94fcde33.
+Verified required CI45008230541 and Security45008230494 both completed successfully on
+94fcde334363d52f136089cc20a6749e92282cb4; draft PR85 head matches. Main backend6065passed,
+2skipped/32deselected; original PREPARING and five new contention cases passed. Later
+isolated gates passed55/1/1/28/16; browser66passed, including F21three/Paper Testtwo.
+Full static/contracts/container and security gates passed. V19 is now Passed; earlier
+failed candidate receipts remain historical, not overwritten. No further CI needed
+without a new affected change. References:
+https://github.com/yukasung/tiewtrade/actions/runs/45008230541
+https://github.com/yukasung/tiewtrade/actions/runs/45008230494
+https://github.com/yukasung/tiewtrade/pull/85
+
+Acceptance work remaining (reuse these IDs and evidence, no duplicate acceptance spec):
+
+- V06/V08/V12: retain existing deterministic ordering/late-proof, real process-kill,
+  takeover and no-replay results now covered by final-head CI. Do not infer complete
+  deployment/failover or real-source fill coverage from these tests.
+- V14: actual target process inventory, binary/capability versions, old-writer drain
+  and restart-disable evidence still required. Historical-binary certification is not
+  supplied by the legacy-style SQL fixture. Read-only local inventory at this handoff
+  found no running Docker containers or listener on15121; this is not proof about
+  other deployments. No service was started/stopped or owner activation changed.
+- V12/V15/V16/V17: current-candidate public-source Paper BUY/fill/first-fill protection
+  remains unproven. Existing profile_candle_closure.py is prepared for a separately
+  bounded attempt6: fresh isolated campaign DB/accounts, BTC/ETH1m,100USDT/entry,
+  preparation<=300s/capture360s, exclusive output marker, no owner/Live actions or
+  implicit retry. Any unsuccessful outcome stays Partial. Owner approval is pending;
+  the generic continuation instruction is not expanded into unlimited campaigns.
+- V20: PR85 currently has no submitted reviews or review requests. This agent's scoped
+  review is not independent review or owner visual/rollout acceptance. An independent
+  reviewer must review the candidate; do not fabricate an approval or contact others
+  without an explicit instruction identifying that action.
+- Owner UI acceptance reuses F21/Paper Test criteria: choose the approved strategy,
+  pair/timeframe/money and pinned settings; Start/Stop/reload in the same order card;
+  no transient login/readiness messages; verify desktop/mobile, light/dark, locale
+  and keyboard behavior. Collect the owner's actual result on a stated candidate;
+  automated66case E2E does not replace this check. Do not claim15121 is available.
+
+BatchV21/ReleaseV22 stay Not Run/Pending Full Validation. No merge/Completed claim,
+new code, extra CI, public attempt or preview activation at this handoff. Keep this
+documentation update local for related follow-up rather than a documentation-only
+publication/CI loop. Next: run only the specifically authorized public campaign, and
+collect independent/owner/deployment acceptance; preserve every remaining gap.
+
+
+## Public-source Paper attempt6 —2026-11-22: Partial
+
+Owner explicitly approved one attempt on94fcde334363d52f136089cc20a6749e92282cb4 with
+the existing300s source preparation/360s capture limits, BTC/ETH1m and100USDT per entry.
+Used unchanged profile_candle_closure.py and runtime/migrations, isolated new
+tiewtrade_e2e_closure_campaign_6 on owned loopback PostgreSQL16.15/Redis containers
+55426/56396. Source manifest365files matches the reviewed/CI-green candidate:
+4ab839944558876b7cc900cee948c38acfdd3a0ab1787d8df2da61bc2ed892c6.
+Only acceptance documents were modified before launch; no owner/Live service touched.
+
+Public boot started14:26:56.683487UTC and stopped14:27:14.763017UTC (~18.08s).
+No capture phase started. ExecutionBookSupervisor failed through ingest_execution_pair's
+TaskGroup with ExceptionGroup; the existing report stores outer failure type/frames,
+not the child exception tree. The precise child cause is therefore unproven. Do not
+label this a confirmed exchange/network/timeout/database or strategy failure.
+Execution states were not READY; ETH showed FEED_DISCONNECTED after cleanup, which
+alone is not causal evidence because ingest_execution_pair's finally invalidates
+using that code. BTC candle demand recorded SOURCE_FAILURE; ETH remained RUNNING
+with its existing claim lease at process shutdown. No claim was forcibly reset.
+
+Independent read-only audit confirms0users/wallets/candles/proofs/decisions/orderlinks/
+orders/executions/positions/reservations/anchors/ledger rows and0other database sessions.
+This was before campaign account creation, not two unchanged funded wallets. First-fill
+TP/SL and entry timing were not exercised. The attempt marker/report was not overwritten
+or restarted. Both owned containers were stopped and retained after audit. No retry,
+time extension, synthetic source/trade/indicator or extra public probe occurred.
+
+Evidence: public-paper-campaign-6.json, -verification.json, -diagnostics.json and
+-candidate-manifest.json; concise receipt public-paper-campaign-6.txt. Independent
+Money/Quantity proof verifier completed with0proofs/decisions (no positive proof claim).
+New four JSON artifacts scanned with existing gitleaks config:exit0/no findings; no
+security exception added. Source fingerprints rechecked after shutdown still match.
+
+V12/V15/V16/V17 remain Partial. V19 remains Passed for unchanged94fcde33 required CI;
+owner/independent/deployment gates and V21/V22 Pending Full Validation remain unchanged.
+The one authorized attempt6 is consumed. Next: offline diagnostic improvement to
+preserve sanitized ExceptionGroup child types/frames and controlled tests of order-book
+failure handling; this evidence cannot recover the lost child cause. Do not restart
+public capture or activate owner preview; any attempt7 requires separate bounded
+owner approval after that offline diagnosis. No publication/CI/merge in this checkpoint.
+
+## Offline nested-failure diagnostic checkpoint —2026-11-22
+
+Implemented the pre-recorded engineering amendment in plan.md. Only the offline
+campaign profile and its two existing unit-test files changed; production source,
+migrations, trading admission, money/quantity, retry intervals and deadlines are
+unchanged. The report preserves existing failure_type/failure_frames/API status/path
+and exclusive output ownership, adding a depth-first child-index tree with types and
+basename/function/line frames. Bounds:32nodes, child depth8,16frames/node; report and
+per-node frame truncation are explicit. Messages/group titles, cause/context text,
+notes, source lines, absolute paths and locals are not serialized.
+
+Validation performed offline (no public source, database or order submission):
+
+- `python -m pytest tests/services/market_data/test_closure_campaign.py
+  tests/services/market_data/test_order_book.py -q -o addopts=`:31passed in0.79s.
+- Covers nested duplicate leaf locations, sensitive message/group/cause/note omission,
+  exact-boundary and over-limit group width/depth, frame bounds, unchanged API-safe
+  report/exclusive marker and cancellation propagation. Controlled supervisor tests
+  prove expected source/venue/lease groups wait for the existing interval before
+  retry, and unexpected mixed groups propagate while sibling tasks are cancelled.
+- Scoped Ruff lint and format:Passed,3files. `MYPYPATH=src mypy` on the same3files:
+  Passed. Initial mypy invocation lacked the source search path and exposed two new
+  annotation errors; corrected both annotations and reran successfully with the
+  repository source path. No ignores or weakened checks were added.
+- Reviewed new diff, existing report consumer/cleanup, supervisor callers and exception
+  handling. No remaining findings in this scoped change. No new persistent/session
+  authority, process-local business state, database transaction or financial logic.
+  `git diff --check` passed; production source/migrations still match HEAD94fcde33.
+
+These controlled checks do not prove exchange recovery, database fencing or a real
+BUY/fill/protection path. They cannot recover attempt6's lost child cause. V12/V15–17
+remain Partial, owner/independent/deployment acceptance remains open, V21/V22 remain
+Pending Full Validation. Required CI passed on94fcde33 only; the new local harness/test
+diff has not been published or run through required CI. No public attempt7, extra CI,
+publication, merge or owner activation occurred. Next: obtain separately bounded
+public-campaign authorization before using the improved report to diagnose a fresh
+real-source attempt; do not claim the F21 entry issue is resolved by this checkpoint.
+
+
+## Bootstrap deadline correction —2026-11-22
+
+Owner approved implementation of the offline investigation plan. Before production
+edits, real-PG regression reproduced ExceptionGroup([TimeoutError()]) on the actual
+five-second capability deadline; expected SourceUnavailableError assertion failed.
+Applied narrowly scoped translation at capability/snapshot public-read boundaries.
+No database/cancellation catch, increased timeout, new retry loop or trading changes.
+
+Final targeted run: test_pipeline.py, test_order_book.py and test_closure_campaign.py:
+38passed in11.81s. Four new PG cases cover capability/snapshot timeout and cancellation,
+stream closure, rejected read_inputs after invalidation and subsequent higher-generation
+recovery using existing sequence-bridge/exact matching/disconnection assertions.
+Recovery fixture expires the previous lease explicitly; this is not evidence of
+natural lease-expiry timing or a public-source recovery campaign. Existing unit tests
+prove supervisor retry interval and mixed-defect propagation/sibling cleanup.
+Ruff/format and source-aware mypy on two changed files passed;7import contracts passed.
+Scoped diff review found no remaining findings; persistent authority stays PostgreSQL.
+Owned isolated review PG/Redis stopped after checks. No owner/Live service touched.
+
+This proves and fixes a timeout-classification defect, not attempt6's unknown cause.
+V15/V17 and other real-source/owner/deployment gates remain Partial. Prior required CI
+on94fcde33 does not cover this new runtime diff; final-candidate required CI is pending.
+Next: publish/run CI and perform a separately authorized bounded public campaign before
+claiming corrected-source BUY/fill/protection acceptance. No publication, extra CI or
+public attempt was performed in this checkpoint. Historical failed evidence retained.

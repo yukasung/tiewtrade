@@ -450,6 +450,44 @@ async def capture_evidence(audit: AsyncEngine, report: dict[str, Any]) -> None:
             report[name] = [dict(row) for row in (await conn.execute(text(sql))).mappings()]
 
 
+def _failure_frames(error: BaseException) -> list[dict[str, str | int | None]]:
+    return [
+        {"file": Path(frame.filename).name, "function": frame.name, "line": frame.lineno}
+        for frame in traceback.extract_tb(error.__traceback__, limit=-16)
+    ]
+
+
+def _failure_tree(error: BaseException) -> dict[str, Any]:
+    """Bound diagnostic metadata; never render exception text or chained context."""
+    nodes: list[dict[str, Any]] = []
+    truncated = False
+
+    def visit(current: BaseException, path: tuple[int, ...]) -> None:
+        nonlocal truncated
+        frames_truncated = len(traceback.extract_tb(current.__traceback__, limit=17)) > 16
+        truncated |= frames_truncated
+        nodes.append(
+            {
+                "path": path,
+                "type": type(current).__name__,
+                "frames": _failure_frames(current),
+                "frames_truncated": frames_truncated,
+            }
+        )
+        if isinstance(current, BaseExceptionGroup):
+            if len(path) >= 8:
+                truncated = True
+                return
+            for index, child in enumerate(current.exceptions):
+                if len(nodes) >= 32:
+                    truncated = True
+                    break
+                visit(child, (*path, index))
+
+    visit(error, ())
+    return {"nodes": nodes, "truncated": truncated}
+
+
 async def main(output: Path, fingerprint: str) -> None:
     guard()
     if len(fingerprint) != 64 or any(c not in "0123456789abcdef" for c in fingerprint):
@@ -483,10 +521,8 @@ async def main(output: Path, fingerprint: str) -> None:
             report["result"] = "PASSED" if filled & anchors & linked else "PARTIAL"
         except Exception as error:
             report["result"], report["failure_type"] = "PARTIAL", type(error).__name__
-            report["failure_frames"] = [
-                {"file": Path(frame.filename).name, "function": frame.name, "line": frame.lineno}
-                for frame in traceback.extract_tb(error.__traceback__)
-            ]
+            report["failure_frames"] = _failure_frames(error)
+            report["failure_tree"] = _failure_tree(error)
             if isinstance(error, ApiRejectedError):
                 report["api_rejection"] = {"path": error.path, "status": error.status}
         finally:

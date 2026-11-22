@@ -796,3 +796,78 @@ Security on the new SHA, report their run links/results, and preserve all remain
 owner/independent/deployment/public-fill Feature gates and Batch/Release pending work.
 No merge, owner activation, extra public campaign or additional CI retry is authorized.
 Do not create a documentation-only commit/CI loop for the resulting checkpoint.
+
+
+## Owner-authorized public-source Paper attempt6 —2026-11-22
+
+Owner explicitly approved one further public-source Paper campaign on reviewed/CI-green
+94fcde334363d52f136089cc20a6749e92282cb4: BTC/USDT and ETH/USDT1m,100USDT per entry,
+new isolated accounts/database, existing profile preparation<=300s and capture360s,
+then stop/capture/report facts. No owner account/preview/Live action, extra campaign,
+time extension, fabricated CLOSED/indicator/order/fill or relaxed guard is authorized.
+
+Reuse tests/infra/execution_market/profile_candle_closure.py unchanged, the attempt5
+external launcher/bootstrap role configuration, source manifest and independent
+proof/ledger verification helpers. Use fresh campaign6 names/ports/output exclusive
+marker; never overwrite/restart an earlier attempt. Working source/test/migrations
+must match94fcde33; only existing acceptance documentation changes may be present.
+Keep the actual running source manifest, SHA and environment identity with the report.
+Adapt only external launch/audit paths and candidate identity, not runtime/harness
+business logic. Stop only this campaign's owned services after cleanup, retain data
+for inspection, and report Partial if the required proof-to-BUY/fill/protection chain
+does not occur within the approved period. Existing owner/independent/deployment and
+Batch/Release gates remain open; no additional CI/publication/merge is inferred.
+
+## Offline nested-failure diagnostics —2026-11-22
+
+Owner replied "เริ่มทำ" to the offline follow-up after attempt6. Under the delegated
+engineering authority in AGENTS.md, improve only the campaign's safe failure report
+and controlled failure-handling tests. Attempt6 retained an outer ExceptionGroup but
+lost child types/locations; its precise cause cannot be recovered or inferred.
+
+Reuse profile_candle_closure.py's existing exclusive output marker, failure_type,
+failure_frames and API status/path reporting. Add a bounded depth-first child tree
+with child-index paths, exception types and basename/function/line frames only.
+Limit nodes to32, child depth to8 and frames per node to16; explicitly mark truncation.
+Never serialize exception messages, arguments, notes, chained context/cause text,
+locals, source lines or absolute paths. Existing leaf traversals in
+tests/infra/execution_market/test_runtime_observation.py::leaves and
+services/market_data/order_book.py::_failure_reasons do not provide bounded safe
+report metadata; the latter renders messages, so neither is imported into the
+campaign. Keep a small local helper rather than a cross-layer diagnostic framework.
+
+Use existing test_closure_campaign.py and test_order_book.py patterns to prove nested
+error visibility, redaction, bounds, exclusive attempt ownership and cancellation,
+plus expected source/venue/lease retry and unexpected mixed-group propagation with
+sibling-task cleanup. Controlled events/mocks test supervisor control flow only;
+they do not replace real source/PG/trading acceptance. No production source changes,
+retry/deadline changes, trading rules, money, schema, privileges or infrastructure.
+Reject raw traceback formatting because it leaks messages/context; reject a new
+public attempt because diagnostics can be verified offline first. Run targeted unit
+tests and scoped Ruff/format/mypy checks, then review this diff. Preserve all existing
+Partial/Not Run gates and the94fcde33 CI receipt; new harness/tests have no required
+CI receipt yet. No public attempt7, publication, extra CI, merge or owner activation.
+
+## Bootstrap deadline classification —2026-11-22
+
+Owner approved the proposed offline investigation/repair plan. The capability and
+snapshot asyncio.timeout(5) boundaries currently emit TimeoutError, which is outside
+the supervisor's expected source-error retry classification. Prove this using the
+existing real-PG test_pipeline FixtureFeed with a blocked capability/snapshot and
+the actual five-second deadline. Then translate TimeoutError only at those public
+read boundaries to SourceUnavailableError, retaining the cause for local diagnosis.
+Reuse existing supervisor retry and database fencing/invalidation behavior. Do not
+catch database errors or cancellation, expand deadlines, add retries or change money.
+Add cancellation and successful next-generation recovery assertions with real PG;
+retain existing matching/disconnection tests. This fixes a demonstrable path, not a
+claim about attempt6's unknown child cause. Public attempt7 remains separately gated.
+
+
+## Timeout correction publication —2026-11-22
+
+Owner replied "เริ่มทำ" to the next required-CI step. Publish the reviewed timeout
+correction, offline diagnostic tests, and existing attempt6 evidence together to
+existing draft PR85; run one required-CI round on the resulting candidate. Preserve
+owner/independent/deployment and public-fill gates. No merge or public attempt7 is
+included; the latter remains separately bounded and authorized. Report CI results
+with SHA/run links without a documentation-only publication loop.

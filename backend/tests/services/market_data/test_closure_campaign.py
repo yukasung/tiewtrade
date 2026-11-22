@@ -109,3 +109,103 @@ async def test_failure_report_is_safe_and_cannot_restart_attempt(
     with pytest.raises(FileExistsError):
         await profile.main(output, "a" * 64)
     assert output.read_text() == encoded
+
+
+async def test_nested_failure_report_keeps_child_locations_without_private_text(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def failed_source() -> Exception:
+        try:
+            raise TimeoutError("private-message") from RuntimeError("private-cause")
+        except TimeoutError as error:
+            error.add_note("private-note")
+            return error
+
+    async def failed_campaign(report: dict[str, Any]) -> None:
+        del report
+        raise ExceptionGroup(
+            "private-outer", [failed_source(), ExceptionGroup("private-inner", [failed_source()])]
+        )
+
+    monkeypatch.setattr(profile, "guard", lambda: None)
+    monkeypatch.setattr(profile, "campaign", failed_campaign)
+    output = tmp_path / "campaign.json"
+    await profile.main(output, "a" * 64)
+    encoded = output.read_text()
+    report = json.loads(encoded)
+    tree = report["failure_tree"]
+    assert report["failure_type"] == "ExceptionGroup"
+    assert tree["truncated"] is False
+    assert [(node["path"], node["type"]) for node in tree["nodes"]] == [
+        ([], "ExceptionGroup"),
+        ([0], "TimeoutError"),
+        ([1], "ExceptionGroup"),
+        ([1, 0], "TimeoutError"),
+    ]
+    for node in (tree["nodes"][1], tree["nodes"][3]):
+        assert node["frames"] == [
+            {
+                "file": "test_closure_campaign.py",
+                "function": "failed_source",
+                "line": failed_source.__code__.co_firstlineno + 2,
+            }
+        ]
+    assert "private-" not in encoded
+    assert str(Path(__file__).parent) not in encoded
+
+
+@pytest.mark.parametrize(
+    "shape,size,truncated",
+    [("wide", 31, False), ("wide", 40, True), ("deep", 8, False), ("deep", 12, True)],
+)
+def test_failure_tree_bounds_group_size_and_depth(shape: str, size: int, truncated: bool) -> None:
+    error: Exception = RuntimeError("private-leaf")
+    expected_paths: list[tuple[int, ...]]
+    if shape == "wide":
+        error = ExceptionGroup("private-group", [error] * size)
+        expected_paths = [()] + [(index,) for index in range(min(size, 31))]
+    else:
+        for _ in range(size):
+            error = ExceptionGroup("private-group", [error])
+        expected_paths = [(0,) * depth for depth in range(min(size, 8) + 1)]
+    tree = profile._failure_tree(error)
+    assert tree["truncated"] is truncated
+    assert [node["path"] for node in tree["nodes"]] == expected_paths
+    assert "private-" not in json.dumps(tree)
+
+
+def test_failure_frames_keep_only_the_last_sixteen_locations() -> None:
+    def recurse(depth: int) -> None:
+        if depth:
+            recurse(depth - 1)
+        else:
+            raise RuntimeError("private-message")
+
+    with pytest.raises(RuntimeError) as caught:
+        recurse(30)
+    tree = profile._failure_tree(caught.value)
+    assert tree["truncated"] is True
+    assert tree["nodes"][0]["frames_truncated"] is True
+    frames = tree["nodes"][0]["frames"]
+    assert len(frames) == 16
+    assert all(frame["function"] == "recurse" for frame in frames)
+
+
+async def test_cancellation_propagates_and_keeps_exclusive_incomplete_marker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def cancelled_campaign(report: dict[str, Any]) -> None:
+        del report
+        raise asyncio.CancelledError("private-cancellation")
+
+    monkeypatch.setattr(profile, "guard", lambda: None)
+    monkeypatch.setattr(profile, "campaign", cancelled_campaign)
+    output = tmp_path / "campaign.json"
+    with pytest.raises(asyncio.CancelledError):
+        await profile.main(output, "a" * 64)
+    assert json.loads(output.read_text()) == {
+        "candidate_fingerprint": "a" * 64,
+        "result": "INCOMPLETE",
+    }
+    with pytest.raises(FileExistsError):
+        await profile.main(output, "a" * 64)

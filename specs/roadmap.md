@@ -2424,3 +2424,55 @@ later isolated backend gates were not reached. No push/new CI/public campaign/ac
 merge. Owner/independent/deployment/public-fill gates remain open; Batch/Release Pending
 Full Validation. Next: publish the reviewed correction and existing blocker receipts
 when a new required-CI round is authorized; do not infer that authorization here.
+
+
+### Final-candidate CI / acceptance handoff —2026-11-22
+
+94fcde334363d52f136089cc20a6749e92282cb4 passed required CI45008230541 and Security45008230494:
+6065main backend cases, all isolated backend gates and66browser E2E; scheduler's original
+PREPARING and all five new contention cases passed. Scoped read-only review approved
+the latest patch; no independent/owner acceptance is inferred. V19 now Passed; historical
+failed receipts remain. See the existing closure-proof validation.md handoff checklist.
+
+Actual target inventory/drain/restart-disable, independent/owner UI acceptance and
+current-candidate public BUY/fill/protection remain open; V21/V22 Pending Full Validation.
+Local read-only inventory found no running Docker containers or15121listener, so no
+available owner preview is claimed. No new code/CI/public campaign/activation/merge.
+Next: obtain the specifically bounded attempt6 authorization and actual acceptance
+evidence; no documentation-only publication/CI loop for this checkpoint.
+
+
+### Public-source Paper attempt6 —2026-11-22: Partial
+
+Owner-authorized one attempt on94fcde33 used unchanged reviewed/CI-green source and
+fresh isolated Paper infrastructure. Boot stopped after18.08s before capture/account
+creation: ExceptionGroup from order-book TaskGroup; child cause not persisted/proven.
+Read-only audit:0users/wallets/proofs/orders/fills/positions/reservations/ledger and
+0other DB sessions. Both owned containers stopped/retained; no retry or owner/Live action.
+New evidence artifacts passed scoped secrets scan.
+[Receipt](features/2026-11-21-candle-closure-proof/evidence/public-paper-campaign-6.txt).
+V12/V15/V16/V17 remain Partial; V19 still Passed on unchanged94fcde33. Owner/independent/
+deployment and Batch/Release gates remain open. Next: offline sanitized child-exception
+diagnostics and controlled order-book failure tests before requesting a bounded attempt7.
+No extra public campaign/publication/CI/merge is authorized by this checkpoint.
+
+### Offline failure diagnostics —2026-11-22
+
+Campaign reports now retain bounded, sanitized ExceptionGroup child types/locations.
+Targeted31unit tests and scoped Ruff/format/mypy passed; new diff reviewed with no
+remaining findings. Production code/trading behavior unchanged; no public campaign
+or new required CI run. Attempt6's lost child cause remains unknown; V12/V15–17 stay
+Partial and owner/independent/deployment/Batch/Release gates remain open. Next: a fresh
+bounded public-source attempt needs separate owner authorization; offline diagnostic
+work in this checkpoint is finished. See the existing closure-proof validation.md.
+
+
+### Bootstrap deadline correction —2026-11-22
+
+Real-PG reproduction confirmed capability timeout escapes expected source-error handling.
+Capability/snapshot timeout classification corrected;38targeted tests, scoped static
+checks and7architecture contracts passed. Scoped review complete. Actual attempt6
+child cause remains unknown; public BUY/fill/protection and owner/deployment acceptance
+remain Partial. Required CI for this new local runtime diff is pending (94fcde33 CI
+covers the prior candidate). Next: authorized publication/CI and a separately bounded
+public campaign; no further campaign or merge performed. See closure-proof validation.
