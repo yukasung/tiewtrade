@@ -26,7 +26,7 @@
 | V16 | End-to-end deterministic composition CP01–16 | rawactualadapterpayload→PGnativeproof→RESTpublication→F11→strategy→actualPaperBUY/protection;BTCpositive/ETHnegative plus syntheticedgefixtures clearlylabelled;RSIpositiveARM/FIREregressionและtestgreenoneposition | Feature | Partial — deterministic path passed; actual API/proof/strategy/command chain verified, actual fill/protection not reached |
 | V17 | Current-candidate real public-source campaign CP01–16 | oneboundedownedPapercampaignตามด้านล่าง actualWS+REST/PG/API/engine;closedproofchain+testgreenBUYจริงถ้าเกิดeligiblegreen;RSIevaluateตามactualconditions ไม่มีforceARM;noLive/useraccountorders | Feature | Partial — attempt7 on ddcd469c stopped during F11 preparation after PostgreSQL lock timeout; no accounts/orders/fills; authorized attempt consumed |
 | V18 | Static/contracts/targeted regression | ruff/format/mypy/importcontracts, migrations/source-triggerinventory, APItypesเมื่อcontractเปลี่ยน;targetedF09/F11/F12/F20/F21/Paper/F17 dependencies;UIhiddenmessages/defaultsไม่เปลี่ยน | Feature | Passed — final full mypy804, Ruff/format885, import contracts7, unchanged API contract; prior90-error failure retained |
-| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Pending — offline matcher recovery patch is unpublished; c435dad1 CI45048519021/Security45048518987 Passed only for the prior candidate |
+| V19 | Stable candidate full regression/required CI | common sourceแก้หลายระบบ:fullbackendcorrectness/security/financial regressionและexistingfreshstate/migration/securityjobsที่บังคับบนfinalcandidate;candidateSHA/runlinks, noLocalแทนCI | Feature | Failed — c5f724f3 CI45055199794: 6126 passed/1 failed; Security45055199790 Passed; downstream backend isolated steps skipped |
 | V20 | Review/owner acceptance/rollout | ReadyforCodeReview→diff+callers+DB/financial/stateless/concurrencyreview→fix/refactor→affectedchecks;ownerตรวจscope/candidate/activationความหมายจริงก่อนmerge ไม่ใช้automatedreviewแทนowner | Feature | Partial — Ready for Code Review announced, review/fixes done; owner/independent acceptance pending |
 | V21 | Combined source/strategy cross-feature E2E | candidateรวมF09/F11/F12/F17/F20/F21/Paperที่นิ่ง พร้อมfullfront/cross-featureprofilesตามBatchscope ไม่รันซ้ำทุกpatch | Batch | Not Run — Pending Full Validation |
 | V22 | Production/Live/release gates | approvedrestore/deployment/rate/load/endurance/venuecontractcoverageที่เกี่ยวข้อง;ไม่activateproduction/Liveในงานนี้ ไม่เรียกCompletedก่อนReleasecriteriaครบ | Release | Not Run — Pending Full Validation |
@@ -1140,3 +1140,41 @@ and frozen TP/SL. Owner/independent/deployment gates and V21/V22 Pending Full
 Validation remain unchanged. Next: separately authorized commit/push and required
 CI on the final candidate, then separately authorized bounded public acceptance.
 No attempt9, publication, CI, merge or Live action was performed in this task.
+
+
+## Offline recovery publication CI result —2026-11-23
+
+c5f724f3b64cd25e8fb6d60a22c980defc4c694a published to draft PR85 after owner
+approval. Source/test fingerprints matched; staged-diff secret scan passed.
+CI45055199794 Failed:6126 passed/1failed/2skipped/32deselected. Reconnect case
+test_proof_to_prepared_indicators_strategy_and_paper_admission[awaiting_proof_reconnect]
+at test_candle_closure_proof.py:922 expected a recovery decision but received None.
+Captured assertion does not establish the rejection reason; do not label flaky or
+weaken its assertion. Backend static checks passed; later isolated/fresh-state steps
+were skipped. Frontend/API/container and E2E including F21/Paper Test Entry passed.
+Security45055199790 Passed. Evidence: offline-recovery-ci-failed.json.
+
+V19 Failed; previous local successes and public Partial results remain unchanged.
+Next: focused offline diagnosis of reconnect admission/recovery and test timing,
+then affected checks; further publication/CI requires another authorized round.
+No rerun, attempt9, merge or Live. This receipt is local and reflected in PR status
+without a documentation-only commit/CI loop.
+
+
+## Offline reconnect fixture checkpoint —2026-11-23
+
+CI failure did not reproduce in a single local reconnect case or full closure-proof
+module (32passed34.94s). Inspected quote window selection: fixture seeds using
+initial now but source.price defaults to later wall-clock trade_time; crossing
+a minute selects a different, unseeded indicator window. Pin synthetic quote time
+to captured now; keep actual receipt/freshness and all recovery/no-order/progress
+assertions. Add durable bot-event diagnostics to the failing assertion. No runtime
+change. After correction32passed33.62s; Ruff/format/mypy1file and diff check passed.
+Initial mypy without src search path failed imports; corrected invocation passed.
+Scoped review confirms fixture-only change; no safety criterion removed.
+
+Evidence offline-reconnect-fixture-check.json. This removes an identified timing
+hazard but does not establish the exact CI failure cause. V19 remains Failed until
+final-candidate required CI passes; other gates unchanged. Next: publish this
+reviewable fixture correction in an authorized CI round; if failure recurs use
+durable reasons to diagnose it. No public campaign, merge or runtime fix claimed.

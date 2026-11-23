@@ -1039,3 +1039,27 @@ Owner replied "approve" to publish the reviewed offline matcher correction and
 track one required-CI round. Publish fingerprint-matched source/tests and related
 existing evidence to draft PR85. No public attempt9, merge or Live action. Report
 CI against the resulting SHA without a documentation-only publication loop.
+
+
+## Offline reconnect CI diagnosis —2026-11-23
+
+Owner instructed focused diagnosis of c5f724f3 CI failure. Under delegated
+engineering authority reuse the existing reconnect integration case and isolated
+PostgreSQL review database. Enrich assertion with durable bot events before
+selecting runtime or fixture changes. Preserve safety assertions. No public
+campaign or new CI round.
+
+Fixture inspection establishes a clock mismatch: seed end=align_floor(initial now),
+but source.price defaults to a later wall-clock trade time. Indicator selection
+uses align_floor(snapshot.observed_at), so crossing a minute selects an unseeded
+window. Pin only this synthetic fixture's price trade_time to its captured now;
+received_at stays actual clock and all freshness/closure/recovery assertions stay.
+This removes a demonstrated fixture hazard, not proof of the captured CI cause.
+No runtime change is justified without a reproduced runtime failure.
+
+
+## Owner-authorized reconnect fixture publication —2026-11-23
+
+Owner instructed "เริ่มทำ" after the proposal to commit/push the reviewed fixture
+correction and run one additional required-CI round. Publish the fixture and
+related existing evidence to draft PR85. No additional public campaign or merge.

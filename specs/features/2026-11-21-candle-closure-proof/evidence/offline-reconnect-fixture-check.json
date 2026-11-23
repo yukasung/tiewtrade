@@ -1,0 +1,11 @@
+{
+  "base_candidate": "c5f724f3",
+  "ci_failure_root_cause": "Unconfirmed: captured assertion lacks rejection reason",
+  "local_before": "single reconnect passed; full module32 passed34.94s",
+  "fixture_hazard": "seed end uses initial now, source.price default later wall clock may select a different minute through snapshot.observed_at",
+  "correction": "synthetic quote trade_time pinned to captured now; receipt time and all readiness/safety assertions retained; assertion adds durable bot events",
+  "local_after": "32 passed33.62s",
+  "static": "Ruff/format passed; MYPYPATH=src mypy passed1file; diff check passed",
+  "limitations": "No controlled minute-boundary CI reproduction; runtime not changed; CI remains Failed. Initial mypy invocation without src path produced import resolution errors; corrected invocation passed.",
+  "publication": "Not done; no additional CI/public campaign"
+}

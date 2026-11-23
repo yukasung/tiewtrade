@@ -820,7 +820,7 @@ async def test_proof_to_prepared_indicators_strategy_and_paper_admission(
         }
         registry = bot.StrategyRegistry(enable_f21=True, enable_paper_test=True)
         if stage in ("awaiting_proof", "awaiting_proof_reconnect"):
-            await source.price("110")
+            await source.price("110", trade_time=now)
             async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
                 progress_before = (
                     await session.execute(
@@ -884,7 +884,9 @@ async def test_proof_to_prepared_indicators_strategy_and_paper_admission(
                 )
             ).scalar_one() == "CLOSED"
             assert await closure.current_proof(market_session, c) is not None
-        await source.price("110")
+        # Keep this synthetic quote in the seeded candle window across a wall-clock
+        # minute rollover; source.price still records the actual receipt time.
+        await source.price("110", trade_time=now)
         from tiewtrade.infra.bots.evaluation import evaluate_published_quote
 
         original = evaluate_published_quote
@@ -919,7 +921,12 @@ async def test_proof_to_prepared_indicators_strategy_and_paper_admission(
                 assert not commands
                 return
             if stage == "awaiting_proof_reconnect":
-                assert decision is not None and not commands
+                diagnostics = (
+                    await session.execute(
+                        "SELECT event,details FROM bot_run_events ORDER BY revision"
+                    )
+                ).all()
+                assert decision is not None and not commands, diagnostics
                 progress = (
                     await session.execute(
                         "SELECT eligible_after,recovery_required,source_recovery_at "

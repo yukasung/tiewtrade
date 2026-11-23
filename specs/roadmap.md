@@ -2567,3 +2567,13 @@ Public fill/TP/SL acceptance remains Partial. V19 Pending for unpublished correc
 prior c435dad1 CI pass remains historical. Next is separately authorized publication
 and required CI, followed by separately authorized public acceptance. Owner/reviewer/
 deployment and Batch/Release gates remain open. No merge or Completed claim.
+
+
+### Offline recovery candidate CI —2026-11-23
+
+c5f724f3 published to draft PR85. CI45055199794 Failed:6126 passed/1failed
+(reconnect closure-proof test expected decision, got None); root cause not yet
+established. Security45055199790, frontend/API/container/E2E passed. Backend
+isolated follow-up steps skipped. V19 Failed; public fill/TP/SL remains Partial.
+Next: focused offline diagnosis/fix and targeted validation before requesting
+another CI round. No attempt9/merge/Completed claim.
