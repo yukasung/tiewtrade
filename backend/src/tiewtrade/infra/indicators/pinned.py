@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import Literal
 from uuid import UUID
@@ -29,7 +29,7 @@ from tiewtrade.infra.indicators.claims import (
     release,
     seed_jobs,
 )
-from tiewtrade.infra.indicators.scheduling import coalesce_session
+from tiewtrade.infra.indicators.scheduling import CoalescingBusyError, coalesce_session
 from tiewtrade.infra.indicators.session import IndicatorWriterSession
 
 
@@ -94,8 +94,10 @@ class PinnedIndicatorWriter:
                         raise IndicatorBuildOwnershipError("indicator writer session changed")
                     yield IndicatorWriterSession(self._connection)
                 except BaseException:
-                    with suppress(SQLAlchemyError, OSError, TimeoutError):
+                    try:
                         await _finish_transaction(self._connection, transaction, commit=False)
+                    except (SQLAlchemyError, OSError, TimeoutError):
+                        self._tainted = True
                     raise
                 else:
                     try:
@@ -115,8 +117,13 @@ class PinnedIndicatorWriter:
 
     async def coalesce(self) -> int:
         # A fresh serialized transaction: no slot/job row locks before source guard.
-        async with self._operations, self.transaction() as session:
-            return await coalesce_session(session)
+        try:
+            async with self._operations, self.transaction() as session:
+                return await coalesce_session(session)
+        except CoalescingBusyError:
+            if self._tainted or self._connection.invalidated:
+                raise IndicatorBuildOwnershipError("indicator coalescing rollback failed") from None
+            raise
 
     async def claim(self, owner: UUID) -> BuildClaim | None:
         async with self._operations:

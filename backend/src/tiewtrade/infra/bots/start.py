@@ -9,6 +9,7 @@ from tiewtrade.core.orders import OrderOrigin, TradingMode
 from tiewtrade.core.positions import PositionPair
 from tiewtrade.core.risk_limits import RiskReason, RiskScope
 from tiewtrade.core.strategies import StrategyDescriptor, StrategyDocument, document_payload
+from tiewtrade.core.strategy_config import CANDLE_STRATEGIES
 from tiewtrade.infra.bots.claims import BotRequestClaim, finish_control, require_control_claim
 from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.paper_orders.storage import lock_pair_catalog
@@ -148,6 +149,13 @@ async def apply_paper_start(
             await finish_control(session, claim, failure_code="BOT_SLOT_OCCUPIED")
             return None
     await finish_control(session, claim, run_id=identity)
+    if definition.descriptor.name in CANDLE_STRATEGIES:
+        await session.execute(
+            """INSERT INTO bot_strategy_progress(run_id,user_id,mode,episode_id)
+            SELECT id,user_id,mode,episode_id FROM bot_runs WHERE id=:id
+            ON CONFLICT(run_id) DO NOTHING""",
+            {"id": identity},
+        )
     return identity
 
 

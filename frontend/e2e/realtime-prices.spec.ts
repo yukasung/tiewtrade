@@ -86,7 +86,7 @@ test("actual quote producer → PostgreSQL → Redis → authenticated API/WS re
     await page.getByLabel("รหัสผ่าน", { exact: true }).fill(PASSWORD);
     await page.getByTestId("submit").click();
     await expect(page.getByTestId("signed-in")).toBeVisible();
-    await expect(page).toHaveURL(/\/chart$/);
+    await expect(page).toHaveURL(/\/paper\/trade$/);
     await expect(page.getByTestId("realtime-prices")).toHaveCount(0);
     await expect(page.locator('a[href="/prices"]')).toHaveCount(0);
 

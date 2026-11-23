@@ -1,0 +1,21 @@
+{
+  "candidate_commit": "ddcd469c275acb5beda2b07e20ebb59cab36eefa",
+  "candidate_fingerprint": "e6ff283160794451bc224927e8e7e1b55653f2d8542392e285d2b8a638ba5608",
+  "report_sha256": "0665390686751c0f92335099969221f4632dac15dc684d5d6db575d26cf910a3",
+  "result": "PARTIAL",
+  "phase": "ACTUAL_F11_BUILD",
+  "boot_started_at": "2026-11-22T15:42:38.384105+00:00",
+  "campaign_started_at": null,
+  "stopped_at": "2026-11-22T15:43:01.093022+00:00",
+  "proofs_reverified": 0,
+  "decisions": 0,
+  "links": 0,
+  "orders": 0,
+  "executions": 0,
+  "positions": 0,
+  "reservations": 0,
+  "anchors": 0,
+  "decision_signals": [],
+  "ledger": "No campaign wallets/users created; ledger empty",
+  "first_fill_tp_sl": "Not exercised: no fill"
+}

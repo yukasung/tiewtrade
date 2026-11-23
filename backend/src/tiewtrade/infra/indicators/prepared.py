@@ -52,8 +52,21 @@ async def rollout_control(session: UserSession, deadline: float) -> RowMapping:
     )
 
 
-async def proof_valid(session: UserSession, generation: RowMapping, now: datetime) -> bool:
-    if generation["expires_at"] <= now or generation["codec_version"] != CODEC_VERSION:
+async def proof_valid(
+    session: UserSession,
+    generation: RowMapping,
+    now: datetime,
+    *,
+    through: datetime | None = None,
+) -> bool:
+    if (
+        (
+            through is not None
+            and not generation["calculation_start"] <= through <= generation["calculation_end"]
+        )
+        or generation["expires_at"] <= now
+        or generation["codec_version"] != CODEC_VERSION
+    ):
         return False
     return bool(
         (
@@ -73,11 +86,62 @@ async def proof_valid(session: UserSession, generation: RowMapping, now: datetim
                     "quote": generation["quote"],
                     "timeframe": generation["timeframe"],
                     "lo": generation["calculation_start"],
-                    "hi": generation["calculation_end"],
+                    "hi": generation["calculation_end"] if through is None else through,
                 },
             )
         ).scalar_one()
     )
+
+
+async def fresh_proof_valid(
+    session: UserSession,
+    generation: RowMapping,
+    now: datetime,
+    *,
+    through: datetime | None = None,
+) -> bool:
+    return timedelta(0) <= now - generation["as_of"] <= timedelta(
+        seconds=600
+    ) and await proof_valid(session, generation, now, through=through)
+
+
+async def read_generation_authority(
+    session: UserSession, base: str, quote: str, timeframe: Timeframe, formula_version: str
+) -> tuple[RowMapping | None, RowMapping | None]:
+    """Return the published head and any newer numeric failure that supersedes it."""
+    args = parameters(base, quote, timeframe) | {"formula": formula_version}
+    generation = (
+        (
+            await session.execute(
+                """SELECT g.* FROM indicator_ready_heads h
+        JOIN indicator_ready_generations g ON g.id=h.generation_id
+        WHERE h.source=:source AND h.base=:base AND h.quote=:quote
+          AND h.timeframe=:timeframe AND h.formula_version=:formula""",
+                args,
+            )
+        )
+        .mappings()
+        .first()
+    )
+    failure = (
+        (
+            await session.execute(
+                """SELECT * FROM indicator_numeric_failures
+        WHERE source=:source AND base=:base AND quote=:quote AND timeframe=:timeframe
+          AND formula_version=:formula""",
+                args,
+            )
+        )
+        .mappings()
+        .first()
+    )
+    if (
+        failure is not None
+        and generation is not None
+        and failure["candidate_sequence"] <= generation["candidate_sequence"]
+    ):
+        failure = None
+    return generation, failure
 
 
 async def read_prepared(
@@ -138,37 +202,10 @@ async def read_prepared(
             raise DatasetChangedError()
         selected = claims
     else:
-        args = parameters(claims.base, claims.quote, claims.timeframe) | {
-            "formula": claims.formula_version
-        }
-        generation = (
-            (
-                await session.execute(
-                    """SELECT g.* FROM indicator_ready_heads h
-            JOIN indicator_ready_generations g ON g.id=h.generation_id
-            WHERE h.source=:source AND h.base=:base AND h.quote=:quote
-              AND h.timeframe=:timeframe AND h.formula_version=:formula""",
-                    args,
-                )
-            )
-            .mappings()
-            .first()
+        generation, failure = await read_generation_authority(
+            session, claims.base, claims.quote, claims.timeframe, claims.formula_version
         )
-        failure = (
-            (
-                await session.execute(
-                    """SELECT * FROM indicator_numeric_failures
-            WHERE source=:source AND base=:base AND quote=:quote AND timeframe=:timeframe
-              AND formula_version=:formula""",
-                    args,
-                )
-            )
-            .mappings()
-            .first()
-        )
-        if failure is not None and (
-            generation is None or generation["candidate_sequence"] < failure["candidate_sequence"]
-        ):
+        if failure is not None:
             if (
                 not failure["manifest_available"]
                 or failure["desired_start"] != failure["calculation_start"]
@@ -178,11 +215,7 @@ async def read_prepared(
             ):
                 raise PreparedNotReadyError()
             raise PreparedNumericError()
-        if (
-            generation is None
-            or not await proof_valid(session, generation, now)
-            or not timedelta(0) <= now - generation["as_of"] <= timedelta(seconds=600)
-        ):
+        if generation is None or not await fresh_proof_valid(session, generation, now):
             raise PreparedNotReadyError()
         end = claims.result_end if explicit_range else generation["calculation_end"]
         start = (

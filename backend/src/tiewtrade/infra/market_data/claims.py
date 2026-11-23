@@ -6,13 +6,15 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import RowMapping
 
+from tiewtrade.core.candle_closure import candle_fingerprint
 from tiewtrade.core.market_data import Candle, Timeframe
 from tiewtrade.core.timeframes import candle_storage_cutoff as retention_cutoff
 from tiewtrade.infra.db import money_to_columns, quantity_to_columns
 from tiewtrade.infra.db.session import MarketDataSession, require_market_data_session
 from tiewtrade.infra.indicators.source import begin_source_write, require_source_write
+from tiewtrade.infra.market_data import candle_closure
 from tiewtrade.infra.market_data.records import PartitionUnavailableError, StaleClaimError
-from tiewtrade.infra.market_data.storage import database_now
+from tiewtrade.infra.market_data.storage import _stored, database_now
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,6 +189,7 @@ async def write_candles(
     fetch_started_at: datetime,
 ) -> None:
     await require_source_write(session)
+    closure_active = await candle_closure.prepare_write(session)
     await lock_claim(session, claim)
     now = await database_now(session)
     cutoff = retention_cutoff(now, claim.timeframe)
@@ -241,8 +244,7 @@ async def write_candles(
     }
     existing_rows = (
         await session.execute(
-            """SELECT open_at,observed_at,open,high,low,
-        close,volume,finality,ingestion_generation FROM market_candles
+            """SELECT * FROM market_candles
         WHERE source='primary_spot' AND base=:base AND quote=:quote AND timeframe=:timeframe
           AND open_at=ANY(CAST(:opens AS timestamptz[]))
         ORDER BY open_at FOR UPDATE""",
@@ -255,6 +257,29 @@ async def write_candles(
     writes: dict[datetime, dict[str, object]] = {}
     for candle, entry in entries:
         previous = states.get(candle.open_at)
+        # Inspect settled contradictions before the legacy CLOSED downgrade skip.
+        # Stale/pre-end fetches cannot revoke newer source authority.
+        if closure_active and previous is not None:
+            if (
+                previous["ingestion_generation"] > claim.generation
+                or previous["observed_at"] > candle.observed_at
+                or previous["fetch_started_at"] > fetch_started_at
+            ):
+                continue
+            changed = candle_fingerprint(_stored(previous).candle) != candle_fingerprint(candle)
+            if changed and fetch_started_at >= candle.end_at:
+                invalidated = await candle_closure.invalidate(
+                    session,
+                    candle,
+                    fetch_started_at=fetch_started_at,
+                    reason="REST_CONFLICT",
+                    settled_only=True,
+                )
+                if invalidated:
+                    # Retain both contradictory snapshots in the receipt. No price winner.
+                    continue
+            if previous["finality"] == "CLOSED":
+                continue
         if (
             previous is not None
             and previous["observed_at"] == candle.observed_at
@@ -267,9 +292,19 @@ async def write_candles(
             or (previous["finality"] == "CLOSED" and candle.finality.value != "CLOSED")
         ):
             continue
-        states[candle.open_at] = entry | {"ingestion_generation": claim.generation}
+        states[candle.open_at] = entry | {
+            "source": "primary_spot",
+            "base": candle.base,
+            "quote": candle.quote,
+            "timeframe": candle.timeframe.value,
+            "ingestion_generation": claim.generation,
+            "fetch_started_at": fetch_started_at,
+            "last_checked_at": now,
+        }
         writes[candle.open_at] = entry
     if not writes:
+        if closure_active:
+            await candle_closure.reconcile_batch(session, tuple(c for c, _ in entries))
         return
     values: list[str] = []
     for index, entry in enumerate(writes.values()):
@@ -297,10 +332,14 @@ async def write_candles(
         params,
     )
 
+    if closure_active:
+        await candle_closure.reconcile_batch(session, tuple(c for c, _ in entries))
+
 
 async def cleanup(session: MarketDataSession) -> int:
     session = require_market_data_session(session)
     await begin_source_write(session)
+    closure_active = await candle_closure.prepare_write(session)
     policy = (
         await session.execute(
             "SELECT retention_policy FROM public.indicator_rollout_control WHERE id=1"
@@ -322,4 +361,15 @@ async def cleanup(session: MarketDataSession) -> int:
         RETURNING open_at""",
         {"ordinary_cutoff": ordinary_cutoff, "extended_cutoff": extended_cutoff},
     )
-    return len(result.all())
+    deleted = len(result.all())
+    if closure_active:
+        await session.execute(
+            """DELETE FROM market_candle_closure_state WHERE
+            (source,base,quote,timeframe,open_at) IN (
+                SELECT source,base,quote,timeframe,open_at FROM market_candle_closure_state
+                WHERE (timeframe IN ('1w','1M') AND open_at<:extended_cutoff)
+                   OR (timeframe NOT IN ('1w','1M') AND open_at<:ordinary_cutoff)
+                ORDER BY open_at LIMIT 10000)""",
+            {"ordinary_cutoff": ordinary_cutoff, "extended_cutoff": extended_cutoff},
+        )
+    return deleted

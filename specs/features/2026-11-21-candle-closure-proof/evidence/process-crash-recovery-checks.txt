@@ -1,0 +1,32 @@
+Local process-crash recovery checkpoint, 2026-11-22
+Base runtime/PR head: e193fd3237a489f152a0643ff25105227c4e82f6
+Changed Python file: backend/tests/infra/execution_market/test_candle_closure_proof.py
+File SHA256: 0bb624f3f63503020a3b3dfe0a453b839b10f3493921356a8c026cbf173ee6ce
+
+Runtime code is unchanged. Four test cases kill a real child process at stdout
+barriers before/after actual transaction commit, for pending-native and accepted
+proof publication. Inherited runtime MARKET_DATA role and isolated PostgreSQL DBs;
+no process-memory business authority, network source campaign or execution facts.
+
+First targeted run: 7 passed / 2 failed (9 selected).
+Five existing concurrency/pool-restart/takeover/rollback cases passed. Two new
+post-commit cases passed; two pre-commit cases exposed a harness error: calling
+reconcile without acquiring the required source-write scope (TT011).
+Correction: use existing prepare_write(acquire=True); no production guard change.
+Final affected rerun: 4 passed (all new process-crash cases).
+Preserved assertions: rolled-back observation/result/proof and source revision;
+committed native/proof durability; no REST-only promotion without native evidence;
+real claimed REST completion; one logical observation/result; identical proof ID
+and unchanged source revision on duplicate replay. No safety threshold relaxation.
+
+Initial scoped mypy: failed with440import-derived errors because local src was
+not in its resolution path. Corrected MYPYPATH=src invocation: passed1source file.
+Scoped Ruff, Ruff format --check and git diff --check: passed.
+Subprocess marker helper and ready/recorded/claimed-REST fixtures reused.
+Review: child cancellation/cleanup, role/source scope, boundary visibility,
+replay idempotency and stateless persistence checked. No runtime financial change.
+
+V08 stays Partial: these four boundaries do not prove the entire deployment,
+failover or mixed-version matrix. Prior failed/Partial results remain preserved.
+No new required CI run or publication; new tests are local changes atop the
+previous green CI candidate and need final-head CI before merge.

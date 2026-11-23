@@ -1025,6 +1025,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/paper/bots/configurations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Configure Strategy */
+        post: operations["configure_strategy_paper_bots_configurations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/bots/configurations/{identity}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Configuration By Id */
+        get: operations["configuration_by_id_paper_bots_configurations__identity__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/paper/bots/requests": {
         parameters: {
             query?: never;
@@ -1085,6 +1119,23 @@ export interface paths {
         };
         /** Status */
         get: operations["status_paper_bots_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/paper/bots/strategy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Strategy Catalog */
+        get: operations["strategy_catalog_paper_bots_strategy_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1696,6 +1747,13 @@ export interface components {
         BotStatus: "STARTING" | "RUNNING" | "PAUSED" | "RECOVERING" | "STOPPED" | "RETIRED";
         /** BotStatusView */
         BotStatusView: {
+            /** Basket Target */
+            basket_target?: string | null;
+            /**
+             * Basket Triggered
+             * @default false
+             */
+            basket_triggered: boolean;
             /** Can Start */
             can_start: boolean;
             /** Configuration Version */
@@ -1703,8 +1761,15 @@ export interface components {
             /** Exposure Available */
             exposure_available: boolean;
             mode: components["schemas"]["TradingMode"];
+            /**
+             * Open Entries
+             * @default 0
+             */
+            open_entries: number;
             /** Pending Request Id */
             pending_request_id: string | null;
+            /** Pinned Configuration */
+            pinned_configuration?: components["schemas"]["StrategyConfigurationInput"] | components["schemas"]["PaperTestConfigurationInput"] | null;
             /** Positions */
             positions: components["schemas"]["BotPositionView"][];
             /** Protections */
@@ -1713,6 +1778,7 @@ export interface components {
             protections_more: boolean;
             /** Readiness Reason */
             readiness_reason: string | null;
+            replacement?: components["schemas"]["BotReplacementInput"] | null;
             /** Revision */
             revision: number | null;
             /** Run Id */
@@ -2758,6 +2824,48 @@ export interface components {
              */
             wallet_id: string;
         };
+        /** PaperTestConfigurationInput */
+        PaperTestConfigurationInput: {
+            /**
+             * Base
+             * @enum {string}
+             */
+            base: "BTC" | "ETH";
+            /** Capital Per Entry */
+            capital_per_entry: string;
+            /**
+             * Strategy Name
+             * @constant
+             */
+            strategy_name: "paper-green-atr-test";
+            /**
+             * Timeframe
+             * @enum {string}
+             */
+            timeframe: "1m" | "3m" | "5m" | "15m" | "1h" | "4h" | "1d" | "1w" | "1M";
+        };
+        /** PaperTestConfigurationView */
+        PaperTestConfigurationView: {
+            /**
+             * Base
+             * @enum {string}
+             */
+            base: "BTC" | "ETH";
+            /** Capital Per Entry */
+            capital_per_entry: string;
+            /** Reference */
+            reference: string;
+            /**
+             * Strategy Name
+             * @constant
+             */
+            strategy_name: "paper-green-atr-test";
+            /**
+             * Timeframe
+             * @enum {string}
+             */
+            timeframe: "1m" | "3m" | "5m" | "15m" | "1h" | "4h" | "1d" | "1w" | "1M";
+        };
         /** PaperTradeView */
         PaperTradeView: {
             /** Account Use */
@@ -3126,6 +3234,11 @@ export interface components {
             step_residual_quantity: string | null;
             /** Stop Loss Price */
             stop_loss_price: string | null;
+            /**
+             * Strategy Managed
+             * @default false
+             */
+            strategy_managed: boolean;
             /** Take Profit Price */
             take_profit_price: string | null;
             /**
@@ -3533,6 +3646,81 @@ export interface components {
             /** Snapshot Revision */
             snapshot_revision: number;
             status: components["schemas"]["KillSwitchStatusView"];
+        };
+        /** StrategyCatalogView */
+        StrategyCatalogView: {
+            /**
+             * Default Max Entries
+             * @default 10
+             */
+            default_max_entries: number;
+            /** @default 5m */
+            default_timeframe: components["schemas"]["Timeframe"];
+            /**
+             * Max Entries Max
+             * @default 10
+             */
+            max_entries_max: number;
+            /**
+             * Max Entries Min
+             * @default 1
+             */
+            max_entries_min: number;
+            /**
+             * Strategies
+             * @default [
+             *       "rsi-step-grid-ema-single-tp"
+             *     ]
+             */
+            strategies: string[];
+            /** Strategy Name */
+            strategy_name: string;
+            /** Timeframes */
+            timeframes: components["schemas"]["Timeframe"][];
+        };
+        /** StrategyConfigurationInput */
+        StrategyConfigurationInput: {
+            /**
+             * Base
+             * @enum {string}
+             */
+            base: "BTC" | "ETH";
+            /** Capital Per Entry */
+            capital_per_entry: string;
+            /**
+             * Max Entries
+             * @default 10
+             */
+            max_entries: number;
+            /**
+             * Timeframe
+             * @default 5m
+             * @enum {string}
+             */
+            timeframe: "1m" | "3m" | "5m" | "15m" | "1h" | "4h" | "1d" | "1w" | "1M";
+        };
+        /** StrategyConfigurationView */
+        StrategyConfigurationView: {
+            /**
+             * Base
+             * @enum {string}
+             */
+            base: "BTC" | "ETH";
+            /** Capital Per Entry */
+            capital_per_entry: string;
+            /**
+             * Max Entries
+             * @default 10
+             */
+            max_entries: number;
+            /** Reference */
+            reference: string;
+            /**
+             * Timeframe
+             * @default 5m
+             * @enum {string}
+             */
+            timeframe: "1m" | "3m" | "5m" | "15m" | "1h" | "4h" | "1d" | "1w" | "1M";
         };
         /**
          * Timeframe
@@ -5393,6 +5581,74 @@ export interface operations {
             };
         };
     };
+    configure_strategy_paper_bots_configurations_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StrategyConfigurationInput"] | components["schemas"]["PaperTestConfigurationInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyConfigurationView"] | components["schemas"]["PaperTestConfigurationView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    configuration_by_id_paper_bots_configurations__identity__get: {
+        parameters: {
+            query?: {
+                strategy_name?: "paper-green-atr-test" | null;
+            };
+            header?: never;
+            path: {
+                identity: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyConfigurationView"] | components["schemas"]["PaperTestConfigurationView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     request_start_paper_bots_requests_post: {
         parameters: {
             query?: never;
@@ -5506,6 +5762,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BotStatusView"];
+                };
+            };
+        };
+    };
+    strategy_catalog_paper_bots_strategy_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrategyCatalogView"];
                 };
             };
         };

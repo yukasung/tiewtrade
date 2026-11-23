@@ -9,7 +9,8 @@ from tiewtrade.core.indicators import IndicatorStatus, IndicatorValue
 from tiewtrade.core.money import Money, Quantity
 from tiewtrade.core.orders import OrderIntent, OrderOrigin, OrderScope, OrderStatus, aware
 from tiewtrade.core.positions import ExecutionFact, ExecutionSide, PositionPair
-from tiewtrade.core.protections import ProtectionPrices
+from tiewtrade.core.protections import EntryAtrProtection, ProtectionPrices
+from tiewtrade.core.strategy_candles import StrategyCandleInput
 
 
 class StrategyContractError(ValueError):
@@ -53,6 +54,7 @@ class StrategyDescriptor:
     requires_protection: bool
     quote_trigger: bool = False
     execution_feedback_trigger: bool = False
+    feedback_requires_indicators: bool = True
 
     def __post_init__(self) -> None:
         if type(self.name) is not str or not self.name.strip():
@@ -73,6 +75,7 @@ class StrategyDescriptor:
             or type(self.requires_protection) is not bool
             or type(self.quote_trigger) is not bool
             or type(self.execution_feedback_trigger) is not bool
+            or type(self.feedback_requires_indicators) is not bool
         ):
             raise StrategyContractError("invalid strategy dependencies")
 
@@ -114,13 +117,14 @@ class StrategyInput:
     indicators: tuple[tuple[str, IndicatorValue], ...] = ()
     feedback: ExecutionFeedback | None = None
     indicator_revision: str | None = None
+    candle_input: StrategyCandleInput | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class StrategyDecision:
     state: StrategyDocument
     intents: tuple[OrderIntent, ...] = ()
-    brackets: tuple[tuple[UUID, ProtectionPrices], ...] = ()
+    brackets: tuple[tuple[UUID, ProtectionPrices | EntryAtrProtection], ...] = ()
 
     def __post_init__(self) -> None:
         if type(self.brackets) is not tuple or type(self.intents) is not tuple:
@@ -138,7 +142,7 @@ class StrategyDecision:
                 order_id in used
                 or entry is None
                 or entry.side is not ExecutionSide.BUY
-                or type(protection) is not ProtectionPrices
+                or type(protection) not in (ProtectionPrices, EntryAtrProtection)
                 or entry.pair != protection.pair
             ):
                 raise StrategyContractError("bracket must match one BUY intent")
@@ -195,11 +199,14 @@ def evaluate_strategy(
     ):
         raise StrategyContractError("invalid market or account snapshot")
     indicators = dict(snapshot.indicators)
-    if len(indicators) != len(snapshot.indicators) or any(
-        name not in indicators
-        or indicators[name].status is not IndicatorStatus.READY
-        or indicators[name].value is None
-        for name in descriptor.required_indicators
+    if len(indicators) != len(snapshot.indicators) or (
+        (snapshot.feedback is None or descriptor.feedback_requires_indicators)
+        and any(
+            name not in indicators
+            or indicators[name].status is not IndicatorStatus.READY
+            or indicators[name].value is None
+            for name in descriptor.required_indicators
+        )
     ):
         raise StrategyContractError("required indicators are not ready")
     decision = strategy.evaluate(snapshot, configuration, state)

@@ -1,0 +1,48 @@
+{
+  "observed_at": "2026-11-22T15:45:26.821567+00:00",
+  "candidate_commit": "ddcd469c275acb5beda2b07e20ebb59cab36eefa",
+  "phase": "ACTUAL_F11_BUILD",
+  "failure_type": "DatabaseTimeoutError",
+  "postgres_log_error": "canceling statement due to lock timeout",
+  "error_location": "coalesce_indicator_build_jobs via coalesce_session",
+  "other_database_sessions_after_cleanup": 0,
+  "users": 0,
+  "wallets": 0,
+  "candles": 2001,
+  "candles_by_pair": {
+    "BTC/USDT 1m": 1000,
+    "ETH/USDT 1m": 1001
+  },
+  "closure_proofs": 0,
+  "decisions": 0,
+  "orders": 0,
+  "executions": 0,
+  "positions": 0,
+  "reservations": 0,
+  "ledger": 0,
+  "indicator_build_jobs_1m": {
+    "READY": 1,
+    "QUEUED": 1
+  },
+  "execution_sources_after_cleanup": [
+    {
+      "base": "ETH",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 1,
+      "last_input_id": 361
+    },
+    {
+      "base": "BTC",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 2,
+      "last_input_id": 75
+    }
+  ],
+  "owned_services_stopped": [
+    "closure-campaign-7-pg",
+    "closure-campaign-7-redis"
+  ],
+  "note": "FEED_DISCONNECTED is post-cleanup invalidation, not proven cause of the lock timeout."
+}

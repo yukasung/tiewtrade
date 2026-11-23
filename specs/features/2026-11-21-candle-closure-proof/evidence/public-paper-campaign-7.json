@@ -1,0 +1,152 @@
+{
+  "candidate_fingerprint": "e6ff283160794451bc224927e8e7e1b55653f2d8542392e285d2b8a638ba5608",
+  "result": "PARTIAL",
+  "boot_started_at": "2026-11-22T15:42:38.384105+00:00",
+  "phase": "ACTUAL_F11_BUILD",
+  "builds": [
+    "READY"
+  ],
+  "stopped_at": "2026-11-22T15:43:01.093022+00:00",
+  "users": [],
+  "wallets": [],
+  "runs": [],
+  "build_jobs": [
+    {
+      "base": "ETH",
+      "timeframe": "1m",
+      "status": "QUEUED",
+      "attempts_used": 0,
+      "failure_reason": null,
+      "failure_category": null,
+      "availability_deadline": "2026-11-22 15:52:45.719737+00:00",
+      "retry_not_before": "2026-11-22 15:42:45.719737+00:00"
+    },
+    {
+      "base": "BTC",
+      "timeframe": "1m",
+      "status": "READY",
+      "attempts_used": 0,
+      "failure_reason": null,
+      "failure_category": null,
+      "availability_deadline": "2026-11-22 15:52:45.719737+00:00",
+      "retry_not_before": null
+    }
+  ],
+  "execution_sources": [
+    {
+      "base": "ETH",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 1,
+      "last_input_id": 361,
+      "received_at": "2026-11-22 15:42:59.231610+00:00",
+      "verified_at": "2026-11-22 15:42:59.231610+00:00"
+    },
+    {
+      "base": "BTC",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 2,
+      "last_input_id": 75,
+      "received_at": "2026-11-22 15:43:00.585758+00:00",
+      "verified_at": "2026-11-22 15:43:00.585758+00:00"
+    }
+  ],
+  "closure_states": [],
+  "closure_results": [],
+  "closure_observations": [],
+  "decisions": [],
+  "links": [],
+  "canonical": [],
+  "ledger": [],
+  "executions": [],
+  "orders": [],
+  "positions": [],
+  "reservations": [],
+  "anchors": [],
+  "failure_type": "DatabaseTimeoutError",
+  "failure_frames": [
+    {
+      "file": "profile_candle_closure.py",
+      "function": "main",
+      "line": 500
+    },
+    {
+      "file": "profile_candle_closure.py",
+      "function": "campaign",
+      "line": 320
+    },
+    {
+      "file": "profile_candle_closure.py",
+      "function": "prepare_heads",
+      "line": 156
+    },
+    {
+      "file": "scheduling.py",
+      "function": "coalesce_jobs",
+      "line": 30
+    },
+    {
+      "file": "scheduling.py",
+      "function": "coalesce_session",
+      "line": 24
+    },
+    {
+      "file": "session.py",
+      "function": "execute",
+      "line": 39
+    },
+    {
+      "file": "session.py",
+      "function": "_execute",
+      "line": 66
+    }
+  ],
+  "failure_tree": {
+    "nodes": [
+      {
+        "path": [],
+        "type": "DatabaseTimeoutError",
+        "frames": [
+          {
+            "file": "profile_candle_closure.py",
+            "function": "main",
+            "line": 500
+          },
+          {
+            "file": "profile_candle_closure.py",
+            "function": "campaign",
+            "line": 320
+          },
+          {
+            "file": "profile_candle_closure.py",
+            "function": "prepare_heads",
+            "line": 156
+          },
+          {
+            "file": "scheduling.py",
+            "function": "coalesce_jobs",
+            "line": 30
+          },
+          {
+            "file": "scheduling.py",
+            "function": "coalesce_session",
+            "line": 24
+          },
+          {
+            "file": "session.py",
+            "function": "execute",
+            "line": 39
+          },
+          {
+            "file": "session.py",
+            "function": "_execute",
+            "line": 66
+          }
+        ],
+        "frames_truncated": false
+      }
+    ],
+    "truncated": false
+  }
+}

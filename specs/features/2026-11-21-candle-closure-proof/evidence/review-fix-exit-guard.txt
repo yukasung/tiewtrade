@@ -1,0 +1,5 @@
+..                                                                       [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_buy_decision_and_exit_fill_serialize[decision-first]
+PASSED tests/infra/execution_market/test_strategy_exit_races.py::test_buy_decision_and_exit_fill_serialize[exit-first]

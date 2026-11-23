@@ -38,7 +38,7 @@ it.each([
   await chartI18n.changeLanguage(language);
   try {
     vi.mocked(useChartData).mockReturnValue(state());
-    const { container } = render(<CandlestickChartPanel userId="one"/>);
+    const { container } = render(<CandlestickChartPanel userId="one" base="BTC"/>);
     expect(screen.getByRole("region", { name: "กราฟแท่งเทียน" })).toBeTruthy();
     expect(chartI18n.t("disclaimer", { lng: language })).toBe(disclaimer);
     expect(container.textContent).not.toMatch(/เมนูราคาสด|live prices page/);
@@ -47,7 +47,7 @@ it.each([
   }
 });
 it("renders exact candle data without indicator points or controls", () => {
-  vi.mocked(useChartData).mockReturnValue(state()); render(<CandlestickChartPanel userId="one"/>);
+  vi.mocked(useChartData).mockReturnValue(state()); render(<CandlestickChartPanel userId="one" base="BTC"/>);
   expect(draw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.5");
   expect(draw.mock.calls.at(-1)?.[1]).toEqual([]);
   expect(draw.mock.calls.at(-1)?.[2].size).toBe(0);
@@ -59,7 +59,7 @@ it.each(["OPEN", "UNCONFIRMED", "CLOSED"] as const)("preserves zero volume and %
   const current = state();
   current.browsing.latest!.rows[0] = { ...candle(), finality, volume: "0" };
   vi.mocked(useChartData).mockReturnValue(current);
-  render(<CandlestickChartPanel userId="one"/>);
+  render(<CandlestickChartPanel userId="one" base="BTC"/>);
   expect(screen.getByTestId("chart-summary").textContent).toContain("0 BTC");
   expect(draw.mock.calls.at(-1)?.[0][0]?.finality).toBe(finality);
   expect(current.browsing.latest!.rows[0].volume).toBe("0");
@@ -68,13 +68,13 @@ it.each(["OPEN", "UNCONFIRMED", "CLOSED"] as const)("preserves zero volume and %
 it("keeps empty calendar slots without fabricating OHLC and disables reset before any page", () => {
   const current = state(); current.browsing.latest!.rows = [];
   vi.mocked(useChartData).mockReturnValue(current);
-  const panel = render(<CandlestickChartPanel userId="one"/>);
+  const panel = render(<CandlestickChartPanel userId="one" base="BTC"/>);
   expect(draw.mock.calls.at(-1)?.[0]).toEqual([]);
   expect(screen.getByTestId("chart-summary").querySelector(".chart-ohlc")).toBeNull();
   expect(draw.mock.calls.at(-1)?.[4]).toHaveLength(24);
   expect(screen.getByRole<HTMLButtonElement>("button", { name: /รีเซ็ต/ }).disabled).toBe(false);
   current.browsing.latest = undefined;
-  panel.rerender(<CandlestickChartPanel userId="one"/>);
+  panel.rerender(<CandlestickChartPanel userId="one" base="BTC"/>);
   expect(screen.getByRole<HTMLButtonElement>("button", { name: /รีเซ็ต/ }).disabled).toBe(true);
 });
 
@@ -83,7 +83,7 @@ it("shows a typed live failure with retained exact data and disables retry durin
   current.error = new ApiRequestError("CHART_DEADLINE_EXCEEDED", 504);
   current.preview.isFetching = true;
   vi.mocked(useChartData).mockReturnValue(current);
-  render(<CandlestickChartPanel userId="one"/>);
+  render(<CandlestickChartPanel userId="one" base="BTC"/>);
   expect(screen.getByRole("alert").textContent).toBe("อ่านข้อมูลสดไม่ทันเวลาที่กำหนด");
   expect(screen.getByRole<HTMLButtonElement>("button", { name: /ลองใหม่/ }).disabled).toBe(true);
   expect(screen.getByTestId("chart-summary").textContent).toContain("100.5");
@@ -91,28 +91,28 @@ it("shows a typed live failure with retained exact data and disables retry durin
 });
 it("keeps newer history when live is older, and deduplicates newer live", () => {
   const current = state(); current.preview.data!.rows = [{ ...candle(), close: "100.1", observed_at: "2026-10-12T00:20:00Z" }];
-  vi.mocked(useChartData).mockReturnValue(current); const panel = render(<CandlestickChartPanel userId="one"/>);
+  vi.mocked(useChartData).mockReturnValue(current); const panel = render(<CandlestickChartPanel userId="one" base="BTC"/>);
   expect(draw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.5");
   current.preview.data = { ...current.preview.data!, rows: [{ ...candle(), close: "100.8", observed_at: "2026-10-12T00:40:00Z" }] };
-  panel.rerender(<CandlestickChartPanel userId="one"/>);
+  panel.rerender(<CandlestickChartPanel userId="one" base="BTC"/>);
   expect(draw.mock.calls.at(-1)?.[0]).toHaveLength(1);
   expect(draw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.8");
 });
 it("never downgrades closed history with a live preview", () => {
   const current = state(); current.browsing.latest!.rows[0]!.finality = "CLOSED";
   current.preview.data!.rows = [{ ...candle(), close: "100.9", observed_at: "2026-10-12T02:00:00Z" }];
-  vi.mocked(useChartData).mockReturnValue(current); render(<CandlestickChartPanel userId="one"/>);
+  vi.mocked(useChartData).mockReturnValue(current); render(<CandlestickChartPanel userId="one" base="BTC"/>);
   expect(draw.mock.calls.at(-1)?.[0][0]?.close).toBe("100.5");
 });
 it("does not append live candles while browsing an older page", () => {
   const current = state(); current.browsing.page = { ...current.browsing.latest! };
   current.preview.data!.rows = [{ ...candle(), open_at: "2026-10-12T02:00:00Z" }];
-  vi.mocked(useChartData).mockReturnValue(current); render(<CandlestickChartPanel userId="one"/>);
+  vi.mocked(useChartData).mockReturnValue(current); render(<CandlestickChartPanel userId="one" base="BTC"/>);
   expect(draw.mock.calls.at(-1)?.[0]).toHaveLength(1);
 });
 it("reset only changes viewport, and supports weekly/monthly selection", () => {
   const current = state(); vi.mocked(useChartData).mockReturnValue(current);
-  render(<CandlestickChartPanel userId="one"/>);
+  render(<CandlestickChartPanel userId="one" base="BTC"/>);
   fireEvent.click(screen.getByRole("button", { name: /รีเซ็ต/ }));
   expect(current.retry).not.toHaveBeenCalled(); expect(current.browsing.retry).not.toHaveBeenCalled();
   expect(scale.setVisibleLogicalRange).toHaveBeenCalled();
@@ -120,29 +120,21 @@ it("reset only changes viewport, and supports weekly/monthly selection", () => {
   fireEvent.change(document.querySelector("#chart-timeframe")!, { target: { value: "1M" } });
   expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].timeframe).toBe("1M");
 });
-it("offers only the supported pairs and defaults to BTC", () => {
-  vi.mocked(useChartData).mockReturnValue(state());
-  render(<CandlestickChartPanel userId="one"/>);
-  const pair = screen.getByRole<HTMLSelectElement>("combobox", { name: "คู่เทรด" });
-  expect([...pair.options].map(option => option.textContent)).toEqual(["BTC/USDT", "ETH/USDT"]);
-  expect(pair.value).toBe("BTC");
-  expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].base).toBe("BTC");
-});
-it("uses a parent-controlled pair when embedded and omits duplicate workspace placeholders", () => {
+it("uses a parent-controlled pair when and omits duplicate workspace placeholders", () => {
   const onBaseChange = vi.fn();
   const onMarketSnapshot = vi.fn();
   vi.mocked(useChartData).mockReturnValue(state());
   render(<CandlestickChartPanel userId="one" base="ETH" onBaseChange={onBaseChange}
-    embedded onMarketSnapshot={onMarketSnapshot}/>);
+    onMarketSnapshot={onMarketSnapshot}/>);
   expect(screen.queryByRole("combobox", { name: "คู่เทรด" })).toBeNull();
   expect(screen.queryByTestId("trading-order-placeholder")).toBeNull();
   expect(screen.queryByTestId("trade-history-placeholder")).toBeNull();
   expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].base).toBe("ETH");
   expect(onMarketSnapshot).toHaveBeenLastCalledWith({ base: "ETH", price: "100.5", observedAt: "2026-10-12T00:30:00Z" });
 });
-it("keeps embedded timeframe and reset controls with the chart through parent rerenders", () => {
+it("keeps timeframe and reset controls with the chart through parent rerenders", () => {
   vi.mocked(useChartData).mockReturnValue(state());
-  const panel = render(<div className="before"><CandlestickChartPanel userId="one" base="BTC" embedded/></div>);
+  const panel = render(<div className="before"><CandlestickChartPanel userId="one" base="BTC"/></div>);
   const chart = screen.getByTestId("candlestick-chart");
   const timeframe = within(chart).getByRole<HTMLSelectElement>("combobox", { name: "Timeframe" });
   const reset = within(chart).getByRole("button", { name: /รีเซ็ต/ });
@@ -150,7 +142,7 @@ it("keeps embedded timeframe and reset controls with the chart through parent re
   expect(chart.querySelector(".trading-market-bar")?.contains(timeframe)).toBe(true);
   fireEvent.change(timeframe, { target: { value: "3m" } });
   expect(vi.mocked(useChartData).mock.calls.at(-1)?.[1].timeframe).toBe("3m");
-  panel.rerender(<div className="after"><CandlestickChartPanel userId="one" base="BTC" embedded/></div>);
+  panel.rerender(<div className="after"><CandlestickChartPanel userId="one" base="BTC"/></div>);
   expect(within(chart).getByRole("combobox", { name: "Timeframe" })).toBe(timeframe);
   expect(timeframe.value).toBe("3m");
   expect(within(chart).getByRole("button", { name: /รีเซ็ต/ })).toBe(reset);
@@ -158,7 +150,7 @@ it("keeps embedded timeframe and reset controls with the chart through parent re
 it("places timeframe and reset beside the workspace pair selector", () => {
   vi.mocked(useChartData).mockReturnValue(state());
   render(<TradingWorkspace mode="PAPER" bases={["BTC"]} base="BTC" onBase={vi.fn()}
-    chart={<CandlestickChartPanel userId="one" base="BTC" embedded/>} form={<input/>}/>);
+    chart={<CandlestickChartPanel userId="one" base="BTC"/>} form={<input/>}/>);
   const timeframe = screen.getByRole<HTMLSelectElement>("combobox", { name: "Timeframe" });
   const bar = timeframe.closest(".trade-workspace-bar");
   expect(bar?.querySelector("#paper-workspace-pair")).toBeTruthy();
@@ -171,7 +163,7 @@ it("retargets controls after the toolbar node is replaced without resetting time
     const [target, setTarget] = useState<HTMLDivElement | null>(null);
     return <ChartToolbarTarget.Provider value={target}>
       <div key={revision} ref={setTarget} data-testid="toolbar-target"/>
-      <CandlestickChartPanel userId="one" base="BTC" embedded/>
+      <CandlestickChartPanel userId="one" base="BTC"/>
     </ChartToolbarTarget.Provider>;
   }
   const view = render(<Workspace revision={1}/>);
@@ -187,17 +179,17 @@ it("retargets controls after the toolbar node is replaced without resetting time
 });
 it("blocks manual retry during cooldown", () => {
   const current = state(); current.error = new Error("unavailable"); current.cooldownActive = true;
-  vi.mocked(useChartData).mockReturnValue(current); const panel = render(<CandlestickChartPanel userId="one"/>);
+  vi.mocked(useChartData).mockReturnValue(current); const panel = render(<CandlestickChartPanel userId="one" base="BTC"/>);
   const button = screen.getByRole("button", { name: /ลองใหม่/ });
   fireEvent.click(button); expect(current.retry).not.toHaveBeenCalled();
-  current.cooldownActive = false; panel.rerender(<CandlestickChartPanel userId="one"/>);
+  current.cooldownActive = false; panel.rerender(<CandlestickChartPanel userId="one" base="BTC"/>);
   fireEvent.click(button); expect(current.retry).toHaveBeenCalledOnce();
 });
 
 
 it("keeps volume available as exact text inside the chart without a volume pane", () => {
   vi.mocked(useChartData).mockReturnValue(state());
-  render(<CandlestickChartPanel userId="fixture" />);
+  render(<CandlestickChartPanel userId="fixture" base="BTC" />);
   const summary = within(screen.getByTestId("chart-summary"));
   expect(summary.getByText("2 BTC", { exact: true }).textContent).toBe("2 BTC");
   expect(screen.getAllByText("2 BTC", { exact: true })).toHaveLength(1);
@@ -206,7 +198,7 @@ it("keeps volume available as exact text inside the chart without a volume pane"
 
 it("does not expose indicator controls or values in the chart UI", () => {
   vi.mocked(useChartData).mockReturnValue(state());
-  render(<CandlestickChartPanel userId="fixture" />);
+  render(<CandlestickChartPanel userId="fixture" base="BTC" />);
   expect(screen.queryByRole("group", { name: "Indicator" })).toBeNull();
   for (const name of ["EMA20", "EMA50", "EMA200", "RSI14", "ATR14"]) {
     expect(screen.queryByText(name, { exact: true })).toBeNull();
@@ -220,7 +212,7 @@ it("shows the selected candle's exact time, OHLCV and finality only on the chart
   const current = state();
   current.browsing.latest!.rows[0]!.open = "83262.00";
   vi.mocked(useChartData).mockReturnValue(current);
-  render(<CandlestickChartPanel userId="fixture" />);
+  render(<CandlestickChartPanel userId="fixture" base="BTC" />);
   const summary = within(screen.getByTestId("chart-summary"));
   expect(summary.getByText("BTC/USDT")).toBeTruthy();
   expect(summary.getByText("· 1h · Binance TH Spot")).toBeTruthy();
@@ -236,7 +228,7 @@ it("shows the selected candle's exact time, OHLCV and finality only on the chart
 
 it("omits manual chart controls and the scale note", () => {
   vi.mocked(useChartData).mockReturnValue(state());
-  render(<CandlestickChartPanel userId="fixture" />);
+  render(<CandlestickChartPanel userId="fixture" base="BTC" />);
   for (const name of ["กลับช่วงล่าสุด", "เพิ่มประวัติก่อนหน้า", "ลองใหม่", "ขอ refresh ประวัติ",
     "แท่งก่อนหน้า", "แท่งถัดไป"]) {
     expect(screen.queryByRole("button", { name })).toBeNull();
@@ -245,40 +237,21 @@ it("omits manual chart controls and the scale note", () => {
 });
 
 
-it("renders a disabled order placeholder without a form or default financial values", () => {
-  vi.mocked(useChartData).mockReturnValue(state());
-  const panel = render(<CandlestickChartPanel userId="fixture" />);
-  const order = within(screen.getByTestId("trading-order-placeholder"));
-  expect(panel.container.querySelector("form")).toBeNull();
-  for (const control of [...order.getAllByRole("button"), ...order.getAllByRole("textbox"),
-    ...order.getAllByRole("combobox")]) {
-    expect(control.hasAttribute("disabled")).toBe(true);
-  }
-  expect(order.getAllByRole("textbox").every(input => (input as HTMLInputElement).value === "")).toBe(true);
-  expect(order.getByRole("button", { name: "ยังไม่เปิดใช้งาน" })).toBeTruthy();
-});
 
 
-it("renders semantic empty trading history without mock rows", () => {
-  vi.mocked(useChartData).mockReturnValue(state());
-  render(<CandlestickChartPanel userId="fixture" />);
-  const history = within(screen.getByTestId("trade-history-placeholder"));
-  expect(history.getByRole("table")).toBeTruthy();
-  expect(history.getAllByRole("columnheader")).toHaveLength(6);
-  expect(history.getAllByRole("row")).toHaveLength(2);
-  expect(history.getByText("ยังไม่มีข้อมูลออเดอร์หรือการเทรดจากระบบ", { exact: true })).toBeTruthy();
-});
+
+
 
 
 it("keeps chart content in Thai without visible market-bar labels", () => {
   vi.mocked(useChartData).mockReturnValue(state());
-  const panel = render(<CandlestickChartPanel userId="fixture" />);
+  const panel = render(<CandlestickChartPanel userId="fixture" base="BTC" />);
   const marketBar = within(panel.container.querySelector(".trading-market-bar") as HTMLElement);
   expect(screen.queryByRole("combobox", { name: "ภาษา" })).toBeNull();
   expect(marketBar.queryByText("กราฟแท่งเทียน", { exact: true })).toBeNull();
   expect(marketBar.queryByText("คู่เทรด", { exact: true })).toBeNull();
   expect(marketBar.queryByText("Timeframe", { exact: true })).toBeNull();
-  expect(marketBar.getByRole("combobox", { name: "คู่เทรด" })).toBeTruthy();
+  expect(marketBar.queryByRole("combobox", { name: "คู่เทรด" })).toBeNull();
   expect(marketBar.getByRole("combobox", { name: "Timeframe" })).toBeTruthy();
   expect(screen.getByText(/12 ต\.ค\. 2569/)).toBeTruthy();
 });
@@ -287,7 +260,7 @@ it("does not paginate after programmatic range changes, but loads on user pan", 
   vi.useFakeTimers();
   try {
     const current = state(); current.browsing.latest!.older_before = "2026-10-11T00:00:00Z";
-    vi.mocked(useChartData).mockReturnValue(current); render(<CandlestickChartPanel userId="one"/>);
+    vi.mocked(useChartData).mockReturnValue(current); render(<CandlestickChartPanel userId="one" base="BTC"/>);
     const changed = scale.subscribeVisibleLogicalRangeChange.mock.calls[0]![0] as (range: { from: number; to: number }) => void;
     changed({ from: 0, to: 99 }); vi.advanceTimersByTime(300);
     expect(current.browsing.navigate).not.toHaveBeenCalled();
@@ -299,18 +272,18 @@ it("does not paginate after programmatic range changes, but loads on user pan", 
 
 it("keeps the user's fractional viewport when live data redraws", () => {
   const current = state(); vi.mocked(useChartData).mockReturnValue(current);
-  const panel = render(<CandlestickChartPanel userId="one"/>);
+  const panel = render(<CandlestickChartPanel userId="one" base="BTC"/>);
   const range = { from: -12.75, to: 8.5 };
   scale.getVisibleLogicalRange.mockReturnValue(range);
   scale.setVisibleLogicalRange.mockClear();
   current.preview.data = { ...chartLive(), rows: [{ ...candle(), close: "100.8" }] };
-  panel.rerender(<CandlestickChartPanel userId="one"/>);
+  panel.rerender(<CandlestickChartPanel userId="one" base="BTC"/>);
   expect(scale.setVisibleLogicalRange).toHaveBeenLastCalledWith(range);
   expect(scale.setVisibleRange).not.toHaveBeenCalled();
 });
 it("offers native 3m between 1m and 5m and switches the existing controller", () => {
   vi.mocked(useChartData).mockReturnValue(state());
-  render(<CandlestickChartPanel userId="one"/>);
+  render(<CandlestickChartPanel userId="one" base="BTC"/>);
   const select = screen.getByRole<HTMLSelectElement>("combobox", { name: "Timeframe" });
   expect(select.value).toBe("1h");
   expect([...select.options].map(option => option.value)).toEqual(["1m", "3m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"]);

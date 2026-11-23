@@ -324,6 +324,22 @@
       },
       "BotStatusView": {
         "properties": {
+          "basket_target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Basket Target"
+          },
+          "basket_triggered": {
+            "default": false,
+            "title": "Basket Triggered",
+            "type": "boolean"
+          },
           "can_start": {
             "title": "Can Start",
             "type": "boolean"
@@ -346,6 +362,11 @@
           "mode": {
             "$ref": "#/components/schemas/TradingMode"
           },
+          "open_entries": {
+            "default": 0,
+            "title": "Open Entries",
+            "type": "integer"
+          },
           "pending_request_id": {
             "anyOf": [
               {
@@ -357,6 +378,20 @@
               }
             ],
             "title": "Pending Request Id"
+          },
+          "pinned_configuration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StrategyConfigurationInput"
+              },
+              {
+                "$ref": "#/components/schemas/PaperTestConfigurationInput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinned Configuration"
           },
           "positions": {
             "items": {
@@ -386,6 +421,16 @@
               }
             ],
             "title": "Readiness Reason"
+          },
+          "replacement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BotReplacementInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "revision": {
             "anyOf": [
@@ -3168,6 +3213,105 @@
         "title": "PaperOrderView",
         "type": "object"
       },
+      "PaperTestConfigurationInput": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "enum": [
+              "BTC",
+              "ETH"
+            ],
+            "title": "Base",
+            "type": "string"
+          },
+          "capital_per_entry": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Capital Per Entry",
+            "type": "string"
+          },
+          "strategy_name": {
+            "const": "paper-green-atr-test",
+            "title": "Strategy Name",
+            "type": "string"
+          },
+          "timeframe": {
+            "enum": [
+              "1m",
+              "3m",
+              "5m",
+              "15m",
+              "1h",
+              "4h",
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "title": "Timeframe",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy_name",
+          "base",
+          "timeframe",
+          "capital_per_entry"
+        ],
+        "title": "PaperTestConfigurationInput",
+        "type": "object"
+      },
+      "PaperTestConfigurationView": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "enum": [
+              "BTC",
+              "ETH"
+            ],
+            "title": "Base",
+            "type": "string"
+          },
+          "capital_per_entry": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Capital Per Entry",
+            "type": "string"
+          },
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          },
+          "strategy_name": {
+            "const": "paper-green-atr-test",
+            "title": "Strategy Name",
+            "type": "string"
+          },
+          "timeframe": {
+            "enum": [
+              "1m",
+              "3m",
+              "5m",
+              "15m",
+              "1h",
+              "4h",
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "title": "Timeframe",
+            "type": "string"
+          }
+        },
+        "required": [
+          "strategy_name",
+          "base",
+          "timeframe",
+          "capital_per_entry",
+          "reference"
+        ],
+        "title": "PaperTestConfigurationView",
+        "type": "object"
+      },
       "PaperTradeView": {
         "properties": {
           "account_use": {
@@ -4180,6 +4324,11 @@
               }
             ],
             "title": "Stop Loss Price"
+          },
+          "strategy_managed": {
+            "default": false,
+            "title": "Strategy Managed",
+            "type": "boolean"
           },
           "take_profit_price": {
             "anyOf": [
@@ -5324,6 +5473,157 @@
           "reconciled_at"
         ],
         "title": "StopSummaryView",
+        "type": "object"
+      },
+      "StrategyCatalogView": {
+        "properties": {
+          "default_max_entries": {
+            "default": 10,
+            "title": "Default Max Entries",
+            "type": "integer"
+          },
+          "default_timeframe": {
+            "$ref": "#/components/schemas/Timeframe",
+            "default": "5m"
+          },
+          "max_entries_max": {
+            "default": 10,
+            "title": "Max Entries Max",
+            "type": "integer"
+          },
+          "max_entries_min": {
+            "default": 1,
+            "title": "Max Entries Min",
+            "type": "integer"
+          },
+          "strategies": {
+            "default": [
+              "rsi-step-grid-ema-single-tp"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Strategies",
+            "type": "array"
+          },
+          "strategy_name": {
+            "title": "Strategy Name",
+            "type": "string"
+          },
+          "timeframes": {
+            "items": {
+              "$ref": "#/components/schemas/Timeframe"
+            },
+            "title": "Timeframes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "strategy_name",
+          "timeframes"
+        ],
+        "title": "StrategyCatalogView",
+        "type": "object"
+      },
+      "StrategyConfigurationInput": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "enum": [
+              "BTC",
+              "ETH"
+            ],
+            "title": "Base",
+            "type": "string"
+          },
+          "capital_per_entry": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Capital Per Entry",
+            "type": "string"
+          },
+          "max_entries": {
+            "default": 10,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Max Entries",
+            "type": "integer"
+          },
+          "timeframe": {
+            "default": "5m",
+            "enum": [
+              "1m",
+              "3m",
+              "5m",
+              "15m",
+              "1h",
+              "4h",
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "title": "Timeframe",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "capital_per_entry"
+        ],
+        "title": "StrategyConfigurationInput",
+        "type": "object"
+      },
+      "StrategyConfigurationView": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "enum": [
+              "BTC",
+              "ETH"
+            ],
+            "title": "Base",
+            "type": "string"
+          },
+          "capital_per_entry": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Capital Per Entry",
+            "type": "string"
+          },
+          "max_entries": {
+            "default": 10,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Max Entries",
+            "type": "integer"
+          },
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          },
+          "timeframe": {
+            "default": "5m",
+            "enum": [
+              "1m",
+              "3m",
+              "5m",
+              "15m",
+              "1h",
+              "4h",
+              "1d",
+              "1w",
+              "1M"
+            ],
+            "title": "Timeframe",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "capital_per_entry",
+          "reference"
+        ],
+        "title": "StrategyConfigurationView",
         "type": "object"
       },
       "Timeframe": {
@@ -8301,6 +8601,143 @@
         ]
       }
     },
+    "/paper/bots/configurations": {
+      "post": {
+        "operationId": "configure_strategy_paper_bots_configurations_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/StrategyConfigurationInput"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PaperTestConfigurationInput"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/StrategyConfigurationView"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PaperTestConfigurationView"
+                    }
+                  ],
+                  "title": "Response Configure Strategy Paper Bots Configurations Post"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Configure Strategy",
+        "tags": [
+          "bots"
+        ]
+      }
+    },
+    "/paper/bots/configurations/{identity}": {
+      "get": {
+        "operationId": "configuration_by_id_paper_bots_configurations__identity__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identity",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identity",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "strategy_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "const": "paper-green-atr-test",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Strategy Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/StrategyConfigurationView"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PaperTestConfigurationView"
+                    }
+                  ],
+                  "title": "Response Configuration By Id Paper Bots Configurations  Identity  Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Configuration By Id",
+        "tags": [
+          "bots"
+        ]
+      }
+    },
     "/paper/bots/requests": {
       "post": {
         "operationId": "request_start_paper_bots_requests_post",
@@ -8456,6 +8893,27 @@
           }
         },
         "summary": "Status",
+        "tags": [
+          "bots"
+        ]
+      }
+    },
+    "/paper/bots/strategy": {
+      "get": {
+        "operationId": "strategy_catalog_paper_bots_strategy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyCatalogView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Strategy Catalog",
         "tags": [
           "bots"
         ]

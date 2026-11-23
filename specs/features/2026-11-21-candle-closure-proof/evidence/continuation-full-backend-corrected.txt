@@ -1,0 +1,1056 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend
+configfile: pyproject.toml
+testpaths: tests
+plugins: asyncio-1.4.0, hypothesis-6.168.1, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 6051 items / 32 deselected / 6019 selected
+
+tests/infra/db/test_migrations.py .......                                [  0%]
+tests/infra/market_data/test_migration.py ...................            [  0%]
+tests/infra/market_data/test_realtime_migration.py .                     [  0%]
+tests/infra/market_data/test_supported_pairs_migration.py ..             [  0%]
+tests/infra/paper_wallet/test_migration.py .                             [  0%]
+tests/infra/risk_limits/test_monitor_price_hint.py .                     [  0%]
+tests/infra/risk_limits/test_same_pair_dispatch.py ..                    [  0%]
+tests/infra/risk_limits/test_source_resumption.py ..                     [  0%]
+tests/api/test_api_key_routes.py ....................................... [  1%]
+.............                                                            [  1%]
+tests/api/test_auth_flow.py ..............                               [  1%]
+tests/api/test_bot_routes.py .....                                       [  1%]
+tests/api/test_candle_routes.py .........................                [  2%]
+tests/api/test_catalog_routes.py .....                                   [  2%]
+tests/api/test_chart_routes.py .......................................   [  2%]
+tests/api/test_failure_contracts.py ..........                           [  3%]
+tests/api/test_indicator_routes.py ......                                [  3%]
+tests/api/test_kill_switch_routes.py .....                               [  3%]
+tests/api/test_manual_order_routes.py ...............                    [  3%]
+tests/api/test_no_secrets.py .....                                       [  3%]
+tests/api/test_numeric_windows.py ...........                            [  3%]
+tests/api/test_paper_test_strategy.py .......                            [  3%]
+tests/api/test_paper_wallet_routes.py ...                                [  3%]
+tests/api/test_prepared_indicators.py .................................. [  4%]
+....                                                                     [  4%]
+tests/api/test_price_admission.py .....                                  [  4%]
+tests/api/test_price_authorization.py .....                              [  4%]
+tests/api/test_price_broadcast.py ...                                    [  4%]
+tests/api/test_price_guard_budget.py .....                               [  4%]
+tests/api/test_price_models.py ....                                      [  4%]
+tests/api/test_protection_routes.py ........                             [  5%]
+tests/api/test_realtime_prices.py .........                              [  5%]
+tests/api/test_risk_admission.py ...                                     [  5%]
+tests/api/test_risk_limit_routes.py ..............                       [  5%]
+tests/api/test_route_classification.py .................                 [  5%]
+tests/api/test_route_policy.py .F.                                       [  5%]
+tests/api/test_strategy_configurations.py .....                          [  5%]
+tests/api/test_strategy_status.py FF                                     [  5%]
+tests/api/test_throttle_counting.py .........                            [  6%]
+tests/api/test_totp_flow.py ...........................................  [  6%]
+tests/api/test_trading_account_routes.py ...................             [  7%]
+tests/core/money/test_arithmetic.py .........................            [  7%]
+tests/core/money/test_context.py ....................................... [  8%]
+................                                                         [  8%]
+tests/core/money/test_direct_construction.py ........................... [  8%]
+.......                                                                  [  9%]
+tests/core/money/test_module_boundary.py ..................              [  9%]
+tests/core/money/test_properties.py .........                            [  9%]
+tests/core/money/test_values.py ................................         [ 10%]
+tests/core/test_bot_contract.py ........................................ [ 10%]
+.............                                                            [ 10%]
+tests/core/test_candle_closure.py ..........................             [ 11%]
+tests/core/test_chart_history_bounds.py .....                            [ 11%]
+tests/core/test_indicator_arithmetic.py ...................              [ 11%]
+tests/core/test_indicators.py ...........                                [ 11%]
+tests/core/test_manual_trading.py ....                                   [ 11%]
+tests/core/test_market_catalog.py .......                                [ 12%]
+tests/core/test_market_data.py ..................................        [ 12%]
+tests/core/test_paper_matching.py ...................................... [ 13%]
+..........                                                               [ 13%]
+tests/core/test_paper_wallet.py ..........                               [ 13%]
+tests/core/test_position_parity.py ..........                            [ 13%]
+tests/core/test_positions.py ...............                             [ 14%]
+tests/core/test_protections.py ......................................... [ 14%]
+.........................                                                [ 15%]
+tests/core/test_realtime_prices.py ..................                    [ 15%]
+tests/core/test_risk_limits.py ......................................... [ 16%]
+..........................                                               [ 16%]
+tests/core/test_risk_matching.py ......                                  [ 16%]
+tests/core/test_totp.py ...........................                      [ 17%]
+tests/core/test_trading_limits.py ..............                         [ 17%]
+tests/core/test_trading_stops.py ...........                             [ 17%]
+tests/gates/test_gates.py .........................................      [ 18%]
+tests/gates/test_paper_isolation.py F.                                   [ 18%]
+tests/infra/api_keys/test_permissions.py ..........................      [ 18%]
+tests/infra/api_keys/test_signing.py ......                              [ 18%]
+tests/infra/api_keys/test_storage.py .........................           [ 19%]
+tests/infra/audit/test_append_only.py ..............                     [ 19%]
+tests/infra/audit/test_documented_exception.py ..                        [ 19%]
+tests/infra/audit/test_event_shape.py .................................. [ 19%]
+.........................                                                [ 20%]
+tests/infra/audit/test_isolation.py ......                               [ 20%]
+tests/infra/audit/test_manual_order_events.py ..                         [ 20%]
+tests/infra/audit/test_partitions.py .....                               [ 20%]
+tests/infra/audit/test_platform_bootstrap_event.py ..                    [ 20%]
+tests/infra/audit/test_records_outlive_users.py ..                       [ 20%]
+tests/infra/audit/test_redaction.py ....................                 [ 21%]
+tests/infra/audit/test_transaction.py .......                            [ 21%]
+tests/infra/auth/test_audit_events.py ............                       [ 21%]
+tests/infra/auth/test_cleanup.py .......................                 [ 21%]
+tests/infra/auth/test_password_rules.py ................                 [ 21%]
+tests/infra/auth/test_privileges.py ...............                      [ 22%]
+tests/infra/auth/test_recovery_and_challenges.py ................        [ 22%]
+tests/infra/auth/test_second_factor_ceiling.py ..........                [ 22%]
+tests/infra/auth/test_session_rules.py ............                      [ 22%]
+tests/infra/auth/test_throttle_rules.py .........                        [ 23%]
+tests/infra/auth/test_totp_audit_events.py ....................          [ 23%]
+tests/infra/auth/test_totp_secrets.py ..................                 [ 23%]
+tests/infra/auth/test_totp_tables.py ...........................         [ 24%]
+tests/infra/bots/test_candle_finality_reason.py FF..                     [ 24%]
+tests/infra/bots/test_requests.py ...                                    [ 24%]
+tests/infra/bots/test_strategy_configurations.py ..                      [ 24%]
+tests/infra/catalog/test_lifecycle.py .                                  [ 24%]
+tests/infra/catalog/test_migration.py .............                      [ 24%]
+tests/infra/crypto/test_chart_proof.py ..                                [ 24%]
+tests/infra/crypto/test_indicator_cursor.py ..                           [ 24%]
+tests/infra/crypto/test_sealing.py .....................                 [ 24%]
+tests/infra/db/test_append_only.py ...................                   [ 25%]
+tests/infra/db/test_created_at.py ...                                    [ 25%]
+tests/infra/db/test_error_hygiene.py ......                              [ 25%]
+tests/infra/db/test_money_storage.py .....................               [ 25%]
+tests/infra/db/test_roles.py ............                                [ 25%]
+tests/infra/db/test_sessions.py .......                                  [ 26%]
+tests/infra/db/test_user_isolation.py ........                           [ 26%]
+tests/infra/db/test_version_pin.py ....                                  [ 26%]
+tests/infra/execution_market/test_bot_api_restart.py ...                 [ 26%]
+tests/infra/execution_market/test_bot_decisions.py .............         [ 26%]
+tests/infra/execution_market/test_bot_feature_gates.py ..............    [ 26%]
+tests/infra/execution_market/test_bot_indicator_inputs.py ...            [ 26%]
+tests/infra/execution_market/test_bot_readiness_recovery.py ............ [ 26%]
+                                                                         [ 26%]
+tests/infra/execution_market/test_bot_review_migration.py ..             [ 26%]
+tests/infra/execution_market/test_bot_review_races.py ....               [ 27%]
+tests/infra/execution_market/test_bot_review_safety.py .......           [ 27%]
+tests/infra/execution_market/test_candle_closure_proof.py .............. [ 27%]
+....                                                                     [ 27%]
+tests/infra/execution_market/test_checkpoint_batch.py .................. [ 27%]
+.                                                                        [ 27%]
+tests/infra/execution_market/test_checkpoint_isolation.py .............. [ 28%]
+..........                                                               [ 28%]
+tests/infra/execution_market/test_checkpoint_polling.py ................ [ 28%]
+....                                                                     [ 28%]
+tests/infra/execution_market/test_claim_coordination.py ................ [ 28%]
+........................                                                 [ 29%]
+tests/infra/execution_market/test_claim_coordination_financial.py ...... [ 29%]
+....                                                                     [ 29%]
+tests/infra/execution_market/test_commit_observation.py ...............  [ 29%]
+tests/infra/execution_market/test_cycle_budget_failure.py .....          [ 29%]
+tests/infra/execution_market/test_decode_cache.py ..........             [ 29%]
+tests/infra/execution_market/test_dispatch.py ........                   [ 29%]
+tests/infra/execution_market/test_environment_preflight.py ............. [ 30%]
+.....................................                                    [ 30%]
+tests/infra/execution_market/test_evidence.py ........                   [ 30%]
+tests/infra/execution_market/test_evidence_decoder.py .................. [ 31%]
+............                                                             [ 31%]
+tests/infra/execution_market/test_executions.py ........                 [ 31%]
+tests/infra/execution_market/test_failure_timeline.py .................. [ 31%]
+                                                                         [ 31%]
+tests/infra/execution_market/test_final_tail_drain.py .................. [ 32%]
+..........                                                               [ 32%]
+tests/infra/execution_market/test_initialization.py ...............      [ 32%]
+tests/infra/execution_market/test_internal_database.py ..                [ 32%]
+tests/infra/execution_market/test_internal_http.py ..................... [ 32%]
+                                                                         [ 32%]
+tests/infra/execution_market/test_internal_observations.py ..........    [ 33%]
+tests/infra/execution_market/test_internal_profile.py .................. [ 33%]
+......................................................                   [ 34%]
+tests/infra/execution_market/test_matching_storage.py ......             [ 34%]
+tests/infra/execution_market/test_observer_diagnostic.py ............... [ 34%]
+................................                                         [ 35%]
+tests/infra/execution_market/test_observer_prefix.py ................... [ 35%]
+......................                                                   [ 35%]
+tests/infra/execution_market/test_observer_scheduled.py ................ [ 36%]
+..................                                                       [ 36%]
+tests/infra/execution_market/test_observer_short_load.py ............... [ 36%]
+................                                                         [ 36%]
+tests/infra/execution_market/test_owned_pools.py ....................... [ 37%]
+...................................                                      [ 37%]
+tests/infra/execution_market/test_paper_test_migration.py ..             [ 37%]
+tests/infra/execution_market/test_paper_test_strategy.py ..........      [ 38%]
+tests/infra/execution_market/test_parent_poll.py ....................... [ 38%]
+.............                                                            [ 38%]
+tests/infra/execution_market/test_pipeline.py ...                        [ 38%]
+tests/infra/execution_market/test_position_accounting_read.py .........  [ 38%]
+tests/infra/execution_market/test_process_recovery.py ....               [ 39%]
+tests/infra/execution_market/test_profile_diagnostics.py ............... [ 39%]
+.................................                                        [ 39%]
+tests/infra/execution_market/test_public_price_deadline.py ............. [ 40%]
+............                                                             [ 40%]
+tests/infra/execution_market/test_publisher_clock_recovery.py .......... [ 40%]
+....................................................                     [ 41%]
+tests/infra/execution_market/test_publisher_fence.py ................... [ 41%]
+.                                                                        [ 41%]
+tests/infra/execution_market/test_publisher_fence_fail_fast.py ......... [ 41%]
+............................................                             [ 42%]
+tests/infra/execution_market/test_publisher_fence_failure.py ........... [ 42%]
+.................                                                        [ 42%]
+tests/infra/execution_market/test_publisher_heartbeat.py ........        [ 43%]
+tests/infra/execution_market/test_publisher_lease.py ................... [ 43%]
+........                                                                 [ 43%]
+tests/infra/execution_market/test_publisher_lease_load.py .............. [ 43%]
+........................                                                 [ 44%]
+tests/infra/execution_market/test_publisher_readiness.py ............    [ 44%]
+tests/infra/execution_market/test_rebuild20.py ......................... [ 44%]
+..........                                                               [ 44%]
+tests/infra/execution_market/test_rebuild20_poll_evidence.py ........... [ 45%]
+.................                                                        [ 45%]
+tests/infra/execution_market/test_release_profile.py .................   [ 45%]
+tests/infra/execution_market/test_remaining_paper_campaign.py .....      [ 45%]
+tests/infra/execution_market/test_remaining_paper_cleanup_diagnostic.py . [ 45%]
+....                                                                     [ 45%]
+tests/infra/execution_market/test_remaining_paper_cleanup_identity.py .. [ 45%]
+.....................                                                    [ 46%]
+tests/infra/execution_market/test_remaining_paper_publication_regressions.py . [ 46%]
+......................                                                   [ 46%]
+tests/infra/execution_market/test_remaining_paper_review_regressions.py . [ 46%]
+............................                                             [ 47%]
+tests/infra/execution_market/test_replay_pagination.py ...............   [ 47%]
+tests/infra/execution_market/test_replay_reads.py ..............         [ 47%]
+tests/infra/execution_market/test_restore_readiness.py ....              [ 47%]
+tests/infra/execution_market/test_restore_routing.py ......              [ 47%]
+tests/infra/execution_market/test_review_regressions.py ....             [ 47%]
+tests/infra/execution_market/test_revised_timing_profile.py ............ [ 47%]
+........                                                                 [ 48%]
+tests/infra/execution_market/test_runtime_observation.py ............... [ 48%]
+......                                                                   [ 48%]
+tests/infra/execution_market/test_standalone_runtime.py ................ [ 48%]
+..................                                                       [ 49%]
+tests/infra/execution_market/test_storage.py ......                      [ 49%]
+tests/infra/execution_market/test_strategy_baskets.py .................  [ 49%]
+tests/infra/execution_market/test_strategy_candle_inputs.py ....         [ 49%]
+tests/infra/execution_market/test_strategy_commit_fences.py ............ [ 49%]
+.................                                                        [ 49%]
+tests/infra/execution_market/test_strategy_database_boundaries.py ...    [ 50%]
+tests/infra/execution_market/test_strategy_exit_races.py ............    [ 50%]
+tests/infra/execution_market/test_strategy_migration.py ..               [ 50%]
+tests/infra/execution_market/test_strategy_recovery.py .....             [ 50%]
+tests/infra/execution_market/test_strategy_tail_inputs.py ......         [ 50%]
+tests/infra/execution_market/test_tail_query_equivalence.py ............ [ 50%]
+..........                                                               [ 50%]
+tests/infra/execution_market/test_tail_reads.py ........................ [ 51%]
+..                                                                       [ 51%]
+tests/infra/execution_market/test_terminal_history.py ..                 [ 51%]
+tests/infra/execution_market/test_wallet_accounting_read.py ...          [ 51%]
+tests/infra/execution_market/test_worker.py ............................ [ 51%]
+...                                                                      [ 51%]
+tests/infra/execution_market/test_workload_latency.py .................. [ 52%]
+.....................                                                    [ 52%]
+tests/infra/execution_market/test_workload_supervision.py .............. [ 52%]
+.....                                                                    [ 52%]
+tests/infra/indicators/test_checkpoint_parity.py ..............          [ 53%]
+tests/infra/indicators/test_claims.py .................................. [ 53%]
+.............                                                            [ 53%]
+tests/infra/indicators/test_codec.py ................................... [ 54%]
+.....................................................                    [ 55%]
+tests/infra/indicators/test_global_lock_order.py ...............         [ 55%]
+tests/infra/indicators/test_global_permissions.py ...                    [ 55%]
+tests/infra/indicators/test_indicator_decode.py .                        [ 55%]
+tests/infra/indicators/test_publication.py ............................. [ 56%]
+...................                                                      [ 56%]
+tests/infra/indicators/test_publication_boundaries.py .................. [ 56%]
+...........                                                              [ 56%]
+tests/infra/indicators/test_rollout.py ................................. [ 57%]
+...........                                                              [ 57%]
+tests/infra/indicators/test_rollout_grants.py .......................... [ 58%]
+..........                                                               [ 58%]
+tests/infra/indicators/test_source.py .................................. [ 58%]
+...                                                                      [ 58%]
+tests/infra/indicators/test_source_lock_matrix.py ...................... [ 59%]
+.................                                                        [ 59%]
+tests/infra/indicators/test_staging.py ......................            [ 59%]
+tests/infra/manual_orders/test_bridge.py .............                   [ 60%]
+tests/infra/manual_orders/test_recovery.py ...                           [ 60%]
+tests/infra/manual_orders/test_requests.py ..................            [ 60%]
+tests/infra/market_data/test_batch_write.py .....                        [ 60%]
+tests/infra/market_data/test_chart_preview.py ................           [ 60%]
+tests/infra/market_data/test_claims.py .                                 [ 60%]
+tests/infra/market_data/test_indicator_reader.py ....                    [ 60%]
+tests/infra/market_data/test_indicator_snapshot.py .                     [ 60%]
+tests/infra/market_data/test_native_3m_e2e_composition.py ..             [ 60%]
+tests/infra/market_data/test_partitions.py .                             [ 60%]
+tests/infra/market_data/test_permissions.py ........                     [ 61%]
+tests/infra/market_data/test_realtime_storage.py ..........              [ 61%]
+tests/infra/market_data/test_retention.py ..................             [ 61%]
+tests/infra/market_data/test_storage.py ................                 [ 61%]
+tests/infra/paper_wallet/test_recovery.py .........................      [ 62%]
+tests/infra/paper_wallet/test_storage.py ...........                     [ 62%]
+tests/infra/positions/test_atomicity.py .........                        [ 62%]
+tests/infra/positions/test_audit_events.py ...                           [ 62%]
+tests/infra/positions/test_permissions.py ......                         [ 62%]
+tests/infra/positions/test_storage.py ..............                     [ 62%]
+tests/infra/realtime/test_acl.py .                                       [ 62%]
+tests/infra/realtime/test_admission.py ...                               [ 62%]
+tests/infra/realtime/test_connections.py ......                          [ 63%]
+tests/infra/realtime/test_notifications.py ..F                           [ 63%]
+tests/infra/realtime/test_pool.py ....                                   [ 63%]
+tests/infra/risk_limits/test_acceptance_publisher_mode.py .............. [ 63%]
+...........................                                              [ 63%]
+tests/infra/risk_limits/test_admission_priority.py .......               [ 63%]
+tests/infra/risk_limits/test_api_price_tail.py ................          [ 64%]
+tests/infra/risk_limits/test_book_clock.py ................              [ 64%]
+tests/infra/risk_limits/test_boundaries.py ....                          [ 64%]
+tests/infra/risk_limits/test_claim_budget.py ..........                  [ 64%]
+tests/infra/risk_limits/test_clock_probe.py ......................       [ 65%]
+tests/infra/risk_limits/test_concurrency.py ............                 [ 65%]
+tests/infra/risk_limits/test_dispatch_recovery.py .                      [ 65%]
+tests/infra/risk_limits/test_evidence_batch.py .                         [ 65%]
+tests/infra/risk_limits/test_execution.py ........                       [ 65%]
+tests/infra/risk_limits/test_execution_identity_budget.py ...            [ 65%]
+tests/infra/risk_limits/test_fixture_publication.py ......               [ 65%]
+tests/infra/risk_limits/test_intake_replay_pending.py .....              [ 65%]
+tests/infra/risk_limits/test_matching_fence.py .......                   [ 65%]
+tests/infra/risk_limits/test_matching_recovery.py .                      [ 65%]
+tests/infra/risk_limits/test_monitor.py ...................              [ 66%]
+tests/infra/risk_limits/test_monitor_price_hint.py ......                [ 66%]
+tests/infra/risk_limits/test_monitor_projection.py .                     [ 66%]
+tests/infra/risk_limits/test_monitor_snapshot.py .....                   [ 66%]
+tests/infra/risk_limits/test_partial_barrier.py .............            [ 66%]
+tests/infra/risk_limits/test_pool_timing.py .........                    [ 66%]
+tests/infra/risk_limits/test_prices.py ......                            [ 66%]
+tests/infra/risk_limits/test_profile_authorization.py .....              [ 66%]
+tests/infra/risk_limits/test_profile_observations.py ................... [ 67%]
+.....                                                                    [ 67%]
+tests/infra/risk_limits/test_profile_resources.py ..........             [ 67%]
+tests/infra/risk_limits/test_profile_stop_runtime.py ...                 [ 67%]
+tests/infra/risk_limits/test_profile_stop_schedule.py .........          [ 67%]
+tests/infra/risk_limits/test_publisher_process.py ................       [ 67%]
+tests/infra/risk_limits/test_requests.py ............                    [ 68%]
+tests/infra/risk_limits/test_risk_timing.py ............                 [ 68%]
+tests/infra/risk_limits/test_same_pair_dispatch.py ..................... [ 68%]
+.................                                                        [ 68%]
+tests/infra/risk_limits/test_saturation_oracle.py ..                     [ 68%]
+tests/infra/risk_limits/test_scheduler.py .................              [ 69%]
+tests/infra/risk_limits/test_source_resumption.py ...................... [ 69%]
+......                                                                   [ 69%]
+tests/infra/risk_limits/test_stops.py .........                          [ 69%]
+tests/infra/risk_limits/test_worker.py .....                             [ 69%]
+tests/infra/risk_limits/test_worker_rounds.py ....                       [ 70%]
+tests/infra/risk_limits/test_workload_profile.py .....................   [ 70%]
+tests/infra/risk_limits/test_workload_sla.py ........................... [ 70%]
+..................                                                       [ 71%]
+tests/infra/trading_account/test_audit.py ..........                     [ 71%]
+tests/infra/trading_account/test_concurrency.py ...                      [ 71%]
+tests/infra/trading_account/test_constraints.py ......                   [ 71%]
+tests/infra/trading_account/test_permissions.py ..........               [ 71%]
+tests/infra/trading_account/test_storage.py .........                    [ 71%]
+tests/services/api/test_chart_response_boundary.py ..................... [ 72%]
+...                                                                      [ 72%]
+tests/services/api/test_manual_order_models.py ......................... [ 72%]
+...                                                                      [ 72%]
+tests/services/api/test_paper_wallet_transaction.py .....                [ 72%]
+tests/services/api/test_runtime_heap.py ..                               [ 72%]
+tests/services/engine/test_catalog.py .......                            [ 72%]
+tests/services/engine/test_verification.py ............................. [ 73%]
+..................................                                       [ 73%]
+tests/services/indicator_builder/test_attempt.py ....................... [ 74%]
+........                                                                 [ 74%]
+tests/services/indicator_builder/test_capacity_admission_alignment.py .. [ 74%]
+.......                                                                  [ 74%]
+tests/services/indicator_builder/test_capacity_smoke.py ................ [ 74%]
+                                                                         [ 74%]
+tests/services/indicator_builder/test_capacity_snapshot_clock.py ....... [ 74%]
+.                                                                        [ 74%]
+tests/services/indicator_builder/test_failure_contracts.py ......        [ 75%]
+tests/services/indicator_builder/test_failure_recovery.py ........       [ 75%]
+tests/services/indicator_builder/test_global_shutdown.py ......          [ 75%]
+tests/services/indicator_builder/test_launcher.py ......                 [ 75%]
+tests/services/indicator_builder/test_maintenance.py ...............     [ 75%]
+tests/services/indicator_builder/test_numeric_windows.py ..............  [ 75%]
+tests/services/indicator_builder/test_profile_capacity_evidence.py ..    [ 75%]
+tests/services/indicator_builder/test_profile_capacity_gates.py ........ [ 76%]
+................................                                         [ 76%]
+tests/services/indicator_builder/test_profile_capacity_s5.py ........... [ 76%]
+.................                                                        [ 77%]
+tests/services/indicator_builder/test_profile_capacity_scope.py ........ [ 77%]
+.....                                                                    [ 77%]
+tests/services/indicator_builder/test_recovery.py ...................... [ 77%]
+.                                                                        [ 77%]
+tests/services/indicator_builder/test_scheduler.py ..................... [ 77%]
+............                                                             [ 78%]
+tests/services/indicator_builder/test_scheduler_lock_diagnostic.py ..... [ 78%]
+..........                                                               [ 78%]
+tests/services/indicator_builder/test_scheduler_validation.py .......... [ 78%]
+.................                                                        [ 78%]
+tests/services/market_data/test_candle_realtime.py ...............       [ 79%]
+tests/services/market_data/test_chart_workload_safety.py ............... [ 79%]
+                                                                         [ 79%]
+tests/services/market_data/test_closure_campaign.py ....                 [ 79%]
+tests/services/market_data/test_ingestion.py ........................... [ 79%]
+..............................                                           [ 80%]
+tests/services/market_data/test_main.py ..                               [ 80%]
+tests/services/market_data/test_order_book.py ..........                 [ 80%]
+tests/services/market_data/test_realtime.py ..........                   [ 80%]
+tests/services/market_data/test_three_minute_timeframe.py .............. [ 80%]
+..                                                                       [ 81%]
+tests/strategies/test_basket_disposals.py ....                           [ 81%]
+tests/strategies/test_basket_targets.py .....................            [ 81%]
+tests/strategies/test_paper_test_strategy.py ........................... [ 81%]
+....                                                                     [ 81%]
+tests/strategies/test_rsi_step_grid.py ................................. [ 82%]
+..                                                                       [ 82%]
+tests/test_api_environment.py ......                                     [ 82%]
+tests/test_api_key_safety.py ........................................... [ 83%]
+................................                                         [ 83%]
+tests/test_asyncio_network_gate.py ..................................... [ 84%]
+........................................................................ [ 85%]
+........................................................................ [ 86%]
+                                                                         [ 86%]
+tests/test_core_purity.py .                                              [ 86%]
+tests/test_engine_limiter_lifetime.py ..                                 [ 86%]
+tests/test_health.py ...                                                 [ 86%]
+tests/test_hypothesis_available.py .                                     [ 87%]
+tests/test_indicator_digest.py ........                                  [ 87%]
+tests/test_indicator_disconnect.py ........................              [ 87%]
+tests/test_indicator_refresh_consumer.py .......................         [ 87%]
+tests/test_money_movement.py ......................................      [ 88%]
+tests/test_paper_acceptance.py ........................                  [ 88%]
+tests/test_paper_cycle_budget.py ...............                         [ 89%]
+tests/test_paper_dispatch_timing.py .........                            [ 89%]
+tests/test_paper_memory_diagnostic.py ........                           [ 89%]
+tests/test_paper_reset_schedule.py ............                          [ 89%]
+tests/test_paper_saturation.py ..................                        [ 89%]
+tests/test_paper_source_timing.py ...............                        [ 90%]
+tests/test_platform_bootstrap_cli.py ...                                 [ 90%]
+tests/test_price_logging.py ..................                           [ 90%]
+tests/test_price_protocol.py ................                            [ 90%]
+tests/test_price_proxy_headers.py ....                                   [ 90%]
+tests/test_risk_limit_main_scheduler.py ........                         [ 91%]
+tests/test_venue_isolation.py ..........                                 [ 91%]
+tests/venue_contract/test_live_contract_pieces.py ........               [ 91%]
+tests/venue_contract/test_verdict.py ....................                [ 91%]
+tests/venue_contract/test_workflow.py ........                           [ 91%]
+tests/venues/binance_th/test_candle_feed.py .......                      [ 91%]
+tests/venues/binance_th/test_candle_stream_mapping.py .................. [ 92%]
+........................................................................ [ 93%]
+.....................................                                    [ 94%]
+tests/venues/binance_th/test_candles.py ................................ [ 94%]
+..................................                                       [ 95%]
+tests/venues/binance_th/test_endpoint_boundary.py ......                 [ 95%]
+tests/venues/binance_th/test_error_changes.py ........                   [ 95%]
+tests/venues/binance_th/test_failures.py ............................... [ 95%]
+.......................                                                  [ 96%]
+tests/venues/binance_th/test_mapping.py ..............................   [ 96%]
+tests/venues/binance_th/test_order_books.py ...........                  [ 96%]
+tests/venues/binance_th/test_price_feed.py .......                       [ 97%]
+tests/venues/binance_th/test_rate_limit.py ............................. [ 97%]
+                                                                         [ 97%]
+tests/venues/binance_th/test_recording.py ................               [ 97%]
+tests/venues/binance_th/test_sources.py ..............                   [ 98%]
+tests/venues/binance_th/test_stream_deadlines.py ................        [ 98%]
+tests/venues/binance_th/test_stream_mapping.py .................         [ 98%]
+tests/venues/binance_th/test_wallets.py .................                [ 98%]
+tests/venues/binance_th/test_worker_limiter.py ..                        [ 98%]
+tests/venues/test_candles.py .                                           [ 98%]
+tests/venues/test_contracts.py ..............................            [ 99%]
+tests/venues/test_fake_price_feed.py .                                   [ 99%]
+tests/venues/test_public_stream_transport.py .............               [ 99%]
+tests/venues/test_types.py .....................                         [100%]
+
+=================================== FAILURES ===================================
+___________ test_routes_that_renew_the_session_are_declared_and_few ____________
+
+    def test_routes_that_renew_the_session_are_declared_and_few() -> None:
+        """V-21.1 — ค่าเริ่มต้นคือไม่ต่ออายุ เส้นทางที่ต่ออายุต้องประกาศตัวเอง
+    
+        ถ้าเส้นทางอ่านข้อมูลที่หน้าเว็บเรียกเป็นรอบ ๆ หลุดเข้ารายการนี้ เปิดหน้าจอทิ้งไว้
+        จะเท่ากับ session ไม่หมดอายุเลย (Q-2)
+        """
+        keys = route_keys()
+        assert keys >= RENEWING_ROUTES
+        # เส้นทาง mutation เหล่านี้เป็น **การกระทำของผู้ใช้**
+        # จึงนับเป็นการใช้งาน · **`GET /api-keys` ไม่อยู่ในรายการนี้** เพราะหน้าเว็บเรียก
+        # เป็นรอบ ๆ เพื่อดูสถานะการตรวจ ซึ่งถ้านับเป็นการใช้งานจะทำให้เปิดหน้าจอทิ้งไว้
+        # แล้ว session ไม่มีวันหมดอายุ (Q-2)
+>       assert (
+            frozenset(
+                {
+                    ("POST", "/auth/logout"),
+                    ("POST", "/auth/logout-all"),
+                    ("POST", "/auth/password"),
+                    ("POST", "/auth/totp/setup"),
+                    ("POST", "/auth/totp/confirm"),
+                    ("POST", "/auth/totp/replace"),
+                    ("POST", "/auth/totp/disable"),
+                    ("POST", "/auth/totp/recovery-codes"),
+                    ("POST", "/api-keys"),
+                    ("DELETE", "/api-keys/{key_id}"),
+                    ("POST", "/api-keys/{key_id}/retry"),
+                    ("POST", "/trading-account/use"),
+                    ("POST", "/paper-wallet"),
+                    ("POST", "/paper-wallet/reset"),
+                    ("POST", "/paper/bots/requests"),
+                    ("POST", "/live/bots/requests"),
+                    ("POST", "/paper/orders"),
+                    ("POST", "/paper/orders/{order_id}/cancel"),
+                    ("POST", "/paper/protections"),
+                    ("POST", "/paper/protections/{protection_id}/replace"),
+                    ("POST", "/paper/protections/{protection_id}/cancel"),
+                    ("POST", "/paper/risk-limit"),
+                    ("POST", "/live/risk-limit"),
+                    ("POST", "/paper/risk-limit/increase"),
+                    ("POST", "/live/risk-limit/increase"),
+                    ("POST", "/paper/risk-limit/reset"),
+                    ("POST", "/live/risk-limit/reset"),
+                    ("POST", "/paper/kill-switch/stop"),
+                    ("POST", "/live/kill-switch/stop"),
+                    ("POST", "/paper/kill-switch/resume"),
+                    ("POST", "/live/kill-switch/resume"),
+                    ("POST", "/admin/kill-switch/stop"),
+                    ("POST", "/admin/kill-switch/resume"),
+                    ("POST", "/admin/supported-symbols"),
+                    ("DELETE", "/admin/supported-symbols/{base}/{quote}"),
+                    ("POST", "/admin/supported-symbols/protocol/enable"),
+                }
+            )
+            == RENEWING_ROUTES
+        )
+E       AssertionError: assert frozenset({('...nable'), ...}) == frozenset({('...nable'), ...})
+E         
+E         Extra items in the right set:
+E         ('POST', '/paper/bots/configurations')
+E         Use -v to get more diff
+
+tests/api/test_route_policy.py:103: AssertionError
+_ test_status_offers_replacement_only_when_flat_and_keeps_managed_tp_readonly[False] _
+
+client = <starlette.testclient.TestClient object at 0x10ee53290>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1154123f0>
+has_inventory = False
+
+    @pytest.mark.parametrize("has_inventory", [False, True])
+    def test_status_offers_replacement_only_when_flat_and_keeps_managed_tp_readonly(
+        client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        has_inventory: bool,
+    ) -> None:
+        register(client)
+        owner = UUID(client.get("/auth/me").json()["user_id"])
+        enable()
+        monkeypatch.setattr(app.state, "bot_f21_enabled", True, raising=False)
+    
+        async def check() -> None:
+            roles = (
+                DatabaseRole.API,
+                DatabaseRole.ENGINE,
+                DatabaseRole.ENGINE_SCAN,
+                DatabaseRole.MIGRATOR,
+            )
+            api, engine, scan, migrator = [create_engine_for(role) for role in roles]
+            try:
+                wallet = await create_production_wallet(api, engine, scan, owner)
+                async with runtime(
+                    api, engine, migrator, owner, wallet, limit="1000", account_use="BOT"
+                ) as source:
+                    old = await f21_run(engine, owner, wallet)
+                    group_id = None
+                    if has_inventory:
+                        _, group_id = await entry(engine, owner, wallet, old, source)
+                    async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+                        await session.execute(
+                            "UPDATE bot_runs SET status='STOPPED',revision=revision+1 WHERE id=:id",
+                            {"id": old},
+                        )
+                    response = client.get("/paper/bots/status")
+                    assert response.status_code == 200, response.text
+                    status = response.json()
+                    assert status["run_id"] == str(old) and status["status"] == "STOPPED"
+                    assert status["pinned_configuration"]["capital_per_entry"] == "100"
+                    assert status["can_start"] is (not has_inventory)
+                    if has_inventory:
+                        assert status["replacement"] is None
+                        rows = client.get(f"/paper/protections?episode_id={wallet.episode_id}")
+                        assert rows.status_code == 200, rows.text
+                        protection = rows.json()["protections"][0]
+                        assert protection["strategy_managed"] is True
+                        payload = {
+                            "expected_wallet_id": str(wallet.wallet_id),
+                            "expected_episode_id": str(wallet.episode_id),
+                            "expected_revision": protection["revision"],
+                            "quantity": protection["quantity"],
+                            "take_profit_price": "120",
+                        }
+                        refusal = client.post(
+                            f"/paper/protections/{group_id}/replace",
+                            json=payload,
+                            headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
+                        )
+                        assert refusal.status_code == 409 and refusal.json() == {
+                            "detail": "ORDER_CONFLICT"
+                        }
+                    else:
+                        proof = status["replacement"]
+                        assert proof["run_id"] == str(old) and proof["stop_id"] is None
+                        config = client.post(
+                            "/paper/bots/configurations",
+                            json={
+                                "base": "BTC",
+                                "capital_per_entry": "17.000000000000000001",
+                                "max_entries": 3,
+                            },
+                            headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
+                        )
+                        assert config.status_code == 200
+                        start = client.post(
+                            "/paper/bots/requests",
+                            json={
+                                "strategy_config_ref": config.json()["reference"],
+                                "replacement": proof,
+                            },
+                            headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
+                        )
+                        assert start.status_code == 202
+                        result = await run_bot_control_round(
+                            engine=engine, scan_engine=scan, registry=StrategyRegistry(enable_f21=True)
+                        )
+                        assert result.applied == 1 and result.refused == 0
+                        async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+                            assert (
+                                await session.execute(
+                                    "SELECT status FROM bot_runs WHERE id=:id", {"id": old}
+                                )
+                            ).scalar_one() == "RETIRED"
+                        current = client.get("/paper/bots/status").json()
+                        assert current["run_id"] != str(old) and current["status"] == "STARTING"
+                        assert (
+                            current["pinned_configuration"]["capital_per_entry"]
+                            == "17.000000000000000001"
+                        )
+            finally:
+                for resource in (api, engine, scan, migrator):
+                    await resource.dispose()
+    
+>       asyncio.run(check())
+
+tests/api/test_strategy_status.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py:195: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py:691: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def check() -> None:
+        roles = (
+            DatabaseRole.API,
+            DatabaseRole.ENGINE,
+            DatabaseRole.ENGINE_SCAN,
+            DatabaseRole.MIGRATOR,
+        )
+        api, engine, scan, migrator = [create_engine_for(role) for role in roles]
+        try:
+            wallet = await create_production_wallet(api, engine, scan, owner)
+            async with runtime(
+                api, engine, migrator, owner, wallet, limit="1000", account_use="BOT"
+            ) as source:
+                old = await f21_run(engine, owner, wallet)
+                group_id = None
+                if has_inventory:
+                    _, group_id = await entry(engine, owner, wallet, old, source)
+                async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+                    await session.execute(
+                        "UPDATE bot_runs SET status='STOPPED',revision=revision+1 WHERE id=:id",
+                        {"id": old},
+                    )
+                response = client.get("/paper/bots/status")
+                assert response.status_code == 200, response.text
+                status = response.json()
+                assert status["run_id"] == str(old) and status["status"] == "STOPPED"
+                assert status["pinned_configuration"]["capital_per_entry"] == "100"
+                assert status["can_start"] is (not has_inventory)
+                if has_inventory:
+                    assert status["replacement"] is None
+                    rows = client.get(f"/paper/protections?episode_id={wallet.episode_id}")
+                    assert rows.status_code == 200, rows.text
+                    protection = rows.json()["protections"][0]
+                    assert protection["strategy_managed"] is True
+                    payload = {
+                        "expected_wallet_id": str(wallet.wallet_id),
+                        "expected_episode_id": str(wallet.episode_id),
+                        "expected_revision": protection["revision"],
+                        "quantity": protection["quantity"],
+                        "take_profit_price": "120",
+                    }
+                    refusal = client.post(
+                        f"/paper/protections/{group_id}/replace",
+                        json=payload,
+                        headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
+                    )
+                    assert refusal.status_code == 409 and refusal.json() == {
+                        "detail": "ORDER_CONFLICT"
+                    }
+                else:
+                    proof = status["replacement"]
+                    assert proof["run_id"] == str(old) and proof["stop_id"] is None
+                    config = client.post(
+                        "/paper/bots/configurations",
+                        json={
+                            "base": "BTC",
+                            "capital_per_entry": "17.000000000000000001",
+                            "max_entries": 3,
+                        },
+                        headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
+                    )
+                    assert config.status_code == 200
+                    start = client.post(
+                        "/paper/bots/requests",
+                        json={
+                            "strategy_config_ref": config.json()["reference"],
+                            "replacement": proof,
+                        },
+                        headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
+                    )
+                    assert start.status_code == 202
+                    result = await run_bot_control_round(
+                        engine=engine, scan_engine=scan, registry=StrategyRegistry(enable_f21=True)
+                    )
+>                   assert result.applied == 1 and result.refused == 0
+E                   assert (1 == 1 and 2 == 0)
+E                    +  where 1 = BotControlRound(applied=1, refused=2, deferred=0).applied
+E                    +  and   2 = BotControlRound(applied=1, refused=2, deferred=0).refused
+
+tests/api/test_strategy_status.py:105: AssertionError
+_ test_status_offers_replacement_only_when_flat_and_keeps_managed_tp_readonly[True] _
+
+client = <starlette.testclient.TestClient object at 0x1152b4260>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10f36b3e0>
+has_inventory = True
+
+    @pytest.mark.parametrize("has_inventory", [False, True])
+    def test_status_offers_replacement_only_when_flat_and_keeps_managed_tp_readonly(
+        client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        has_inventory: bool,
+    ) -> None:
+        register(client)
+        owner = UUID(client.get("/auth/me").json()["user_id"])
+        enable()
+        monkeypatch.setattr(app.state, "bot_f21_enabled", True, raising=False)
+    
+        async def check() -> None:
+            roles = (
+                DatabaseRole.API,
+                DatabaseRole.ENGINE,
+                DatabaseRole.ENGINE_SCAN,
+                DatabaseRole.MIGRATOR,
+            )
+            api, engine, scan, migrator = [create_engine_for(role) for role in roles]
+            try:
+                wallet = await create_production_wallet(api, engine, scan, owner)
+                async with runtime(
+                    api, engine, migrator, owner, wallet, limit="1000", account_use="BOT"
+                ) as source:
+                    old = await f21_run(engine, owner, wallet)
+                    group_id = None
+                    if has_inventory:
+                        _, group_id = await entry(engine, owner, wallet, old, source)
+                    async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+                        await session.execute(
+                            "UPDATE bot_runs SET status='STOPPED',revision=revision+1 WHERE id=:id",
+                            {"id": old},
+                        )
+                    response = client.get("/paper/bots/status")
+                    assert response.status_code == 200, response.text
+                    status = response.json()
+                    assert status["run_id"] == str(old) and status["status"] == "STOPPED"
+                    assert status["pinned_configuration"]["capital_per_entry"] == "100"
+                    assert status["can_start"] is (not has_inventory)
+                    if has_inventory:
+                        assert status["replacement"] is None
+                        rows = client.get(f"/paper/protections?episode_id={wallet.episode_id}")
+                        assert rows.status_code == 200, rows.text
+                        protection = rows.json()["protections"][0]
+                        assert protection["strategy_managed"] is True
+                        payload = {
+                            "expected_wallet_id": str(wallet.wallet_id),
+                            "expected_episode_id": str(wallet.episode_id),
+                            "expected_revision": protection["revision"],
+                            "quantity": protection["quantity"],
+                            "take_profit_price": "120",
+                        }
+                        refusal = client.post(
+                            f"/paper/protections/{group_id}/replace",
+                            json=payload,
+                            headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
+                        )
+                        assert refusal.status_code == 409 and refusal.json() == {
+                            "detail": "ORDER_CONFLICT"
+                        }
+                    else:
+                        proof = status["replacement"]
+                        assert proof["run_id"] == str(old) and proof["stop_id"] is None
+                        config = client.post(
+                            "/paper/bots/configurations",
+                            json={
+                                "base": "BTC",
+                                "capital_per_entry": "17.000000000000000001",
+                                "max_entries": 3,
+                            },
+                            headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
+                        )
+                        assert config.status_code == 200
+                        start = client.post(
+                            "/paper/bots/requests",
+                            json={
+                                "strategy_config_ref": config.json()["reference"],
+                                "replacement": proof,
+                            },
+                            headers={**csrf_headers(client), "Idempotency-Key": str(uuid4())},
+                        )
+                        assert start.status_code == 202
+                        result = await run_bot_control_round(
+                            engine=engine, scan_engine=scan, registry=StrategyRegistry(enable_f21=True)
+                        )
+                        assert result.applied == 1 and result.refused == 0
+                        async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+                            assert (
+                                await session.execute(
+                                    "SELECT status FROM bot_runs WHERE id=:id", {"id": old}
+                                )
+                            ).scalar_one() == "RETIRED"
+                        current = client.get("/paper/bots/status").json()
+                        assert current["run_id"] != str(old) and current["status"] == "STARTING"
+                        assert (
+                            current["pinned_configuration"]["capital_per_entry"]
+                            == "17.000000000000000001"
+                        )
+            finally:
+                for resource in (api, engine, scan, migrator):
+                    await resource.dispose()
+    
+>       asyncio.run(check())
+
+tests/api/test_strategy_status.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py:195: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/base_events.py:691: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/api/test_strategy_status.py:47: in check
+    _, group_id = await entry(engine, owner, wallet, old, source)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_strategy_baskets.py:305: in entry
+    order_id, command = await queue_entry(engine, owner, wallet, run, budget=budget, atr=atr)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_strategy_baskets.py:228: in queue_entry
+    return await queue_entry_in_session(
+tests/infra/execution_market/test_strategy_baskets.py:280: in queue_entry_in_session
+    **await accounting_signal_proof(session, run, timeframe),
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_strategy_baskets.py:161: in accounting_signal_proof
+    ).one()
+      ^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/result.py:1116: in one
+    return self._only_one_row(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>   ???
+E   sqlalchemy.exc.NoResultFound: No row was found when one was required
+
+lib/sqlalchemy/engine/_result_cy.py:538: NoResultFound
+_________ test_paper_owned_modules_cannot_import_live_or_network_code __________
+
+    def test_paper_owned_modules_cannot_import_live_or_network_code() -> None:
+>       assert _violations(tuple(PAPER_FILES)) == []
+E       AssertionError: assert ['/Users/chai..._config', ...] == []
+E         
+E         Left contains 36 more items, first extra item: '/Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend/src/tiewtrade/infra/protections/worker.py:unexpected internal dependency tiewtrade.core.strategy_config'
+E         Use -v to get more diff
+
+tests/gates/test_paper_isolation.py:218: AssertionError
+_ test_nonclosed_indicator_point_is_rejected_with_precise_reason[UNCONFIRMED-False] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x114695ca0>
+paper_test = False, finality = <CandleFinality.UNCONFIRMED: 'UNCONFIRMED'>
+
+    @pytest.mark.parametrize("paper_test", [False, True])
+    @pytest.mark.parametrize("finality", [CandleFinality.UNCONFIRMED, CandleFinality.OPEN])
+    async def test_nonclosed_indicator_point_is_rejected_with_precise_reason(
+        monkeypatch: pytest.MonkeyPatch, paper_test: bool, finality: CandleFinality
+    ) -> None:
+        value = snapshot()
+        strategy = (
+            PaperTestStrategy(PaperTestConfig(value.pair, Timeframe.M5, money("100")))
+            if paper_test
+            else RsiStepGridStrategy(RsiStepGridConfig(value.pair, Timeframe.M5, money("100"), 10))
+        )
+        session = AsyncMock(spec=UserSession)
+        result = MagicMock()
+        result.scalar_one.return_value = datetime.now(UTC)
+        session.execute.return_value = result
+        assert value.candle_input is not None
+        point = SimpleNamespace(finality=finality, open_at=value.candle_input.candle.open_at)
+        page = SimpleNamespace(result=SimpleNamespace(points=(point,)))
+        monkeypatch.setattr("tiewtrade.infra.bots.inputs.rollout_control", AsyncMock(return_value={}))
+        monkeypatch.setattr(
+            "tiewtrade.infra.bots.inputs.read_bot_indicator_page", AsyncMock(return_value=page)
+        )
+        reason = (
+            "BOT_CANDLE_UNCONFIRMED"
+            if finality is CandleFinality.UNCONFIRMED
+            else "INDICATOR_NOT_READY"
+        )
+        with pytest.raises(BotInputsUnavailableError, match=f"^{reason}$"):
+>           await read_bot_indicators(session, strategy.descriptor, value)
+
+tests/infra/bots/test_candle_finality_reason.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/tiewtrade/infra/bots/inputs.py:245: in read_bot_indicators
+    values = tuple(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <list_iterator object at 0x113906830>
+
+    values = tuple(
+>       (name, points[0].values[name]) for name in sorted(descriptor.required_indicators)
+               ^^^^^^^^^^^^^^^^
+    )
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'values'
+
+src/tiewtrade/infra/bots/inputs.py:246: AttributeError
+_ test_nonclosed_indicator_point_is_rejected_with_precise_reason[UNCONFIRMED-True] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x113907fe0>
+paper_test = True, finality = <CandleFinality.UNCONFIRMED: 'UNCONFIRMED'>
+
+    @pytest.mark.parametrize("paper_test", [False, True])
+    @pytest.mark.parametrize("finality", [CandleFinality.UNCONFIRMED, CandleFinality.OPEN])
+    async def test_nonclosed_indicator_point_is_rejected_with_precise_reason(
+        monkeypatch: pytest.MonkeyPatch, paper_test: bool, finality: CandleFinality
+    ) -> None:
+        value = snapshot()
+        strategy = (
+            PaperTestStrategy(PaperTestConfig(value.pair, Timeframe.M5, money("100")))
+            if paper_test
+            else RsiStepGridStrategy(RsiStepGridConfig(value.pair, Timeframe.M5, money("100"), 10))
+        )
+        session = AsyncMock(spec=UserSession)
+        result = MagicMock()
+        result.scalar_one.return_value = datetime.now(UTC)
+        session.execute.return_value = result
+        assert value.candle_input is not None
+        point = SimpleNamespace(finality=finality, open_at=value.candle_input.candle.open_at)
+        page = SimpleNamespace(result=SimpleNamespace(points=(point,)))
+        monkeypatch.setattr("tiewtrade.infra.bots.inputs.rollout_control", AsyncMock(return_value={}))
+        monkeypatch.setattr(
+            "tiewtrade.infra.bots.inputs.read_bot_indicator_page", AsyncMock(return_value=page)
+        )
+        reason = (
+            "BOT_CANDLE_UNCONFIRMED"
+            if finality is CandleFinality.UNCONFIRMED
+            else "INDICATOR_NOT_READY"
+        )
+        with pytest.raises(BotInputsUnavailableError, match=f"^{reason}$"):
+>           await read_bot_indicators(session, strategy.descriptor, value)
+
+tests/infra/bots/test_candle_finality_reason.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/tiewtrade/infra/bots/inputs.py:245: in read_bot_indicators
+    values = tuple(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <list_iterator object at 0x113906650>
+
+    values = tuple(
+>       (name, points[0].values[name]) for name in sorted(descriptor.required_indicators)
+               ^^^^^^^^^^^^^^^^
+    )
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'values'
+
+src/tiewtrade/infra/bots/inputs.py:246: AttributeError
+___________ test_actual_redis_ack_idle_pong_and_public_invalidation ____________
+
+    async def test_actual_redis_ack_idle_pong_and_public_invalidation() -> None:
+        import os
+    
+        import pytest
+        from redis.asyncio import Redis as RedisClient
+    
+        url = os.environ.get("TIEWTRADE_TEST_REDIS_URL")
+        if not url:
+            pytest.skip("isolated Redis required")
+        client = RedisClient.from_url(url)
+        notifications = RedisNotifications(client)
+        try:
+            await notifications.subscribe()
+    
+            async def next_event() -> None:
+                return await anext(notifications.events())
+    
+            event = asyncio.create_task(next_event())
+            await asyncio.sleep(1.6)
+>           assert not event.done()  # pong kept the idle subscription alive
+            ^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: assert not True
+E            +  where True = <built-in method done of _asyncio.Task object at 0x114f87640>()
+E            +    where <built-in method done of _asyncio.Task object at 0x114f87640> = <Task finished name='Task-70128' coro=<test_actual_redis_ack_idle_pong_and_public_invalidation.<locals>.next_event() d...s/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend/tests/infra/realtime/test_notifications.py:77> result=None>.done
+
+tests/infra/realtime/test_notifications.py:82: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/api/test_auth_flow.py::test_a_new_password_that_breaks_the_rules_is_refused[\u0e2a\u0e31\u0e49\u0e19\u0e40\u0e01\u0e34\u0e19-\u0e04\u0e27\u0e32\u0e21\u0e22\u0e32\u0e27]
+tests/api/test_auth_flow.py::test_a_new_password_that_breaks_the_rules_is_refused[password123456789-\u0e2d\u0e22\u0e39\u0e48\u0e43\u0e19\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e17\u0e35\u0e48\u0e2b\u0e49\u0e32\u0e21]
+  /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend/src/tiewtrade/services/api/auth_routes.py:187: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    password = _accepted_new_password(body.password)
+
+tests/api/test_prepared_indicators.py::test_empty_derived_scheduler_refresh_and_rebuild
+  /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend/.venv/lib/python3.12/site-packages/httpx/_client.py:1144: StarletteDeprecationWarning: You should not use the 'timeout' argument with the TestClient. See https://github.com/Kludex/starlette/issues/1108 for more information.
+    return self.request(
+
+tests/api/test_prepared_indicators.py::test_empty_derived_scheduler_refresh_and_rebuild
+  /Users/chainarongjaykeaw/Projects/TiewTrade/Projects/TiewTrade-candle-closure-proof/backend/.venv/lib/python3.12/site-packages/httpx/_client.py:1053: StarletteDeprecationWarning: You should not use the 'timeout' argument with the TestClient. See https://github.com/Kludex/starlette/issues/1108 for more information.
+    return self.request(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 20 durations =============================
+126.32s call     tests/infra/execution_market/test_strategy_tail_inputs.py::test_closed_basket_allows_only_next_eligible_real_candle_after_pool_restart
+25.66s call     tests/infra/db/test_migrations.py::test_downgrade_then_upgrade_rebuilds_the_same_structure
+21.51s call     tests/infra/execution_market/test_rebuild20.py::test_small_real_economic_history_full_replay[True]
+19.79s call     tests/api/test_indicator_routes.py::test_indicator_read_only_pagination_contract
+18.53s call     tests/infra/execution_market/test_internal_observations.py::test_restore_extension_fixture_and_retry_with_real_roles
+17.38s call     tests/api/test_api_key_routes.py::test_no_route_hands_back_the_secret[False]
+15.83s call     tests/infra/execution_market/test_storage.py::test_ring_wrap_is_bounded_and_slow_consumer_must_recover
+13.41s call     tests/infra/db/test_migrations.py::test_downgrading_0003_restores_the_earlier_mechanism
+13.40s call     tests/infra/db/test_migrations.py::test_single_account_upgrade_refuses_multiple_keys_and_keeps_rows
+13.36s call     tests/infra/market_data/test_migration.py::test_empty_upgrade_downgrade_replays_market_schema
+12.88s call     tests/infra/db/test_migrations.py::test_selected_use_audit_survives_allowed_downgrade
+12.38s call     tests/infra/market_data/test_migration.py::test_populated_candle_downgrade_refuses_atomically[market_candle_demand]
+12.37s call     tests/infra/market_data/test_migration.py::test_populated_candle_downgrade_refuses_atomically[market_candles]
+11.13s call     tests/infra/market_data/test_realtime_migration.py::test_upgrade_starts_durable_outage_before_first_producer
+10.73s call     tests/infra/db/test_migrations.py::test_preferences_populated_downgrade_refuses_and_keeps_history
+10.19s call     tests/infra/risk_limits/test_profile_resources.py::test_cleanup_excludes_only_predeclared_observers_and_detects_a_leak
+10.17s call     tests/infra/indicators/test_staging.py::test_full_m1_scan_is_bounded_and_has_at_most_527_checkpoints
+10.10s call     tests/infra/execution_market/test_bot_feature_gates.py::test_strategy_proof_is_bound_to_current_owner_stop_and_source_revisions[expiry]
+10.02s call     tests/infra/execution_market/test_tail_reads.py::test_statement_timeout_cancels_query_without_retry
+9.88s setup    tests/infra/execution_market/test_bot_api_restart.py::test_api_restart_recovers_committed_start_by_key_without_duplicate_run_or_audit
+=========================== short test summary info ============================
+FAILED tests/api/test_route_policy.py::test_routes_that_renew_the_session_are_declared_and_few
+FAILED tests/api/test_strategy_status.py::test_status_offers_replacement_only_when_flat_and_keeps_managed_tp_readonly[False]
+FAILED tests/api/test_strategy_status.py::test_status_offers_replacement_only_when_flat_and_keeps_managed_tp_readonly[True]
+FAILED tests/gates/test_paper_isolation.py::test_paper_owned_modules_cannot_import_live_or_network_code
+FAILED tests/infra/bots/test_candle_finality_reason.py::test_nonclosed_indicator_point_is_rejected_with_precise_reason[UNCONFIRMED-False]
+FAILED tests/infra/bots/test_candle_finality_reason.py::test_nonclosed_indicator_point_is_rejected_with_precise_reason[UNCONFIRMED-True]
+FAILED tests/infra/realtime/test_notifications.py::test_actual_redis_ack_idle_pong_and_public_invalidation
+==== 7 failed, 6012 passed, 32 deselected, 5 warnings in 2157.74s (0:35:57) ====

@@ -19,7 +19,9 @@
     "test:e2e:manual-orders": "playwright test --config=playwright.manual-orders.config.ts",
     "test:e2e:risk-limits": "playwright test --config=playwright.risk-limits.config.ts",
     "test:e2e:protections": "playwright test --config=playwright.protections.config.ts",
-    "test:e2e:bots": "playwright test --config=playwright.bots.config.ts"
+    "test:e2e:bots": "playwright test --config=playwright.bots.config.ts",
+    "test:e2e:strategy": "playwright test --config=playwright.strategy.config.ts",
+    "test:e2e:paper-test": "playwright test --config=playwright.paper-test.config.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",

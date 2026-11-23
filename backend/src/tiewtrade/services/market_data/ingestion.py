@@ -24,6 +24,7 @@ from tiewtrade.core.timeframes import candle_storage_cutoff as retention_cutoff
 from tiewtrade.infra.db.errors import DatabaseTimeoutError
 from tiewtrade.infra.db.session import MarketDataSession, market_data_session
 from tiewtrade.infra.indicators.source import begin_source_write, source_write_timeouts
+from tiewtrade.infra.market_data.candle_closure import prepare_write
 from tiewtrade.infra.market_data.catalog import runtime_catalog
 from tiewtrade.infra.market_data.claims import (
     Claim,
@@ -549,6 +550,7 @@ async def run_round(
             page = _validate(page, claim, window)
             async with market_data_session(engine) as session:
                 await begin_source_write(session)
+                await prepare_write(session)
                 row = await lock_claim(session, claim)
                 await write_candles(session, claim, page.candles, started)
                 now = await database_now(session)

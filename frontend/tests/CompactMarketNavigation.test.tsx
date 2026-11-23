@@ -5,7 +5,6 @@ import { TradingWorkspace } from "../src/TradingWorkspace";
 import { accountI18n, accountText as t } from "../src/accountMessages";
 
 beforeEach(() => {
-  vi.stubEnv("VITE_CHART_ENABLED", "1");
   vi.stubGlobal("fetch", vi.fn());
 });
 afterEach(async () => {

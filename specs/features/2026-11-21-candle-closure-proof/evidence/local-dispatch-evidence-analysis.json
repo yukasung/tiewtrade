@@ -1,0 +1,26 @@
+{
+  "purpose": "Offline analysis of preserved attempt4 evidence; no public run or DB write",
+  "source_hashes": {
+    "public-paper-campaign-4-authority-timeline.json": "664155ed8937edc3df7d0a0378eb6d7da295053067817dc3052a5fef7c7d94fb",
+    "public-paper-campaign-4-diagnostics.json": "a8ef842101a0b65ec6b4d152833489d400efe430f21ac82e9d409cea16bbd743",
+    "public-paper-campaign-4.txt": "c882550802f7a0d7a6f379fdc1c7365b9a77d113dab46d817a8c45463c022b35"
+  },
+  "observed": {
+    "decision_commit_to_terminal_result_commit": "0:00:42.747145",
+    "decision_commit_to_pause_commit": "0:00:18.982648",
+    "pause_commit_to_terminal_result_commit": "0:00:23.764497",
+    "terminal_claim_revision": 4,
+    "terminal_attempts": 0,
+    "failure_code": "ORDER_SAFETY_UNAVAILABLE"
+  },
+  "interpretation": [
+    "Run pause and newer revision predate rejection; blocking authority is consistent with the approved guard.",
+    "finish_claim resets attempts to zero; terminal attempts cannot establish absence of previous deferrals.",
+    "claim_revision is monotonic fencing metadata; the saved terminal snapshot lacks the claim start/end/due transitions needed to reconstruct each claim.",
+    "serve schedules protection and manual phases before the bot-order phase. The 20ms outer sleep is not an upper bound on dispatch latency.",
+    "defer_claim has bounded 1s/5s/30s/5min schedules, but no preserved per-claim evidence proves which delay contributed to this command.",
+    "Risk DATABASE_TIMEOUT and book readiness warnings have no per-command phase timestamps in the preserved log; they do not establish the latency root cause."
+  ],
+  "root_cause": "Unproven",
+  "next_diagnostic_if_separately_authorized": "Capture monotonic phase durations and safe command/claim correlation at selection, claim commit, process start, defer/terminal commit; preserve source/risk readiness at each boundary. Do not log secrets or change trading guards."
+}

@@ -1,0 +1,48 @@
+{
+  "candidate_manifest": "continuation-candidate-manifest.json",
+  "full_backend": {
+    "passed": 6012,
+    "failed": 7,
+    "deselected": 32,
+    "seconds": 2157.74,
+    "status": "FAILED; affected reruns passed"
+  },
+  "final_findings_regression": {
+    "passed": 16,
+    "failed": 0,
+    "seconds": 17.65,
+    "includes": "all seven full-run failures plus both protection timing failures and related regressions"
+  },
+  "isolated_phases": {
+    "writer_guard": {
+      "exit_code": 0
+    },
+    "optional_limit": {
+      "exit_code": 0
+    },
+    "fresh_global": {
+      "exit_code": 0
+    },
+    "protection_rollback": {
+      "exit_code": 0
+    }
+  },
+  "full_mypy": "Passed:804 files",
+  "ruff": "Passed",
+  "format": "Passed:885 files",
+  "api_contract": "export byte-identical to existing backend/openapi.json",
+  "required_ci": "Not Run",
+  "owner_acceptance": "Pending",
+  "batch_release": "Pending Full Validation",
+  "protection_initial": "Failed two timing cases under concurrent full regression; unchanged cases passed in final focused run",
+  "notification_environment": "Dedicated temporary Redis instance; logical DB separation alone does not isolate Pub/Sub",
+  "final_candidate_manifest": "continuation-reviewed-candidate-manifest.json",
+  "campaign_candidate_manifest": "continuation-candidate-manifest.json",
+  "second_campaign": "Partial: OWNED_API_SETUP, RuntimeError; no users/wallets/orders/positions; both F11 builds READY; closure activated only in owned DB",
+  "harness_diagnostics_regression": {
+    "passed": 6,
+    "failed": 0,
+    "seconds": 0.95
+  },
+  "offline_api_signup": "Passed in fresh owned DB; original campaign failure remains unidentified"
+}

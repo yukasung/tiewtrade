@@ -1,0 +1,40 @@
+Local deployment/protocol compatibility checkpoint, 2026-11-22
+Published runtime base: e193fd3237a489f152a0643ff25105227c4e82f6
+No production source, architecture, money, strategy, session or activation changes.
+
+backend/tests/infra/execution_market/test_candle_closure_compatibility.py SHA256 3828679cbcb5171544afb68d8150f9599999fb16f97fdc8b07f9b30a54760a83
+backend/tests/infra/execution_market/test_candle_closure_proof.py SHA256 0bb624f3f63503020a3b3dfe0a453b839b10f3493921356a8c026cbf173ee6ce
+
+Real PostgreSQL16.16, dedicated localhost55424, fresh internal test databases:
+25 selected /25 passed (21 new cases +4 existing regressions).
+- Four boolean attestations each missing/false/string:12 rejections.
+- Candidate SHA missing/empty/nonhex/too short:4 rejections.
+- Source proof PENDING:1 rejection.
+- Separate MARKET_DATA writer process: protocol OFF permits the old unmarked
+  canonical write without promotion; ON rejects that same write; current v1
+  writer publishes exactly one proof readable by the ENGINE consumer:3 cases.
+- Deactivation without paused-admission attestation is rejected; valid
+  deactivation retains accepted evidence and makes the proof non-tradable:1 case.
+- Existing regressions: missing inventory/disabled guards, default-OFF schema
+  roundtrip, role/forgery boundaries and refusal of destructive history downgrade:4.
+Every rejected activation leaves the complete closure-control row unchanged.
+
+Scoped mypy with MYPYPATH=src: passed2source files.
+Ruff and format --check: passed2files. git diff --check passed.
+Initial Ruff found one long line inside the child-script fixture; wrapped before
+running tests. No test failure, retry, skipped assertion or timeout relaxation.
+Reuse: ready/INVENTORY, existing marker helper and one local rejection helper
+rather than repeating activation SQL/state comparisons across three tests.
+
+Reviewed scope: PostgreSQL remains shared persistent authority; runtime roles
+and source-write scopes enforced; process cleanup in finally; no memory session
+or process cache introduced. OFF/ON legacy writes share the same SQL oracle,
+so a privilege error alone cannot explain the ON rejection. No runtime finding.
+
+Limits: the legacy subprocess executes the old unmarked SQL path using the
+current runtime dependencies; it is not a historical executable certification.
+Attestation fixtures cannot certify actual deployed process inventory, draining,
+restart-disable policy or old-reader compatibility. Only current proof v1 is
+positively exercised. Actual deployment evidence and owner/independent acceptance
+remain open; V14 stays Partial. New tests remain local and have no final-head CI.
+No public source campaign, owner preview activation, Live, commit/push or new CI.

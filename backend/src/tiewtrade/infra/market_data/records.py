@@ -35,6 +35,7 @@ class StoredCandle:
     candle: Candle
     fetch_started_at: datetime
     last_checked_at: datetime
+    closure_refresh_required: bool = False
 
 
 @dataclass(frozen=True, slots=True)

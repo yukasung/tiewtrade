@@ -1,0 +1,31 @@
+{
+  "candidate": "completion-candidate-manifest.json",
+  "latest_api_pg_harness": {
+    "passed": 14,
+    "failed": 0,
+    "seconds": 13.93
+  },
+  "final_guard_harness": {
+    "passed": 9,
+    "failed": 0,
+    "seconds": 0.94
+  },
+  "counts_overlap": true,
+  "mypy": "804 passed",
+  "ruff": "passed",
+  "format": "passed",
+  "production_runtime_changes_this_continuation": false,
+  "attempt3": "Partial: configuration HTTP422; RSI payload defect fixed after attempt",
+  "attempts2_3_corrected_facts": {
+    "each_users": 2,
+    "each_wallets": 2,
+    "each_capital_ledger_rows": 2,
+    "each_runs": 0,
+    "each_orders": 0,
+    "each_positions": 0
+  },
+  "fourth_public_attempt": "Not Run; owner decision pending under three-attempt stop",
+  "required_ci": "Not Run",
+  "owner_acceptance": "Pending",
+  "batch_release": "Pending Full Validation"
+}

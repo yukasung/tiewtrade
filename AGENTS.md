@@ -259,6 +259,8 @@ validation ที่อนุมัติก่อน 2026-11-01 ใช้ check
 
 ### การเลือก Tests และการตรวจรับ
 
+- การแก้ test/CI failure ให้ใช้ [มาตรฐาน Testing หัวข้อ 7](specs/standards/testing.md)
+  “การวินิจฉัย test/CI failure ก่อนเผยแพร่รอบแก้” เป็นแหล่งกฎและเกณฑ์รายงานผล
 - ระหว่างพัฒนาและก่อน merge ใช้ targeted correctness/safety/regression ครอบคลุม
   diff, callers, dependencies, contracts, database, concurrency และ trading safety
   พร้อม static checks ที่เกี่ยวข้อง

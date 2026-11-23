@@ -7,6 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 
 from tiewtrade.core.bots import BotStatus
+from tiewtrade.core.market_data import Timeframe
 from tiewtrade.core.orders import TradingMode
 from tiewtrade.core.protections import ProtectionState
 
@@ -25,6 +26,40 @@ class BotStartInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
     strategy_config_ref: StrictStr = Field(min_length=1, max_length=128)
     replacement: BotReplacementInput | None = None
+
+
+class StrategyConfigurationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    base: Literal["BTC", "ETH"]
+    timeframe: Literal["1m", "3m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"] = "5m"
+    capital_per_entry: StrictStr = Field(min_length=1, max_length=128)
+    max_entries: StrictInt = Field(default=10, ge=1, le=10)
+
+
+class StrategyConfigurationView(StrategyConfigurationInput):
+    reference: str
+
+
+class StrategyCatalogView(BaseModel):
+    strategy_name: str
+    strategies: list[str] = ["rsi-step-grid-ema-single-tp"]
+    timeframes: list[Timeframe]
+    max_entries_min: int = 1
+    max_entries_max: int = 10
+    default_max_entries: int = 10
+    default_timeframe: Timeframe = Timeframe.M5
+
+
+class PaperTestConfigurationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    strategy_name: Literal["paper-green-atr-test"]
+    base: Literal["BTC", "ETH"]
+    timeframe: Literal["1m", "3m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"]
+    capital_per_entry: StrictStr = Field(min_length=1, max_length=128)
+
+
+class PaperTestConfigurationView(PaperTestConfigurationInput):
+    reference: str
 
 
 class BotPositionView(BaseModel):
@@ -65,6 +100,11 @@ class BotStatusView(BaseModel):
     protections: list[BotProtectionView]
     protections_more: bool
     readiness_reason: str | None
+    pinned_configuration: StrategyConfigurationInput | PaperTestConfigurationInput | None = None
+    basket_target: str | None = None
+    basket_triggered: bool = False
+    open_entries: int = 0
+    replacement: BotReplacementInput | None = None
 
 
 class BotReceiptView(BaseModel):

@@ -13,6 +13,7 @@ const words = {
   stepResidual: ["เศษที่ไม่ตรง step ตลาด", "Remainder below quantity step"], coverageUnknown: ["ยังยืนยันส่วนที่ป้องกันไม่ได้", "Coverage cannot be verified"], residualWarning: ["เศษส่วนนี้ไม่มี TP/SL ป้องกัน และระบบจะไม่ขายเพิ่มอัตโนมัติ", "This remainder is not protected by TP/SL and will not be sold automatically."],
   title: ["TP / SL", "TP / SL"], create: ["ตั้ง TP/SL ให้เหรียญที่ถือ", "Protect held assets"],
   quantity: ["จำนวนเหรียญ", "Quantity"], tp: ["ราคา Take Profit", "Take profit price"], sl: ["ราคา Stop Loss", "Stop loss price"],
+  strategyManaged: ["ใช้ TP ร่วมจากสูตรบอท", "Shared TP managed by strategy"],
   save: ["บันทึก", "Save"], edit: ["แก้ไข", "Edit"], cancel: ["ยกเลิกการป้องกัน", "Cancel protection"], close: ["ปิด", "Close"],
   remaining: ["ปริมาณที่ผูกไว้", "Allocated quantity"], covered: ["ปริมาณที่ป้องกันแล้ว", "Protected quantity"],
   exitQuantity: ["จำนวนที่บันทึกในคำสั่งปิด", "Queued exit quantity"],

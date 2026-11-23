@@ -1,0 +1,81 @@
+{
+  "candidate_fingerprint": "4ab839944558876b7cc900cee948c38acfdd3a0ab1787d8df2da61bc2ed892c6",
+  "result": "PARTIAL",
+  "boot_started_at": "2026-11-22T14:26:56.683487+00:00",
+  "phase": "PUBLIC_BOOT",
+  "stopped_at": "2026-11-22T14:27:14.763017+00:00",
+  "users": [],
+  "wallets": [],
+  "runs": [],
+  "build_jobs": [],
+  "execution_sources": [
+    {
+      "base": "BTC",
+      "ready": false,
+      "failure_code": null,
+      "generation": 1,
+      "last_input_id": 0,
+      "received_at": null,
+      "verified_at": null
+    },
+    {
+      "base": "ETH",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 1,
+      "last_input_id": 0,
+      "received_at": null,
+      "verified_at": null
+    }
+  ],
+  "closure_states": [],
+  "closure_results": [],
+  "closure_observations": [],
+  "decisions": [],
+  "links": [],
+  "canonical": [],
+  "ledger": [],
+  "executions": [],
+  "orders": [],
+  "positions": [],
+  "reservations": [],
+  "anchors": [],
+  "failure_type": "ExceptionGroup",
+  "failure_frames": [
+    {
+      "file": "profile_candle_closure.py",
+      "function": "main",
+      "line": 462
+    },
+    {
+      "file": "profile_candle_closure.py",
+      "function": "campaign",
+      "line": 291
+    },
+    {
+      "file": "order_book.py",
+      "function": "run",
+      "line": 300
+    },
+    {
+      "file": "order_book.py",
+      "function": "_produce",
+      "line": 278
+    },
+    {
+      "file": "order_book.py",
+      "function": "ingest_execution_pair",
+      "line": 410
+    },
+    {
+      "file": "taskgroups.py",
+      "function": "__aexit__",
+      "line": 71
+    },
+    {
+      "file": "taskgroups.py",
+      "function": "_aexit",
+      "line": 164
+    }
+  ]
+}

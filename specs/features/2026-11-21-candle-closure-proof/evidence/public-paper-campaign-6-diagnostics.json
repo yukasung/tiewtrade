@@ -1,0 +1,2 @@
+{"observed_at" : "2026-11-22T14:29:27.278082+00:00", "other_database_sessions" : 0, "users" : 0, "wallets" : 0, "candles" : 0, "orders" : 0, "executions" : 0, "positions" : 0, "reservations" : 0, "ledger" : 0, "candle_demand" : [{"base":"BTC","timeframe":"1m","status":"PENDING","attemptcount":1,"failure_code":"SOURCE_FAILURE"}, 
+ {"base":"ETH","timeframe":"1m","status":"RUNNING","attemptcount":1,"failure_code":null}]}

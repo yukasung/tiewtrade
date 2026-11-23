@@ -4,6 +4,7 @@
 ข้อกำหนดอยู่ใน `specs/features/2026-09-27-money-types/requirements.md`
 """
 
+from tiewtrade.core.money.basket_arithmetic import basket_take_profit
 from tiewtrade.core.money.errors import (
     ArithmeticFailureError,
     InvalidInputTypeError,
@@ -63,6 +64,7 @@ __all__ = [
     "advance_indicator_batch",
     "align_quantity",
     "allocate_money",
+    "basket_take_profit",
     "divide_money",
     "money_for_quantity",
     "percentage_share",

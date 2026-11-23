@@ -1,0 +1,211 @@
+{
+  "candidate": "9e992141d39c59a738275822d103e2734804958f",
+  "ci_run": 45042222741,
+  "backend": "failed_full_mypy_six_wrappers",
+  "security_run": 45042222782,
+  "security": "passed",
+  "local_correction": "unpublished",
+  "checks": {
+    "full_mypy_source_files": 805,
+    "diagnostic_tests": 119,
+    "session_and_workload_tests": 41,
+    "ruff_and_format_files": 9
+  },
+  "review": "scoped_diff_and_delegate_paths_passed",
+  "public_attempt8": "not_run_not_authorized",
+  "remaining_ci": "completed",
+  "ci_jobs": [
+    {
+      "name": "ค่ากลาง — เวอร์ชัน PostgreSQL",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "backend execution",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "e2e execution",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "api-contract execution",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "docker execution",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "frontend execution",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "สัญญา API — ชนิดข้อมูลสองฝั่งต้องตรง...",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "หลังบ้าน — lint, types, imports, tests",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "หน้าบ้าน — lint, types, tests",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "container — ทั้งสองฝั่งรันใน container ได้",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "e2e — เบราว์เซอร์จริงเห็นข้อมูลจาก API ...",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "e2e_steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Initialize containers",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/checkout@v4",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run astral-sh/setup-uv@v5",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/setup-node@v4",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run uv sync --frozen",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run npm ci",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Prepare Ubuntu mirror for E2E dependencies",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Diagnose E2E DNS and HTTPS access",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run npx playwright install --with-deps chromium",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "bootstrap ฐานข้อมูล (บทบาทและ event trigger)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "migration",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run npm run test:e2e",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "F-37 supported-symbol catalog E2E",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "F-16 manual order Paper E2E",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "F-17 Paper protection E2E",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "F-20 Paper bot lifecycle E2E",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "F-21 single-basket Paper strategy E2E",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Paper Test Entry first-fill TP/SL E2E",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "reset database for F-18/F-19 risk composition",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "F-18 wallet risk production composition E2E",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/upload-artifact@v4",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Post Run actions/setup-node@v4",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run astral-sh/setup-uv@v5",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/checkout@v4",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Stop containers",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

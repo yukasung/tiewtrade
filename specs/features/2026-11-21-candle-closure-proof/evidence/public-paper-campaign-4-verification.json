@@ -1,0 +1,33 @@
+{
+  "report_sha256": "191ed422aa4f2c676161859d3f2a2b6d1bd8499f5951c793ac751d136a6bb533",
+  "candidate_fingerprint": "51f6519346fe9bf92bf5a4d53568678375b8198024fc99936762b955d3867566",
+  "result": "PARTIAL",
+  "native_rest_proofs_reverified": 8,
+  "decisions": 7,
+  "buy_commands": 1,
+  "buy_budget": "100 USDT",
+  "signal_green": true,
+  "signal_open_at": "2026-11-21T12:54:00+00:00",
+  "request_in_next_candle": true,
+  "command_requested_at": "2026-11-21 12:55:41.081358+00:00",
+  "command_result": "REJECTED",
+  "failure_code": "ORDER_SAFETY_UNAVAILABLE",
+  "result_recorded_at": "2026-11-21 12:56:24.323755+00:00",
+  "fills": 0,
+  "positions": 0,
+  "reservations": 0,
+  "wallet_capital_each": "10000 USDT; unchanged ledger",
+  "first_fill_tp_sl": "Not exercised: no fill",
+  "specific_failed_guard": "Not identified from generic ORDER_SAFETY_UNAVAILABLE; readiness gaps/timeouts observed, no claimed root cause",
+  "validation": "Read-only offline evidence verification with existing Money/Quantity/core verifier; no new campaign",
+  "later_commit_timeline_analysis": {
+    "decision_revision": 7,
+    "post_decision_run_revision": 8,
+    "source_pause_revision": 9,
+    "source_pause_committed_at": "2026-11-21T12:56:00.684285+00:00",
+    "rejection_committed_at": "2026-11-21T12:56:24.448782+00:00",
+    "resume_committed_at": "2026-11-21T12:56:28.294247+00:00",
+    "interpretation": "At rejection the durable run was PAUSED with a newer revision. Existing paper_bot_authority requires RUNNING and _queued_signal_current requires the pinned revision; this state blocks the command. Internal sub-guard was not separately logged. Cause of approximately43 seconds queue/processing delay remains unproved.",
+    "stop_requests": 0
+  }
+}

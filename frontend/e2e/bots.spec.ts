@@ -37,7 +37,9 @@ async function language(page: Page, locale: string) {
     await manual.manualOrderI18n.changeLanguage(selected);
     await stops.killSwitchI18n.changeLanguage(selected);
   }, locale);
-  await page.locator(`${panelSelector} input`).fill(locale === "en" ? "100" : "101");
+  await expect(page.locator(panelSelector).getByRole("button", {
+    name: locale === "en" ? "Start bot" : "เริ่มบอท", exact: true,
+  })).toBeVisible();
 }
 
 test("real API lifecycle, exposure and stop recovery across responsive locales/themes", async ({ page }, info) => {
@@ -46,7 +48,8 @@ test("real API lifecycle, exposure and stop recovery across responsive locales/t
   await phase(page, owner, "pending");
   await expect(panel.getByText("รับคำขอเริ่มแล้ว · กำลังตรวจความพร้อม")).toBeVisible();
   expect((await status(page)).status).toBeNull();
-  await expect(panel.getByRole("button", { name: "เริ่มบอท", exact: true })).toBeDisabled();
+  await expect(panel.getByRole("button", { name: "เริ่มบอท", exact: true })).toHaveCount(0);
+  await expect(panel.getByRole("button", { name: "หยุดบอท", exact: true })).toBeEnabled();
   await panel.screenshot({ path: info.outputPath("f20-pending.png") });
   await phase(page, owner, "start");
   await expect(panel.getByText("กำลังเริ่ม", { exact: true })).toBeVisible();
@@ -68,11 +71,15 @@ test("real API lifecycle, exposure and stop recovery across responsive locales/t
         await page.evaluate(value => document.documentElement.classList.toggle("dark", value === "dark"), theme);
         await expect(panel.getByRole("button", { name: locale === "th" ? "เริ่มบอท" : "Start bot", exact: true })).toBeDisabled();
         await expect(panel.getByText(locale === "th" ? "กำลังทำงาน" : "Running", { exact: true })).toBeVisible();
-        await panel.locator("input").focus();
-        await page.keyboard.press("Shift+Tab");
-        await expect(panel.getByRole("combobox")).toBeFocused();
+        await expect(panel.locator("#paper-bot-budget")).toBeDisabled();
+        await expect(panel.locator("#paper-bot-count")).toBeDisabled();
+        const stop = panel.getByRole("button", { name: locale === "th" ? "หยุดบอท Paper" : "Stop Paper bot", exact: true });
+        await stop.focus();
+        await expect(stop).toBeFocused();
         await page.keyboard.press("Tab");
-        await expect(panel.locator("input")).toBeFocused();
+        await expect(page.getByRole("button", { name: locale === "th" ? "ลด/ปิดสถานะ" : "Reduce / close holdings", exact: true })).toBeFocused();
+        await page.keyboard.press("Shift+Tab");
+        await expect(stop).toBeFocused();
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
         // Capture the real page from its top: a locator screenshot scrolls the
         // mobile panel beneath the existing sticky market toolbar and clips it.
@@ -88,7 +95,8 @@ test("real API lifecycle, exposure and stop recovery across responsive locales/t
   await page.evaluate(() => document.documentElement.classList.remove("dark"));
   await page.setViewportSize({ width: 1440, height: 1000 });
   await phase(page, owner, "pause");
-  await expect(panel.getByText("พักชั่วคราว", { exact: true })).toBeVisible();
+  await expect.poll(async () => (await status(page)).status).toBe("PAUSED");
+  await expect(panel.getByText("พักชั่วคราว", { exact: true })).toHaveCount(0);
   await panel.screenshot({ path: info.outputPath("f20-paused.png") });
   await phase(page, owner, "evaluate");
   await expect(panel.getByText("กำลังทำงาน", { exact: true })).toBeVisible();
@@ -104,19 +112,20 @@ test("real API lifecycle, exposure and stop recovery across responsive locales/t
   const recovery = page.waitForRequest(request => request.url().includes("/kill-switch/requests/by-key/"));
   await page.reload();
   await recovery;
-  await expect(panel.getByText("หยุดแล้ว", { exact: true }).first()).toBeVisible();
+  await expect(panel.getByRole("button", { name: "เริ่มบอท", exact: true })).toBeVisible();
+  await expect(panel.getByText("หยุดแล้ว", { exact: true })).toHaveCount(0);
   await expect.poll(() => page.evaluate(id => window.localStorage.getItem(`tiewtrade.kill-switch.stop.v1:${id}:PAPER`), owner)).toBeNull();
   const metrics = await (await page.request.post(`${control}/metrics`, { data: { user_id: owner } })).json() as { stop_requests: number; orders: number; position_events: number };
   expect(metrics).toEqual({ stop_requests: 1, orders: 1, position_events: 1 });
   expect((await status(page)).positions[0]?.quantity).toBe("0.999");
   expect((await status(page)).protections[0]?.quantity).toBe("0.999");
-  await panel.getByRole("button", { name: "ดูรายละเอียด", exact: true }).click();
+  await panel.getByRole("button", { name: "ตรวจการหยุด / เปิดกลับ", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByRole("button", { name: "เปิดบอทกลับ", exact: true })).toBeEnabled();
   await dialog.screenshot({ path: info.outputPath("f20-resume-summary.png") });
   await page.keyboard.press("Escape");
-  await expect(panel.getByRole("button", { name: "หยุดบอท Paper", exact: true })).toBeFocused();
-  await panel.getByRole("button", { name: "ดูรายละเอียด", exact: true }).click();
+  await expect(panel.getByRole("button", { name: "ตรวจการหยุด / เปิดกลับ", exact: true })).toBeFocused();
+  await panel.getByRole("button", { name: "ตรวจการหยุด / เปิดกลับ", exact: true }).click();
   await dialog.getByRole("button", { name: "เปิดบอทกลับ", exact: true }).click();
   await expect.poll(async () => (await status(page)).status).toBe("RECOVERING");
   await page.keyboard.press("Escape");

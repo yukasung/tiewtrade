@@ -148,8 +148,12 @@ async def test_early_trace_separates_query_and_finalization_and_retains_error(
     private = RuntimeError("PRIVATE_FINALIZATION_ERROR")
 
     @asynccontextmanager
-    async def delayed(engine: Any, *, cleanup_seconds: float | None = None) -> AsyncIterator[Any]:
-        async with original(engine, cleanup_seconds=cleanup_seconds) as connection:
+    async def delayed(
+        engine: Any, *, cleanup_seconds: float | None = None, strict_rollback: bool = False
+    ) -> AsyncIterator[Any]:
+        async with original(
+            engine, cleanup_seconds=cleanup_seconds, strict_rollback=strict_rollback
+        ) as connection:
             yield connection
             await asyncio.sleep(0.04)
             if failure:

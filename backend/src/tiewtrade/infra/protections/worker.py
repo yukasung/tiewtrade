@@ -1,10 +1,11 @@
 """Fenced Paper protection decisions, always inside the financial writer transaction."""
 
 from dataclasses import replace
+from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid5
 
-from tiewtrade.core.money import Money, MoneyError, Quantity
+from tiewtrade.core.money import Money, MoneyError, Quantity, basket_take_profit
 from tiewtrade.core.orders import (
     BaseSize,
     OrderConflictError,
@@ -26,8 +27,10 @@ from tiewtrade.core.positions import (
 )
 from tiewtrade.core.protections import (
     EntryAllocationEvidence,
+    EntryAtrProtection,
     ManualSaleAllocation,
     Protection,
+    ProtectionLeg,
     ProtectionPrices,
     ProtectionState,
     SetupAction,
@@ -41,6 +44,12 @@ from tiewtrade.core.protections import (
     replace_protection,
 )
 from tiewtrade.core.realtime_prices import Readiness, readiness
+from tiewtrade.core.strategy_config import PAPER_TEST_STRATEGY
+from tiewtrade.infra.bots.baskets import (
+    finish_empty_baskets,
+    open_entry_order_ids,
+    record_execution,
+)
 from tiewtrade.infra.bots.system_stop import stop_for_protection_failure
 from tiewtrade.infra.db.session import UserSession
 from tiewtrade.infra.market_data.order_book_codec import canonical
@@ -50,6 +59,7 @@ from tiewtrade.infra.paper_orders.codec import object_payload
 from tiewtrade.infra.paper_orders.dispatch import submit_cancel, submit_order
 from tiewtrade.infra.paper_orders.requests import ManualRequest, decode_request, wallet_lock
 from tiewtrade.infra.positions.views import held_and_reserved
+from tiewtrade.infra.protections.entry_anchor import resolve_first_fill
 from tiewtrade.infra.protections.storage import (
     StoredProtection,
     allocated,
@@ -166,7 +176,35 @@ async def bot_bracket(
         },
     )
     bracket = result.scalar_one_or_none()
-    return None if bracket is None else prices(intent.pair, object_payload(bracket))
+    if bracket is None:
+        return None
+    payload = object_payload(bracket)
+    if payload.get("kind") == "ATR_FIRST_FILL":
+        if (
+            payload.keys() != {"version", "kind", "atr"}
+            or type(payload["version"]) is not int
+            or payload["version"] != 1
+        ):
+            raise OrderConflictError("invalid anchored protection instruction")
+        anchor = (
+            await session.execute(
+                (
+                    "SELECT atr FROM bot_test_entry_anchors WHERE order_id=:order AND "
+                    "command_id=:command"
+                ),
+                {"order": intent.order_id, "command": command_id},
+            )
+        ).scalar_one_or_none()
+        if anchor is None or Money.of(anchor, intent.pair.quote) != Money.of(
+            payload["atr"], intent.pair.quote
+        ):
+            raise OrderConflictError("anchored protection provenance differs")
+        evidence = await market_evidence(session, intent.pair)
+        tick = (await read_latest_book(session, intent.pair)).metadata.market.price_tick
+        return EntryAtrProtection(intent.pair, Money.of(anchor, intent.pair.quote)).resolve(
+            evidence.price, tick
+        )
+    return prices(intent.pair, payload)
 
 
 async def linked_protection_exit(
@@ -319,7 +357,7 @@ async def commit_admission(
         )
 
 
-async def record_fill(session: UserSession, order_id: UUID, fact: ExecutionFact) -> None:
+async def _record_fill(session: UserSession, order_id: UUID, fact: ExecutionFact) -> None:
     # Reuse F-14's fee/base effect. Never reproduce fee arithmetic here.
     if fact.side is ExecutionSide.BUY:
         row = (
@@ -466,6 +504,390 @@ async def _close_after_bot_setup_failure(
     )
 
 
+async def record_fill(
+    session: UserSession,
+    order_id: UUID,
+    fact: ExecutionFact,
+    *,
+    tick: Money | None = None,
+) -> None:
+    anchor_failed = await resolve_first_fill(session, order_id, fact, tick)
+    await _record_fill(session, order_id, fact)
+    if anchor_failed:
+        failed_row = (
+            await session.execute(
+                "SELECT id FROM paper_protections WHERE entry_order_id=:order", {"order": order_id}
+            )
+        ).one()
+        group = await load(session, failed_row.id)
+        assert group is not None
+        await _close_after_bot_setup_failure(
+            session, group, reason="PROTECTION_SETUP_REJECTED", permanent=True
+        )
+    if (
+        await session.execute("SELECT to_regclass('public.bot_strategy_entries')")
+    ).scalar_one_or_none() is None:
+        return
+    for basket_id in await record_execution(session, order_id, fact):
+        await synchronize_basket(session, basket_id, tick=tick)
+        if fact.side is ExecutionSide.BUY:
+            row = (
+                await session.execute(
+                    "SELECT id FROM paper_protections WHERE entry_order_id=:order",
+                    {"order": order_id},
+                )
+            ).one_or_none()
+            if row is not None:
+                group = await load(session, row.id)
+                assert group is not None
+                await _adopt_basket_trigger(session, basket_id, group)
+
+
+async def synchronize_basket(
+    session: UserSession, basket_id: UUID, *, tick: Money | None = None
+) -> None:
+    """Called inside the fill transaction: all allocations share one revision."""
+    basket = (
+        await session.execute(
+            "SELECT b.*,r.strategy_name,p.reconciliation_required AS run_reconciliation_required "
+            "FROM bot_strategy_baskets b JOIN bot_runs r ON r.id=b.run_id JOIN "
+            "bot_strategy_progress p ON p.run_id=b.run_id "
+            "WHERE b.id=:id FOR UPDATE OF b",
+            {"id": basket_id},
+        )
+    ).one()
+    if (
+        basket.strategy_name == PAPER_TEST_STRATEGY
+        or basket.reconciliation_required
+        or basket.run_reconciliation_required
+        or basket.status == "CLOSED"
+    ):
+        return
+    entries = (
+        await session.execute(
+            """SELECT * FROM bot_strategy_entries
+      WHERE basket_id=:id AND quantity>0 ORDER BY filled_at,entry_sequence""",
+            {"id": basket_id},
+        )
+    ).all()
+    if not entries:
+        return
+    pair = PositionPair(basket.base, basket.quote)
+    if tick is None and basket.price_tick is not None:
+        tick = Money.of(basket.price_tick, basket.quote)
+    if tick is None:
+        source = await read_latest_book(session, pair)
+        tick = source.metadata.market.price_tick
+    await session.execute(
+        "UPDATE bot_strategy_baskets SET price_tick=:tick WHERE id=:id",
+        {"tick": tick.as_parts()["amount"], "id": basket_id},
+    )
+    held = None if basket.target is None else Money.of(basket.target, pair.quote)
+    target = (
+        held
+        if basket.status == "TRIGGERED"
+        else basket_take_profit(
+            tuple(
+                (Money.of(entry.price, pair.quote), Quantity.of(entry.quantity, pair.base))
+                for entry in entries
+            ),
+            Money.of(entries[-1].atr, pair.quote),
+            tick,
+            held=held,
+            entry_costs=tuple(
+                (
+                    Money.of(entry.gross_notional, pair.quote),
+                    Quantity.of(entry.gross_quantity, pair.base),
+                )
+                for entry in entries
+            ),
+        )
+    )
+    if target is None:
+        raise OrderConflictError("triggered basket has no held target")
+    for entry in entries:
+        row = (
+            await session.execute(
+                "SELECT id FROM paper_protections WHERE entry_order_id=:order",
+                {"order": entry.order_id},
+            )
+        ).one_or_none()
+        if row is None:
+            raise OrderConflictError("basket entry has no protection allocation")
+        group = await load(session, row.id)
+        assert group is not None
+        value = group.value
+        if value.state in (ProtectionState.CANCELED, ProtectionState.CLOSED):
+            # An explicit manual release/cancel is never silently undone.
+            continue
+        if value.trigger is None and value.prices.take_profit != target:
+            await save(
+                session,
+                group,
+                replace(
+                    value,
+                    prices=ProtectionPrices(pair, take_profit=target),
+                    revision=value.revision + 1,
+                ),
+                kind="REPLACE",
+            )
+        await session.execute(
+            "UPDATE paper_protections SET "
+            "observed_source=NULL,observed_generation=NULL,observed_sequence=NULL WHERE id=:id",
+            {"id": row.id},
+        )
+    await session.execute(
+        """UPDATE bot_strategy_baskets SET target=:target,
+      target_revision=target_revision+1,revision=revision+1 WHERE id=:id""",
+        {"id": basket_id, "target": target.as_parts()["amount"]},
+    )
+
+
+async def _basket_for_protection(session: UserSession, group: StoredProtection) -> UUID | None:
+    if group.value.origin is not OrderOrigin.BOT or group.value.entry_order_id is None:
+        return None
+    if (
+        await session.execute("SELECT to_regclass('public.bot_strategy_entries')")
+    ).scalar_one_or_none() is None:
+        return None
+    value = (
+        await session.execute(
+            (
+                "SELECT e.basket_id FROM bot_strategy_entries e JOIN bot_runs r ON "
+                "r.id=e.run_id WHERE e.order_id=:order AND r.strategy_name<>:test"
+            ),
+            {"order": group.value.entry_order_id, "test": PAPER_TEST_STRATEGY},
+        )
+    ).scalar_one_or_none()
+    return None if value is None else UUID(str(value))
+
+
+def _basket_trigger_evidence(raw: dict[str, Any], pair: PositionPair) -> TriggerEvidence:
+    return TriggerEvidence(
+        UUID(raw["source"]),
+        raw["generation"],
+        raw["sequence"],
+        Money.of(raw["price"], pair.quote),
+        datetime.fromisoformat(raw["occurred_at"]),
+        datetime.fromisoformat(raw["received_at"]),
+        pair,
+    )
+
+
+async def _adopt_basket_trigger(
+    session: UserSession,
+    basket_id: UUID,
+    group: StoredProtection,
+    winning: TriggerEvidence | None = None,
+) -> StoredProtection:
+    value = group.value
+    if (
+        value.trigger is not None
+        or value.quantity.amount == 0
+        or value.conflicted
+        or value.state not in (ProtectionState.ARMING, ProtectionState.ARMED)
+    ):
+        return group
+    if winning is None:
+        raw = (
+            await session.execute(
+                "SELECT t.evidence FROM bot_basket_triggers t "
+                "JOIN bot_strategy_baskets b ON b.id=t.basket_id "
+                "JOIN bot_strategy_progress p ON p.run_id=b.run_id "
+                "WHERE b.id=:id AND b.status='TRIGGERED' "
+                "AND NOT b.reconciliation_required AND NOT p.reconciliation_required",
+                {"id": basket_id},
+            )
+        ).scalar_one_or_none()
+        if raw is None:
+            return group
+        winning = _basket_trigger_evidence(raw, value.prices.pair)
+    return await save(
+        session,
+        group,
+        replace(
+            value,
+            state=ProtectionState.EXITING,
+            winning_leg=ProtectionLeg.TAKE_PROFIT,
+            trigger=winning,
+            revision=value.revision + 1,
+            setup_due_at=None,
+        ),
+        kind="TRIGGER",
+        extra_exit=value.quantity,
+    )
+
+
+async def _executable_setup(
+    session: UserSession, group: StoredProtection, evidence: TriggerEvidence
+) -> Quantity | None:
+    value = group.value
+    if value.state is ProtectionState.ARMING:
+        now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+        if value.setup_due_at is not None and now < value.setup_due_at:
+            return None
+    try:
+        return await _validate_market_setup(session, value, evidence)
+    except (SourceUnavailableError, SafetyUnavailableError):
+        if value.state is not ProtectionState.ARMING:
+            return None
+        decision = decide_setup_result(
+            origin=value.origin,
+            attempt=value.setup_attempt,
+            outcome=SetupOutcome.TRANSIENT_FAILURE,
+            observed_at=now,
+        )
+        if decision.action is SetupAction.CLOSE_AND_STOP:
+            await _close_after_bot_setup_failure(
+                session, group, reason="PROTECTION_SETUP_UNAVAILABLE", permanent=False
+            )
+            return None
+        retry = decision.action is SetupAction.RETRY
+        await save(
+            session,
+            group,
+            replace(
+                value,
+                revision=value.revision + 1,
+                state=ProtectionState.ARMING if retry else ProtectionState.FAILED,
+                setup_attempt=decision.next_attempt or value.setup_attempt,
+                setup_due_at=decision.due_at,
+            ),
+            kind="RETRY" if retry else "FAIL",
+            failure_code="PROTECTION_SETUP_UNAVAILABLE",
+        )
+        return None
+    except (OrderError, MoneyError):
+        if value.origin is OrderOrigin.BOT and value.state is ProtectionState.ARMING:
+            await _close_after_bot_setup_failure(
+                session, group, reason="PROTECTION_SETUP_REJECTED", permanent=True
+            )
+            return None
+        await save(
+            session,
+            group,
+            replace(
+                value,
+                revision=value.revision + 1,
+                state=ProtectionState.FAILED,
+                setup_due_at=None,
+            ),
+            kind="FAIL",
+            extra_exit=Quantity.of(0, value.prices.pair.base),
+            failure_code="PROTECTION_SETUP_REJECTED",
+        )
+        return None
+
+
+async def process_basket(
+    session: UserSession, basket_id: UUID, current_evidence: TriggerEvidence
+) -> bool:
+    """Latch one TP observation and fan out all exit work atomically."""
+    basket = (
+        await session.execute(
+            "SELECT b.*,p.reconciliation_required AS run_reconciliation_required "
+            "FROM bot_strategy_baskets b JOIN bot_strategy_progress p ON p.run_id=b.run_id "
+            "WHERE b.id=:id FOR UPDATE OF b",
+            {"id": basket_id},
+        )
+    ).one()
+    if (
+        basket.status == "CLOSED"
+        or basket.reconciliation_required
+        or basket.run_reconciliation_required
+        or basket.target is None
+    ):
+        return False
+    pair = PositionPair(basket.base, basket.quote)
+    target = Money.of(basket.target, pair.quote)
+    if basket.status != "TRIGGERED" and current_evidence.price < target:
+        return False
+    rows = (
+        await session.execute(
+            "SELECT id FROM paper_protections WHERE entry_order_id=ANY(:orders) ORDER BY id",
+            {"orders": list(await open_entry_order_ids(session, basket_id))},
+        )
+    ).all()
+    groups_now = []
+    for row in rows:
+        group = await load(session, row.id)
+        if group is not None:
+            groups_now.append(group)
+    trigger = (
+        await session.execute(
+            "SELECT evidence FROM bot_basket_triggers WHERE basket_id=:id", {"id": basket_id}
+        )
+    ).scalar_one_or_none()
+    if trigger is None:
+        # Keep the immutable winning evidence independent of subsequent quotes.
+        trigger = {
+            "source": str(current_evidence.source_id),
+            "generation": current_evidence.generation,
+            "sequence": current_evidence.sequence,
+            "price": current_evidence.price.as_parts()["amount"],
+            "occurred_at": current_evidence.occurred_at.isoformat(),
+            "received_at": current_evidence.received_at.isoformat(),
+        }
+        await session.execute(
+            """INSERT INTO bot_basket_triggers
+          (id,basket_id,user_id,mode,episode_id,run_id,target_revision,evidence,membership)
+          VALUES(:trigger,:basket,:owner,'PAPER',:episode,:run,:revision,
+            CAST(:evidence AS jsonb),CAST(:members AS jsonb))""",
+            {
+                "trigger": uuid5(basket_id, "TP"),
+                "basket": basket_id,
+                "owner": session.user_id,
+                "episode": basket.episode_id,
+                "run": basket.run_id,
+                "revision": basket.target_revision,
+                "evidence": canonical(trigger),
+                "members": canonical([str(group.value.protection_id) for group in groups_now]),
+            },
+        )
+        await session.execute(
+            "UPDATE bot_strategy_baskets SET status='TRIGGERED',revision=revision+1 WHERE id=:id",
+            {"id": basket_id},
+        )
+    winning = _basket_trigger_evidence(trigger, pair)
+    for group in groups_now:
+        value = group.value
+        if value.entry_order_id is not None:
+            await submit_cancel(
+                session,
+                wallet_id=group.wallet_id,
+                episode_id=value.scope.episode_id,
+                order_id=value.entry_order_id,
+                idempotency_key=uuid5(value.protection_id, "cancel-entry"),
+            )
+        if (
+            value.state not in (ProtectionState.ARMING, ProtectionState.ARMED)
+            or value.quantity.amount == 0
+            or value.conflicted
+        ):
+            continue
+        if value.prices.take_profit != target:
+            raise OrderConflictError("basket protection target revision differs")
+        # ARMED allocations retain durable EXITING work if the book is unavailable.
+        # ARMING allocations must first pass the F-17 setup/retry policy.
+        if value.state is ProtectionState.ARMED:
+            group = await _adopt_basket_trigger(session, basket_id, group, winning)
+        executable = await _executable_setup(session, group, current_evidence)
+        if executable is None:
+            continue
+        if value.state is ProtectionState.ARMING:
+            group = await _adopt_basket_trigger(session, basket_id, group, winning)
+        value = group.value
+        group = await save(
+            session,
+            group,
+            replace(value, revision=value.revision + 1),
+            kind="EXIT",
+            extra_exit=Quantity.of(0, pair.base),
+        )
+        await queue_exit(session, group, executable)
+    return True
+
+
 async def process_group(session: UserSession, group_id: UUID) -> None:
     group = await load(session, group_id)
     if group is None:
@@ -476,6 +898,7 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
     value = group.value
     if value.state in (ProtectionState.CANCELED, ProtectionState.CLOSED):
         return
+    basket_id = await _basket_for_protection(session, group)
     if value.state is ProtectionState.EXITING:
         exits = (
             await session.execute(
@@ -556,6 +979,13 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
                 kind="EXIT",
                 failure_code=None if value.quantity.amount == 0 else "PROTECTION_RESIDUAL",
             )
+        if basket_id is not None:
+            run_id = (
+                await session.execute(
+                    "SELECT run_id FROM bot_strategy_baskets WHERE id=:id", {"id": basket_id}
+                )
+            ).scalar_one()
+            await finish_empty_baskets(session, UUID(str(run_id)))
         return
     if value.state is ProtectionState.WAITING_ENTRY:
         # Rejected/terminal-unfilled entry has no exposure to protect.
@@ -600,59 +1030,10 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
             failure_code="ORDER_CONFLICT",
         )
         return
-    if value.state is ProtectionState.ARMING:
-        now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
-        if value.setup_due_at is not None and now < value.setup_due_at:
-            return
-    try:
-        executable = await _validate_market_setup(session, value, evidence)
-    except (SourceUnavailableError, SafetyUnavailableError):
-        if value.state is not ProtectionState.ARMING:
-            return
-        decision = decide_setup_result(
-            origin=value.origin,
-            attempt=value.setup_attempt,
-            outcome=SetupOutcome.TRANSIENT_FAILURE,
-            observed_at=now,
-        )
-        if decision.action is SetupAction.CLOSE_AND_STOP:
-            await _close_after_bot_setup_failure(
-                session, group, reason="PROTECTION_SETUP_UNAVAILABLE", permanent=False
-            )
-            return
-        retry = decision.action is SetupAction.RETRY
-        await save(
-            session,
-            group,
-            replace(
-                value,
-                revision=value.revision + 1,
-                state=ProtectionState.ARMING if retry else ProtectionState.FAILED,
-                setup_attempt=decision.next_attempt or value.setup_attempt,
-                setup_due_at=decision.due_at,
-            ),
-            kind="RETRY" if retry else "FAIL",
-            failure_code="PROTECTION_SETUP_UNAVAILABLE",
-        )
+    if basket_id is not None and await process_basket(session, basket_id, evidence):
         return
-    except (OrderError, MoneyError):
-        if value.origin is OrderOrigin.BOT and value.state is ProtectionState.ARMING:
-            await _close_after_bot_setup_failure(
-                session, group, reason="PROTECTION_SETUP_REJECTED", permanent=True
-            )
-            return
-        await save(
-            session,
-            group,
-            replace(
-                value,
-                revision=value.revision + 1,
-                state=ProtectionState.FAILED,
-                setup_due_at=None,
-            ),
-            kind="FAIL",
-            failure_code="PROTECTION_SETUP_REJECTED",
-        )
+    exit_quantity = await _executable_setup(session, group, evidence)
+    if exit_quantity is None:
         return
     if value.state is ProtectionState.ARMING:
         group = await save(
@@ -664,6 +1045,8 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
             kind="ARM",
         )
         value = group.value
+    if basket_id is not None:
+        return
     cursor = (evidence.source_id, evidence.generation, evidence.sequence)
     if group.observation == cursor and value.state is ProtectionState.ARMED:
         return
@@ -680,7 +1063,7 @@ async def process_group(session: UserSession, group_id: UUID) -> None:
     changed = evaluate_trigger(value, evidence, market_ready=True, authoritative_ready=True)
     if changed is not value:
         group = await save(session, group, changed, kind="TRIGGER")
-        await queue_exit(session, group, executable)
+        await queue_exit(session, group, exit_quantity)
         if changed.entry_order_id is not None:
             await submit_cancel(
                 session,
@@ -754,6 +1137,8 @@ async def process_request(session: UserSession, request_id: UUID) -> None:
             if row.action == "CANCEL":
                 updated = cancel_protection(value, expected_revision=payload["expected_revision"])
             else:
+                if await _basket_for_protection(session, current) is not None:
+                    raise OrderConflictError("strategy-managed protection cannot be amended")
                 held, reserved = await held_and_reserved(session, row.episode_id, value.prices.pair)
                 other = await allocated(session, row.episode_id, value.prices.pair) - value.quantity
                 capacity = max(held - reserved - other, Quantity.of(0, value.prices.pair.base))
@@ -924,6 +1309,14 @@ async def reconcile_allocations(
         cap = max(acquired - disposed, Quantity.of(0, pair.base))
         own_unsafe = group.value.entry_order_id is not None and remaining > cap
         changed_source = acquired != group.acquired or exit_quantity_delta.amount != 0
+        if changed_source:
+            basket_id = await _basket_for_protection(session, group)
+            if basket_id is not None:
+                await session.execute(
+                    "UPDATE bot_strategy_baskets SET reconciliation_required=true,"
+                    "revision=revision+1 WHERE id=:id AND NOT reconciliation_required",
+                    {"id": basket_id},
+                )
         conflict = unsafe or own_unsafe or (changed_source and not allow_clear)
         if not allow_clear:
             conflict = conflict or group.value.conflicted

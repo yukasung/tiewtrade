@@ -437,7 +437,7 @@ production activation.
 | รหัส | งาน | สถานะ | หมายเหตุ |
 |---|---|---|---|
 | F-20 | ส่วนต่อประสานกลยุทธ์ + วงจรชีวิตบอท | **In Progress - Code Review / Owner UI Accepted; Fresh-State Isolation Verified** | [requirements](features/2026-11-19-bot-lifecycle/requirements.md), [plan/validation](features/2026-11-19-bot-lifecycle/validation.md) Approved 2026-11-19; migrations 0067-0073; review fixes and targeted PostgreSQL faults/races/proof/feedback, API process restart + Redis loss and actual-API browser lifecycle/scope/responsive/locale/theme checks passed; Ready for Code Review announced, closure review found no new code finding. [Scenario matrix / UI artifacts](features/2026-11-19-bot-lifecycle/evidence/implementation-checkpoint.md#feature-validation-closure-and-owner-ui-checkpoint--2026-11-20). V-15 owner UI accepted 2026-11-20; V-18 previous CI main backend passed 5766/2 skipped, fresh-state initially failed 6 shared-fixture cases; owner approved exact isolation patch plus one candidate CI round, all 28 fresh-state tests/static checks now passed locally; final-SHA CI pending; not merge-ready/Completed. V-19/20 Batch and V-21 Release dependencies retained; no production/Live activation. |
-| F-21 | กลยุทธ์สำเร็จรูปตัวแรก + ระบบปรับพารามิเตอร์ | Planned | (R-06) ยังไม่ได้ระบุว่ากลยุทธ์อะไร |
+| F-21 | กลยุทธ์สำเร็จรูปตัวแรก + ระบบปรับพารามิเตอร์ | **In Progress — Owner Acceptance / CI Preparation** | [requirements](features/2026-11-20-first-strategy/requirements.md) Approved 2026-11-20; RSI reset<30 + entry>60/EMA20>EMA50/แท่งเขียวปิดเหนือresetและEMAทั้งสอง, เงินต่อไม้, max_entries1–10/default10, ไม่มีcooldown, กลุ่มเดียวTPร่วม, BTC/ETH+timeframeWeb/default5m+250แท่ง ใช้indicator/matching/fee/protectionเดิมWeb; [plan](features/2026-11-20-first-strategy/plan.md) และ [validation](features/2026-11-20-first-strategy/validation.md) Approved 2026-11-20 ฉบับแก้deep-review F21-R01/R02: basket trigger/atomic retarget และ durable exit-candle guard พร้อม Feature tests; implementation/review และ local Feature correctness/safety validation ผ่านตาม combined evidence; V14/V17 รอ owner visual acceptance และ V18 รอ final-SHA required CI — Ready for Code Review แจ้งแล้วและreview/fixต่อแล้ว; actualAPI browser attempt6 Passed, affected safety checksผ่าน (ดูvalidation checkpoint), Batch/Release Pending Full Validation; ยังไม่พร้อมmerge; owner visual acceptance/required CI ค้าง และไม่เปิดproduction/Live |
 
 ## ชุดที่ 7 — Live Trading
 
@@ -2236,3 +2236,373 @@ explicit owner authority and effective signup/STOP/compatible-worker/source/DB-p
 proof before changing flags. Repository audit did not inspect or activate a deployment;
 internal20 is not an enforced user cap. Read-only preparation may continue under existing
 approved startup scope; owner visual confirmation/opening authority cannot be inferred.
+
+### งานเสริมตรวจรับ F-21 — Paper Test Entry (2026-11-21)
+
+สถานะ: **In Progress — Requirements / Plan / Validation Approved; implementation และ local validation แล้ว; owner acceptance / required CI ยังค้าง**
+
+เจ้าของขอกลยุทธ์ Paper เพิ่มเพื่อให้ตรวจ flow ได้เร็วขึ้น: CLOSED green, ATR14,
+TP/SL ±3×ATR ตรึงจาก first fill, ครั้งละหนึ่ง position เลือก timeframe ได้
+เป็นกลยุทธ์แยกและไม่แทนหลักฐานสัญญาณ RSI/EMA ของ F-21
+[requirements](features/2026-11-21-paper-test-strategy/requirements.md),
+[plan](features/2026-11-21-paper-test-strategy/plan.md),
+[validation](features/2026-11-21-paper-test-strategy/validation.md).
+Implementation อยู่ใน worktree `../TiewTrade-paper-test-entry`, branch `feature/paper-test-entry`
+รักษา WIP/preview F-21 เดิม; [checkpoint](features/2026-11-21-paper-test-strategy/evidence/checkpoint.md)
+คง owner acceptance/required CI ก่อน merge และ Pending Full Validation ระดับ Batch/Release
+ไม่เปิด production/Live
+
+Paper Test Entry NC-05 follow-up (2026-11-21): real-market entry blocked by original
+UNCONFIRMED finality; [requirements amendment proposal](features/2026-11-21-paper-test-strategy/real-market-candle-policy.md)
+prepared at owner's request, awaiting approval before plan/validation amendment and runtime.
+Approved original CLOSED-only policy and all owner/CI gates remain in force.
+
+Paper Test Entry NC-05 latest decision: Closed - use the same CLOSED/readiness/MARKET
+rules as RSI Step Grid; UNCONFIRMED exception Superseded. Current runtime matches.
+Real-source entry acceptance remains Blocked by missing CLOSED evidence. Owner/CI and
+Batch/Release gates remain pending; no new trading/Live scope.
+
+### Shared Candle Closure Proof — Implementation review checkpoint (2026-11-21)
+
+Requirements/plan/validation **Approved**. Implementation and scoped review/fixes are in
+`feature/candle-closure-proof`, based on the preserved local F21/Paper dependency candidate.
+[Requirements](features/2026-11-21-candle-closure-proof/requirements.md),
+[plan](features/2026-11-21-candle-closure-proof/plan.md),
+[validation](features/2026-11-21-candle-closure-proof/validation.md),
+[review/checkpoint](features/2026-11-21-candle-closure-proof/review.md).
+
+Durable native TH closure+exact post-end REST proof, atomic publication/invalidation,
+per-series conflict recovery, bounded F11 restore and decision/queued proof fencing are
+implemented. Targeted source/financial/authority regression149 passed; changed-file checks
+passed. Full repository mypy remains **Failed90 errors in10 unchanged dependency test files**.
+
+Authorized public attempt **Partial** during actual F11 preparation (READY/SUPERSEDED and
+book readiness unavailable); protocol remained OFF,0orders/positions/proofs. No repeat
+attempt was made. Final review added a CP06 correction after that attempt, so V17 has no
+passing evidence on the final runtime. Research BTC match/ETH conflict remains historical
+fixture evidence, not real entry acceptance.
+
+**Pending Feature Validation / not Completed or ready to merge**: final real-source entry
+acceptance, remaining Feature matrix, full type/required CI and owner/independent review
+gates. Batch/Release Pending Full Validation. Original real-source F21/Paper entry blocker
+is not closed. No owner-preview activation, owner-account trade or Live change; no
+publication/merge. Another bounded public campaign needs explicit owner authorization.
+
+
+Shared Candle Closure Proof — owner continuation checkpoint (2026-11-21): full strict
+mypy now Passed804 files; Ruff/format885 Passed. Local full backend6012passed/7failed,
+then all failed cases plus protection timing covered by focused16passed on isolated PG/
+Redis; historical failures retained. Four other isolated CI phases exited0. Campaign2
+Partial: actual BTC/ETH1m F11 READY and owned closure activation succeeded, but API setup
+failed before users/wallets/orders/positions; original cause not established. Harness now
+captures safe failure context (6tests Passed). No third campaign, owner-preview activation,
+Live, commit/push/PR/merge. Current evidence supersedes the earlier mypy blocker above;
+real-entry acceptance remains open. [Current checkpoint](features/2026-11-21-candle-closure-proof/validation.md).
+Pending Feature Validation / not Completed: another public attempt needs owner authorization,
+remaining matrices/owner and independent acceptance/required CI are still pending.
+Batch/Release Pending Full Validation.
+
+
+Shared Candle Closure Proof — latest code-review checkpoint (2026-11-21): **Ready for Code
+Review**, not Completed/merge-ready. Attempt3 identified RSI API payload422; harness now
+reuses existing input models. Fixed FORCE-RLS evidence filtering with guarded read-only
+owned-DB audit. Corrected facts supersede earlier counts: attempts2/3 each2users/2wallets/
+2capital ledger rows,0runs/orders/positions. Actual API/PG/harness14passed; final guard/
+harness9passed; strict mypy804 and lint/format Passed. Production runtime unchanged.
+Real-source entry acceptance remains Partial; three-attempt stop reached, awaiting owner's
+choice for another bounded attempt. Remaining Feature/owner/independent/required-CI gates
+open, Batch/Release Pending Full Validation. See current validation/review and completion
+candidate manifest. No owner-preview activation, Live, publication or merge.
+
+
+Shared Candle Closure Proof — authorized attempt4 (2026-11-21): **Partial**. Both API starts
+worked;8actual native/REST MATCHED proofs independently reverified,7decisions. Paper Test
+produced one100USDT BUY from a green closed candle in its next candle; command was rejected
+ORDER_SAFETY_UNAVAILABLE before fill. Commit timeline shows run PAUSED/INDICATOR_NOT_READY
+with newer revision before rejection; approximately43s dispatch/processing delay needs
+further diagnosis.0fills/positions/reservations, capital ledgers unchanged. No fifth attempt
+or owner-preview/Live action; no source changes this turn. Ready for Code Review remains;
+V17/owner/requiredCI and other Feature gates remain pending, not Completed/merge-ready.
+See current validation/review and attempt4 evidence. Batch/Release Pending Full Validation.
+
+### Candle closure review corrections —2026-11-22
+
+Corrected queued B-window expiry, accepted/SELL-driven closure-proof invalidation and
+native OPEN→close contradiction publication. Related existing exit guards now pin revision
+and share the native A/B lookup; accounting fixtures use actual CLOSED slots. Candidate
+51ab7d36; final targeted PG67passed, corrected basket/recovery4passed, units116passed,
+gates6passed, scoped types/lint/import checks passed (counts overlap). Prior failed and
+Partial evidence is preserved in the feature's validation/review. Required CI, owner/
+independent acceptance, remaining Feature matrices and actual public fill stay open;
+corrected-candidate public campaign Not Run. No owner preview/Live activation, extra
+campaign or publication. Pending Full Validation; not Completed or merge-ready.
+
+
+2026-11-22 Shared Candle Closure Proof local gate continuation: V08 pending-receipt
+pool restart and expired-writer takeover added; real PostgreSQL6passed, scoped static
+checks passed, production unchanged after refactor. Full recovery/public fill/owner/CI
+gates remain Partial or Not Run. Publication-only draft PR/CI exception requested, not
+assumed; no public attempt5 or merge. See feature validation.md/local-recovery evidence.
+
+
+2026-11-22 Shared Candle Closure Proof owner-authorized draft publication: main005ec483
+F17 refactor integrated; affected protection118unit +10PG tests and scoped static checks
+passed. Prepare combined draft candidate for required CI, without merge/public campaign5.
+Owner/independent/public-fill/other Partial Feature gates remain open; not Completed.
+
+
+2026-11-22 Shared Candle Closure Proof post-CI local recovery checkpoint: PR85runtime
+head e193fd32passed required CI44990595087 and Security44990595105 (66browser cases).
+Four additional real-process kill tests now prove pending/proof atomicity before/after
+commit and exact replay dedup locally; five related PG regressions passed. No runtime
+change. Initial harness/type-resolution failures and corrected passes are preserved in
+feature validation/evidence. New tests remain local; final-head CI is not implied.
+V08deployment/failover, other Partial Feature matrices, actual public fill and owner/
+independent acceptance remain open; no new campaign/preview activation/merge.
+Batch/Release Pending Full Validation; not Completed or merge-ready.
+
+
+2026-11-22 Shared Candle Closure Proof local deployment compatibility:21new matrix
+cases plus4existing regressions passed against isolated PostgreSQL; typed inventory,
+source readiness, separate OFF/legacy-v1 process behavior and deactivation covered.
+Scoped lint/format/types passed. Runtime unchanged; process-crash and compatibility
+tests remain local/unpublished, so prior green e193fd32CI is not their final-head CI.
+V14actual deployed inventory/historical-binary evidence, owner/independent acceptance,
+public actual fill and other Partial Feature gates remain open. No campaign5 or owner
+preview activation. Batch/Release Pending Full Validation; not Completed/merge-ready.
+
+
+### Candle closure public Paper attempt5 checkpoint —2026-11-22
+
+Owner-authorized single attempt on f2418d29 completed within the5minute preparation /
+6minute capture budget using a fresh owned Paper database.4native/REST proofs and
+3decisions independently verified, but0orders/fills/positions/reservations; balances
+remain10000USDT each. Paper Test evaluated a green candle yet produced no order;
+source/readiness and recovery filtering require offline diagnosis. Evidence and limits:
+[validation](features/2026-11-21-candle-closure-proof/validation.md#public-source-paper-attempt-5-2026-11-22-partial).
+Owned containers stopped; no owner-preview/Live/merge or extra attempt. Required CI
+44996144227 and Security44996144193 passed on f2418d29; remaining Feature/owner/
+independent acceptance and public-fill gates stay Partial. Batch/Release Pending Full
+Validation. Next: offline source/recovery review; attempt6 needs separate owner approval.
+
+
+### F21/Paper Test proof-wait correction —2026-11-22
+
+Campaign5 follow-up reproduced ordinary UNCONFIRMED waits corrupting the recovery cutoff
+(2new PostgreSQL cases failed before runtime fix). Reclassified only this preparation wait;
+45targeted real-PG regressions and scoped static/import checks passed. RSI resumes ARM;
+Paper proof→one command→real matcher fill passes deterministic composition; real reconnect
+still rejects old entry. [Evidence](features/2026-11-21-candle-closure-proof/evidence/recovery-proof-wait-fix.txt).
+Local/unpublished: final-candidate CI, owner/independent acceptance and actual corrected-
+candidate public fill remain open. No attempt6, owner-preview activation or merge.
+Batch/Release Pending Full Validation. Next: review/publish final candidate for required
+CI; new public campaign remains separately bounded by owner approval.
+
+
+### Proof-wait publication CI checkpoint —2026-11-22: Failed
+
+Patch published on b538070b in draft PR85. CI45003959474:6059backend tests passed,
+1unchanged scheduler PREPARING test failed on55P03 lock timeout; all3new correction cases
+passed. E2E66, frontend/API/container and Security45003959519 passed. Targeted local rerun
+of unchanged scheduler case passed; no timeout/assertion/code change, no CI rerun/merge/
+public campaign. [Blocker evidence](features/2026-11-21-candle-closure-proof/evidence/proof-wait-ci-checkpoint.txt).
+Required CI remains Failed, other Feature/owner/public-fill gates remain open; Batch/Release
+Pending Full Validation. Next: diagnose/correct scheduler contention before a separately
+owner-authorized CI round. No document-only publication loop.
+
+
+### Scheduler contention local correction —2026-11-22
+
+Reproduced55P03 with a real held builder transaction and independent engine; added a
+nonblocking transaction gate at shared coalesce_session, preserving timeouts and all
+original parallel/safety assertions.85scheduler/physical-writer PostgreSQL tests passed
+(5new commit/rollback/cancellation cases), scoped Ruff/format/mypy and7import contracts
+passed; scoped review has no unresolved finding.
+[Evidence](features/2026-11-21-candle-closure-proof/evidence/scheduler-contention-fix.txt).
+Local/uncommitted, not CI-Passed: published b538070b required CI remains Failed and
+later isolated backend gates were not reached. No push/new CI/public campaign/activation/
+merge. Owner/independent/deployment/public-fill gates remain open; Batch/Release Pending
+Full Validation. Next: publish the reviewed correction and existing blocker receipts
+when a new required-CI round is authorized; do not infer that authorization here.
+
+
+### Final-candidate CI / acceptance handoff —2026-11-22
+
+94fcde334363d52f136089cc20a6749e92282cb4 passed required CI45008230541 and Security45008230494:
+6065main backend cases, all isolated backend gates and66browser E2E; scheduler's original
+PREPARING and all five new contention cases passed. Scoped read-only review approved
+the latest patch; no independent/owner acceptance is inferred. V19 now Passed; historical
+failed receipts remain. See the existing closure-proof validation.md handoff checklist.
+
+Actual target inventory/drain/restart-disable, independent/owner UI acceptance and
+current-candidate public BUY/fill/protection remain open; V21/V22 Pending Full Validation.
+Local read-only inventory found no running Docker containers or15121listener, so no
+available owner preview is claimed. No new code/CI/public campaign/activation/merge.
+Next: obtain the specifically bounded attempt6 authorization and actual acceptance
+evidence; no documentation-only publication/CI loop for this checkpoint.
+
+
+### Public-source Paper attempt6 —2026-11-22: Partial
+
+Owner-authorized one attempt on94fcde33 used unchanged reviewed/CI-green source and
+fresh isolated Paper infrastructure. Boot stopped after18.08s before capture/account
+creation: ExceptionGroup from order-book TaskGroup; child cause not persisted/proven.
+Read-only audit:0users/wallets/proofs/orders/fills/positions/reservations/ledger and
+0other DB sessions. Both owned containers stopped/retained; no retry or owner/Live action.
+New evidence artifacts passed scoped secrets scan.
+[Receipt](features/2026-11-21-candle-closure-proof/evidence/public-paper-campaign-6.txt).
+V12/V15/V16/V17 remain Partial; V19 still Passed on unchanged94fcde33. Owner/independent/
+deployment and Batch/Release gates remain open. Next: offline sanitized child-exception
+diagnostics and controlled order-book failure tests before requesting a bounded attempt7.
+No extra public campaign/publication/CI/merge is authorized by this checkpoint.
+
+### Offline failure diagnostics —2026-11-22
+
+Campaign reports now retain bounded, sanitized ExceptionGroup child types/locations.
+Targeted31unit tests and scoped Ruff/format/mypy passed; new diff reviewed with no
+remaining findings. Production code/trading behavior unchanged; no public campaign
+or new required CI run. Attempt6's lost child cause remains unknown; V12/V15–17 stay
+Partial and owner/independent/deployment/Batch/Release gates remain open. Next: a fresh
+bounded public-source attempt needs separate owner authorization; offline diagnostic
+work in this checkpoint is finished. See the existing closure-proof validation.md.
+
+
+### Bootstrap deadline correction —2026-11-22
+
+Real-PG reproduction confirmed capability timeout escapes expected source-error handling.
+Capability/snapshot timeout classification corrected;38targeted tests, scoped static
+checks and7architecture contracts passed. Scoped review complete. Actual attempt6
+child cause remains unknown; public BUY/fill/protection and owner/deployment acceptance
+remain Partial. Required CI for this new local runtime diff is pending (94fcde33 CI
+covers the prior candidate). Next: authorized publication/CI and a separately bounded
+public campaign; no further campaign or merge performed. See closure-proof validation.
+
+### Final-candidate CI and public-source Paper attempt7 —2026-11-22
+
+ddcd469c passed required CI45035954903 and Security45035954851. Owner-authorized
+one isolated BTC/ETH1m Paper attempt (100USDT/entry, preparation<=300s,
+capture360s). It stopped after22.71s in ACTUAL_F11_BUILD: DatabaseTimeoutError
+from indicator coalescing; PostgreSQL logged a lock timeout. Independent audit found
+2001 market candles but0 users/wallets/proofs/decisions/orders/fills/ledger; no
+Paper account or Live action. Source manifest matched365 candidate files; proof
+verifier and scoped secret scan completed. Owned services stopped, no retry.
+[Receipt](features/2026-11-21-candle-closure-proof/evidence/public-paper-campaign-7.txt).
+V12/V15–17 remain Partial; owner/independent/deployment and Batch/Release gates
+remain open. Public attempts5–7 did not complete the fill proof. Stop before another
+public experiment per AGENTS.md three-round rule. Next: offline lock-contention
+diagnosis and owner choice for any bounded follow-up; no campaign8/merge authorized.
+
+
+### Offline coalescing lock recovery —2026-11-22
+
+Owner-approved offline plan implemented: source-guard/job-row lock blockers captured
+on real PG; only rolled-back coalescing contention defers to the existing poll.
+Other timeouts/cleanup uncertainty propagate, cancellation/STOP remain interruptible.
+278distinct targeted cases passed (274suite+4cleanup compatibility), scoped Ruff/mypy
+and7import contracts passed; scoped review findings fixed. Bounded evidence is in
+closure-proof/evidence/offline-coalescing-lock-recovery.json. Offline services stopped.
+Attempt7's exact blocker remains unproven; public BUY/fill/protection and owner/
+independent/deployment gates stay Partial. New local runtime diff needs required CI;
+ddcd469c's Passed CI is historical. Next: authorized publication/CI, then separately
+bounded public validation; no campaign8/CI/merge performed in this checkpoint.
+
+
+### Recovery publication CI compatibility checkpoint —2026-11-22
+
+Draft PR85 candidate9e992141: CI45042222741 backend failed full mypy at six diagnostic
+transaction wrappers; Security45042222782 passed. Local correction forwards the new
+strict_rollback parameter through observer/test wrappers;160 targeted cases, full
+mypy805 and changed-file lint/format passed. The correction remains unpublished;
+required CI is not passed. E2E (including F21/Paper Test Entry), frontend, API contract and container passed;
+the run is complete with overall Failure due to backend mypy.
+Next: another authorized publication/CI round, then separately authorized public
+acceptance. Attempt7 stays Partial; no attempt8, merge or Completed claim.
+
+
+### Wrapper CI and optional risk replay cleanup —2026-11-23
+
+Candidate a46dbe0d: CI45044685661 backend6104passed/1failed; full types now passed.
+Security45044685714, E2E including F21/Paper Test Entry, frontend/API/container passed.
+Failure exposed timeout restoration outside the optional risk replay savepoint.
+Local correction keeps restoration protected;69 targeted cases and scoped static
+checks passed, no financial/risk rule or timeout increase. Correction is unpublished;
+V19 remains Failed. Next: owner-authorized additional publication/CI round. Public
+attempt8 remains separately unapproved; attempt7Partial and owner/independent/
+deployment and Batch/Release gates remain open. No merge/Completed claim.
+
+
+### Risk cleanup required CI passed —2026-11-23
+
+Stable candidate c435dad12e9427c51f75990b7ed39c9c0e8a1db7 passed required
+CI45048519021 and Security45048518987, including full backend required steps and
+F21/Paper Test Entry E2E. V19 Passed; previous Failed/Partial evidence retained.
+Draft PR85 remains unmerged, with owner/independent/deployment gates open. Public
+attempt7 remains Partial; attempt8 is not authorized or run. Next: separately
+authorized bounded public-source Paper acceptance on this candidate. Batch/Release
+remain Pending Full Validation; no Completed claim.
+
+
+### Public Paper attempt8 —2026-11-23
+
+On CI-passed c435dad1, one bounded actual-source campaign reached both ready F11
+heads and account setup:7verified closure proofs,6decisions,1BTC Paper Test Entry
+BUY. Preparation152.58s/capture360s. BUY stayed ACCEPTED with100USDT reserved,
+0fills/positions and no frozen TP/SL. Matcher rejected a market input identity/
+payload conflict; exact differing field remains to isolate offline. ResultPartial,
+V19 stillPassed. Owned campaign services stopped; financial ledger unchanged and
+no duplicate linked order observed. Next: offline replay diagnosis/fix before any
+new public attempt; attempt9/merge/CI not authorized. Remaining gates unchanged.
+
+
+### Offline matcher recovery correction —2026-11-23
+
+Authenticated attempt8 retained input/checkpoint reproduces a consumer rebase-only
+identity conflict. Worker now skips the verified consumed book, consumes subsequent
+inputs or waits; strict source/core equality and financial rules remain intact.
+166 distinct targeted cases passed, including real PostgreSQL concurrent/restart
+replay; scoped static checks and7 import contracts passed. Scoped review tightened
+source-flag validation. Evidence: candle-closure-proof/evidence/offline-same-book-recovery.json.
+This is a reproduced mechanism; failed runtime call arguments were not captured.
+Public fill/TP/SL acceptance remains Partial. V19 Pending for unpublished correction;
+prior c435dad1 CI pass remains historical. Next is separately authorized publication
+and required CI, followed by separately authorized public acceptance. Owner/reviewer/
+deployment and Batch/Release gates remain open. No merge or Completed claim.
+
+
+### Offline recovery candidate CI —2026-11-23
+
+c5f724f3 published to draft PR85. CI45055199794 Failed:6126 passed/1failed
+(reconnect closure-proof test expected decision, got None); root cause not yet
+established. Security45055199790, frontend/API/container/E2E passed. Backend
+isolated follow-up steps skipped. V19 Failed; public fill/TP/SL remains Partial.
+Next: focused offline diagnosis/fix and targeted validation before requesting
+another CI round. No attempt9/merge/Completed claim.
+
+
+### Reconnect fixture CI checkpoint —2026-11-23
+
+3a5a1d7f CI45106792952 Failed:6126passed/1failed. Reconnect case now passed;
+awaiting_proof stage failed because queued dispatch claim returned None, cause
+unconfirmed. Security45106793030 and frontend/API/container/E2E passed. V19 Failed.
+Next: offline dispatch claim diagnosis before another authorized CI round. Public
+fill/protection and remaining acceptance gates unchanged; no merge/Completed.
+
+
+### Dispatch diagnostics CI checkpoint —2026-11-23
+
+762315ab CI45113386759 Failed overall. Backend6127 and all isolated backend
+steps Passed; prior reconnect/awaiting_proof cases Passed, historical cause still
+unconfirmed. Security45113386814, frontend/API/container Passed. F17 E2E failed
+before order submission: HTTP200 snapshot wallet:null after prepare/reload.
+V19 Failed. Next: offline F17 preparation/snapshot diagnosis, then a concrete
+proposal before further CI. No public round, merge or Completed claim.
+
+
+### F17 response observer local correction —2026-11-23
+
+CI trace proves old-document wallet:null response captured despite ready wallet
+after reload. Scoped observer fix tracks new-navigation requests and shares F16/
+F17 helper. Red/green regression2cases and real browser/isolatedPG F17(7), F16(1)
+passed; scoped lint/types passed. V19 remains Failed pending final-candidate CI.
+Next: separately authorized publication/CI round; historical dispatch cause and
+other acceptance gaps retained. No new public campaign or merge.

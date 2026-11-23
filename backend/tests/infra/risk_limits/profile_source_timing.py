@@ -79,11 +79,12 @@ class SourceTimeline:
             engine: AsyncEngine,
             *,
             cleanup_seconds: float | None = None,
+            strict_rollback: bool = False,
         ) -> AsyncIterator[AsyncConnection]:
             cycle = _CYCLE.get()
             if cycle is None or engine is not self.engine:
                 async with self.original_begin(
-                    engine, cleanup_seconds=cleanup_seconds
+                    engine, cleanup_seconds=cleanup_seconds, strict_rollback=strict_rollback
                 ) as connection:
                     yield connection
                 return
@@ -100,7 +101,7 @@ class SourceTimeline:
             token = _TX.set(tx)
             try:
                 async with self.original_begin(
-                    engine, cleanup_seconds=cleanup_seconds
+                    engine, cleanup_seconds=cleanup_seconds, strict_rollback=strict_rollback
                 ) as connection:
                     tx["entered"] = monotonic()
                     yield connection

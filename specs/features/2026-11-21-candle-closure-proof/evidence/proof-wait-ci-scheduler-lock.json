@@ -1,0 +1,131 @@
+{
+  "samples": [
+    {
+      "elapsed_seconds": 0.014632735999839497,
+      "interval_seconds": 0.014632735999839497,
+      "activity": {
+        "rows": [
+          {
+            "pid": 13981,
+            "role": "tiewtrade_migrator",
+            "state": "idle",
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "blockers": [],
+            "transaction_age_seconds": null,
+            "query_age_seconds": 0.034465,
+            "coalescing": false
+          }
+        ],
+        "truncated": false
+      },
+      "locks": {
+        "rows": [],
+        "truncated": false
+      },
+      "views_sampled_separately": true
+    },
+    {
+      "elapsed_seconds": 0.053647279999950115,
+      "interval_seconds": 0.03901454400011062,
+      "activity": {
+        "rows": [
+          {
+            "pid": 13981,
+            "role": "tiewtrade_migrator",
+            "state": "idle",
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "blockers": [],
+            "transaction_age_seconds": null,
+            "query_age_seconds": 0.035824,
+            "coalescing": false
+          },
+          {
+            "pid": 13983,
+            "role": "tiewtrade_indicator_builder",
+            "state": "active",
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "blockers": [],
+            "transaction_age_seconds": 0.00072,
+            "query_age_seconds": 0.000385,
+            "coalescing": false
+          }
+        ],
+        "truncated": false
+      },
+      "locks": {
+        "rows": [],
+        "truncated": false
+      },
+      "views_sampled_separately": true
+    },
+    {
+      "elapsed_seconds": 0.27290509799991014,
+      "interval_seconds": 0.21925781799996003,
+      "activity": {
+        "rows": [
+          {
+            "pid": 13981,
+            "role": "tiewtrade_migrator",
+            "state": "idle",
+            "wait_event_type": "Client",
+            "wait_event": "ClientRead",
+            "blockers": [],
+            "transaction_age_seconds": null,
+            "query_age_seconds": 0.049087,
+            "coalescing": false
+          },
+          {
+            "pid": 13983,
+            "role": "tiewtrade_indicator_builder",
+            "state": "active",
+            "wait_event_type": "Lock",
+            "wait_event": "transactionid",
+            "blockers": [
+              13984
+            ],
+            "transaction_age_seconds": 0.010741,
+            "query_age_seconds": 0.007659,
+            "coalescing": true
+          },
+          {
+            "pid": 13984,
+            "role": "tiewtrade_indicator_builder",
+            "state": "active",
+            "wait_event_type": null,
+            "wait_event": null,
+            "blockers": [],
+            "transaction_age_seconds": 0.010478,
+            "query_age_seconds": 0.007363,
+            "coalescing": true
+          }
+        ],
+        "truncated": false
+      },
+      "locks": {
+        "rows": [
+          {
+            "pid": 13984,
+            "locktype": "transactionid",
+            "mode": "ExclusiveLock",
+            "granted": true,
+            "relation": null,
+            "transaction_id": "36122",
+            "virtualxid": null,
+            "classid": null,
+            "objid": null,
+            "objsubid": null
+          }
+        ],
+        "truncated": false
+      },
+      "views_sampled_separately": true
+    }
+  ],
+  "errors": [],
+  "observation_limit_reached": false,
+  "test_error": null,
+  "status": "Captured"
+}

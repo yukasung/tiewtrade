@@ -1,19 +1,18 @@
 import { useEffect, useState, type MouseEvent } from "react";
 
-export const accountPages = ["chart", "paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "supported-symbols", "system-safety"] as const;
+export const accountPages = ["paper/trade", "live/trade", "account", "security", "api-keys", "trading-account", "supported-symbols", "system-safety"] as const;
 export type AccountPage = (typeof accountPages)[number];
 /** Group the existing registry without changing route authorization. */
-export function visibleAccountPages(group: "primary" | "account", chartEnabled: boolean, isPlatformAdmin: boolean): AccountPage[] {
+export function visibleAccountPages(group: "primary" | "account", isPlatformAdmin: boolean): AccountPage[] {
   return accountPages.filter(page => {
-    const primary = page === "chart" || page === "paper/trade" || page === "live/trade";
+    const primary = page === "paper/trade" || page === "live/trade";
     return (group === "primary" ? primary : !primary) &&
-      (page !== "chart" || chartEnabled) &&
       ((page !== "supported-symbols" && page !== "system-safety") || isPlatformAdmin);
   });
 }
 function currentPage(isPlatformAdmin: boolean): AccountPage {
   const found = accountPages.find(page => window.location.pathname === `/${page}`);
-  return (found === "supported-symbols" || found === "system-safety") && !isPlatformAdmin ? "chart" : found ?? "chart";
+  return (found === "supported-symbols" || found === "system-safety") && !isPlatformAdmin ? "paper/trade" : found ?? "paper/trade";
 }
 /** Preserve native modified clicks, new tabs and downloads. */
 export function navigateAccountPage(event: MouseEvent<HTMLAnchorElement>): void {

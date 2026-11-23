@@ -1,0 +1,306 @@
+.................................................FF....                  [100%]
+=================================== FAILURES ===================================
+_ test_feed_gap_requires_fresh_generation_and_real_worker_starts_within_one_second[111] _
+
+fut = <coroutine object Event.wait at 0x10d16db60>, timeout = 5
+
+    async def wait_for(fut, timeout):
+        """Wait for the single Future or coroutine to complete, with timeout.
+    
+        Coroutine will be wrapped in Task.
+    
+        Returns result of the Future or coroutine.  When a timeout occurs,
+        it cancels the task and raises TimeoutError.  To avoid the task
+        cancellation, wrap it in shield().
+    
+        If the wait is cancelled, the task is also cancelled.
+    
+        If the task suppresses the cancellation and returns a value instead,
+        that value is returned.
+    
+        This function is a coroutine.
+        """
+        # The special case for timeout <= 0 is for the following case:
+        #
+        # async def test_waitfor():
+        #     func_started = False
+        #
+        #     async def func():
+        #         nonlocal func_started
+        #         func_started = True
+        #
+        #     try:
+        #         await asyncio.wait_for(func(), 0)
+        #     except asyncio.TimeoutError:
+        #         assert not func_started
+        #     else:
+        #         assert False
+        #
+        # asyncio.run(test_waitfor())
+    
+    
+        if timeout is not None and timeout <= 0:
+            fut = ensure_future(fut)
+    
+            if fut.done():
+                return fut.result()
+    
+            await _cancel_and_wait(fut)
+            try:
+                return fut.result()
+            except exceptions.CancelledError as exc:
+                raise TimeoutError from exc
+    
+        async with timeouts.timeout(timeout):
+>           return await fut
+                   ^^^^^^^^^
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:520: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <asyncio.locks.Event object at 0x10d2bbb60 [unset]>
+
+    async def wait(self):
+        """Block until the internal flag is true.
+    
+        If the internal flag is true on entry, return True
+        immediately.  Otherwise, block until another coroutine calls
+        set() to set the flag to true, then return True.
+        """
+        if self._value:
+            return True
+    
+        fut = self._get_loop().create_future()
+        self._waiters.append(fut)
+        try:
+>           await fut
+E           asyncio.exceptions.CancelledError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/locks.py:212: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+api_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10cf6f210>
+engine_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10c5a1d10>
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10cabe110>
+owner = UUID('f0f61aee-534a-4829-a600-bb50bfba9afa')
+wallet = PaperWalletSnapshot(wallet_id=UUID('eb732e59-5ce5-4ee2-8cb6-396407956a96'), episode_id=UUID('729c645c-da8b-4295-8899-8...ime(2026, 11, 21, 9, 7, 14, 425315, tzinfo=datetime.timezone.utc), revision=2, reset_available=True, reset_reason=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10cb3f9e0>
+record_property = <function record_property.<locals>.append_property at 0x10d286c00>
+recovered_price = '111'
+
+    @pytest.mark.parametrize("recovered_price", ["111", "100"])
+    async def test_feed_gap_requires_fresh_generation_and_real_worker_starts_within_one_second(
+        api_engine: AsyncEngine,
+        engine_engine: AsyncEngine,
+        scan_engine: AsyncEngine,
+        owner: UUID,
+        wallet: PaperWalletSnapshot,
+        monkeypatch: pytest.MonkeyPatch,
+        record_property: Callable[[str, object], None],
+        recovered_price: str,
+    ) -> None:
+        from tiewtrade.infra.protections import worker
+        from tiewtrade.services.engine.paper_order_main import serve
+    
+        market, _, _, _, group_id = await buy(api_engine, engine_engine, scan_engine, owner, wallet)
+        serving = None
+        try:
+            async with market_data_session(market) as market_session:
+                snapshot = await read_snapshot(market_session)
+                assert snapshot.feed is not None
+                row = next(value for value in snapshot.rows if value.base == "BTC")
+                assert row.observation is not None
+                expired_at = snapshot.server_time - MAX_PRICE_AGE - timedelta(milliseconds=1)
+                stale = replace(
+                    row.observation,
+                    amount=Money.of("111", "USDT"),
+                    trade_id=row.observation.trade_id + 1,
+                    trade_time=expired_at,
+                    received_at=expired_at,
+                )
+                assert await write_price(market_session, snapshot.feed, replace(row, observation=stale))
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_group(session, group_id)
+                current = await load(session, group_id)
+                assert current is not None and current.value.state is ProtectionState.ARMED
+            async with market_data_session(market) as market_session:
+                snapshot = await read_snapshot(market_session)
+                assert snapshot.feed is not None
+                feed = await set_connected(market_session, snapshot.feed, False)
+            await publish_price(market, "111")
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_group(session, group_id)
+                current = await load(session, group_id)
+                assert current is not None and current.value.state is ProtectionState.ARMED
+            async with market_data_session(market) as market_session:
+                feed = await begin_generation(market_session, feed)
+                await set_connected(market_session, feed, True)
+                snapshot = await read_snapshot(market_session)
+                prior = next(value for value in snapshot.rows if value.base == "BTC")
+                assert prior.observation is not None
+                fresh_sequence = prior.observation.trade_id + 1
+            # An old crossing observation does not become trusted after reconnect.
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_group(session, group_id)
+                current = await load(session, group_id)
+                assert current is not None and current.value.state is ProtectionState.ARMED
+            started: list[datetime] = []
+            first_poll, fresh_processed = asyncio.Event(), asyncio.Event()
+            original = worker.market_evidence
+    
+            async def observe_start(session: UserSession, pair: PositionPair) -> TriggerEvidence:
+                if session.user_id == owner:
+                    first_poll.set()
+                evidence = await original(session, pair)
+                if session.user_id == owner and evidence.sequence == fresh_sequence and not started:
+                    # The post-lock read completing is a conservative upper bound
+                    # for actual processing start, never an enqueue timestamp.
+                    started.append((await session.execute("SELECT clock_timestamp()")).scalar_one())
+                    fresh_processed.set()
+                return evidence
+    
+            monkeypatch.setattr(worker, "market_evidence", observe_start)
+            serving = asyncio.create_task(serve())
+            await asyncio.wait_for(first_poll.wait(), 5)
+            ready_at = await publish_price(market, recovered_price)
+>           await asyncio.wait_for(fresh_processed.wait(), 5)
+
+tests/infra/protections/test_validation.py:1056: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/tasks.py:519: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x10d5c3fc0>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+    
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+    
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+    
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+../../../../../.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py:115: TimeoutError
+_ test_feed_gap_requires_fresh_generation_and_real_worker_starts_within_one_second[100] _
+
+api_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d58ac90>
+engine_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d46d690>
+scan_engine = <sqlalchemy.ext.asyncio.engine.AsyncEngine object at 0x10d467850>
+owner = UUID('f5d312dc-cfbc-4c13-8b04-a0c050017399')
+wallet = PaperWalletSnapshot(wallet_id=UUID('3b75b9f7-c5de-44da-b70f-c707073beed2'), episode_id=UUID('7e458677-bac4-4d02-b479-b...ime(2026, 11, 21, 9, 7, 23, 544966, tzinfo=datetime.timezone.utc), revision=2, reset_available=True, reset_reason=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10d4344a0>
+record_property = <function record_property.<locals>.append_property at 0x10cb00220>
+recovered_price = '100'
+
+    @pytest.mark.parametrize("recovered_price", ["111", "100"])
+    async def test_feed_gap_requires_fresh_generation_and_real_worker_starts_within_one_second(
+        api_engine: AsyncEngine,
+        engine_engine: AsyncEngine,
+        scan_engine: AsyncEngine,
+        owner: UUID,
+        wallet: PaperWalletSnapshot,
+        monkeypatch: pytest.MonkeyPatch,
+        record_property: Callable[[str, object], None],
+        recovered_price: str,
+    ) -> None:
+        from tiewtrade.infra.protections import worker
+        from tiewtrade.services.engine.paper_order_main import serve
+    
+        market, _, _, _, group_id = await buy(api_engine, engine_engine, scan_engine, owner, wallet)
+        serving = None
+        try:
+            async with market_data_session(market) as market_session:
+                snapshot = await read_snapshot(market_session)
+                assert snapshot.feed is not None
+                row = next(value for value in snapshot.rows if value.base == "BTC")
+                assert row.observation is not None
+                expired_at = snapshot.server_time - MAX_PRICE_AGE - timedelta(milliseconds=1)
+                stale = replace(
+                    row.observation,
+                    amount=Money.of("111", "USDT"),
+                    trade_id=row.observation.trade_id + 1,
+                    trade_time=expired_at,
+                    received_at=expired_at,
+                )
+                assert await write_price(market_session, snapshot.feed, replace(row, observation=stale))
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_group(session, group_id)
+                current = await load(session, group_id)
+                assert current is not None and current.value.state is ProtectionState.ARMED
+            async with market_data_session(market) as market_session:
+                snapshot = await read_snapshot(market_session)
+                assert snapshot.feed is not None
+                feed = await set_connected(market_session, snapshot.feed, False)
+            await publish_price(market, "111")
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_group(session, group_id)
+                current = await load(session, group_id)
+                assert current is not None and current.value.state is ProtectionState.ARMED
+            async with market_data_session(market) as market_session:
+                feed = await begin_generation(market_session, feed)
+                await set_connected(market_session, feed, True)
+                snapshot = await read_snapshot(market_session)
+                prior = next(value for value in snapshot.rows if value.base == "BTC")
+                assert prior.observation is not None
+                fresh_sequence = prior.observation.trade_id + 1
+            # An old crossing observation does not become trusted after reconnect.
+            async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                await process_group(session, group_id)
+                current = await load(session, group_id)
+                assert current is not None and current.value.state is ProtectionState.ARMED
+            started: list[datetime] = []
+            first_poll, fresh_processed = asyncio.Event(), asyncio.Event()
+            original = worker.market_evidence
+    
+            async def observe_start(session: UserSession, pair: PositionPair) -> TriggerEvidence:
+                if session.user_id == owner:
+                    first_poll.set()
+                evidence = await original(session, pair)
+                if session.user_id == owner and evidence.sequence == fresh_sequence and not started:
+                    # The post-lock read completing is a conservative upper bound
+                    # for actual processing start, never an enqueue timestamp.
+                    started.append((await session.execute("SELECT clock_timestamp()")).scalar_one())
+                    fresh_processed.set()
+                return evidence
+    
+            monkeypatch.setattr(worker, "market_evidence", observe_start)
+            serving = asyncio.create_task(serve())
+            await asyncio.wait_for(first_poll.wait(), 5)
+            ready_at = await publish_price(market, recovered_price)
+            await asyncio.wait_for(fresh_processed.wait(), 5)
+            async with asyncio.timeout(5):
+                while True:
+                    async with user_session(engine_engine, owner, role=DatabaseRole.ENGINE) as session:
+                        current = await load(session, group_id)
+                        assert current is not None
+                        if current.observation is not None and current.observation[2] == fresh_sequence:
+                            break
+                    await asyncio.sleep(0.005)
+            assert len(started) == 1
+            latency = (started[0] - ready_at).total_seconds()
+>           assert 0 <= latency <= 1, f"processing start latency: {latency}s"
+E           AssertionError: processing start latency: 1.44309s
+E           assert 1.44309 <= 1
+
+tests/infra/protections/test_validation.py:1067: AssertionError
+=========================== short test summary info ============================
+FAILED tests/infra/protections/test_validation.py::test_feed_gap_requires_fresh_generation_and_real_worker_starts_within_one_second[111]
+FAILED tests/infra/protections/test_validation.py::test_feed_gap_requires_fresh_generation_and_real_worker_starts_within_one_second[100]

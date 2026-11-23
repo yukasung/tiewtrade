@@ -102,7 +102,7 @@ test("actual chart panes, exact values and keyboard selection", async ({ page })
   await expect(chart).toBeVisible();
   await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
   await expect(chart.locator("canvas").first()).toBeVisible();
-  await expect(chart.getByRole("button", { name: "รีเซ็ตกราฟ" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "รีเซ็ตกราฟ" })).toBeEnabled();
   await expect(chart.getByLabel("MACD_LINE", { exact: true })).toHaveCount(0);
   for (const name of ["EMA20", "EMA50", "EMA200", "RSI14", "ATR14"]) {
     await expect(chart.getByText(name, { exact: true })).toHaveCount(0);
@@ -114,7 +114,7 @@ test("actual chart panes, exact values and keyboard selection", async ({ page })
     await expect(chart.locator("canvas").first()).toBeVisible();
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= globalThis.innerWidth)).toBe(true);
   }
-  const pair = chart.getByRole("combobox", { name: "คู่เทรด", exact: true });
+  const pair = page.getByRole("combobox", { name: "คู่เทรด", exact: true });
   const pairStyle = await pair.evaluate(element => {
     const style = globalThis.getComputedStyle(element);
     return {
@@ -132,11 +132,9 @@ test("actual chart panes, exact values and keyboard selection", async ({ page })
   });
   await pair.focus();
   await expect(pair).toHaveCSS("border-color", "rgb(156, 185, 255)");
-  const disabled = chart.getByRole("button", { name: "ยังไม่เปิดใช้งาน", exact: true });
-  await expect(disabled).toBeDisabled();
-  await expect(disabled).toHaveCSS("cursor", "not-allowed");
-  await expect(disabled).toHaveCSS("opacity", "0.5");
-  await expect(disabled).toHaveCSS("border-radius", "8px");
+  await expect(page.locator('a[href="/chart"]')).toHaveCount(0);
+  await expect(page.getByTestId("trading-order-placeholder")).toHaveCount(0);
+  await expect(page.getByTestId("trade-history-placeholder")).toHaveCount(0);
   await expect(chart.getByRole("link", { name: "Charting by TradingView", exact: true })).toBeVisible();
   await page.screenshot({ path: "../specs/features/2026-10-12-candlestick-chart/evidence/chart-browser.png", fullPage: true });
   expect(errors).toEqual([]);
@@ -145,7 +143,7 @@ test("actual chart panes, exact values and keyboard selection", async ({ page })
 
 test("module pages preserve navigation history, deep links and cancel inactive chart work", async ({ page }) => {
   await registerAccount(page);
-  await expect(page).toHaveURL(/\/chart$/);
+  await expect(page).toHaveURL(/\/paper\/trade$/);
   await expect(page.getByTestId("candlestick-chart").getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
   let chartCalls = 0;
   page.on("request", request => { if (request.url().includes("/market-data/chart/")) chartCalls += 1; });
@@ -181,8 +179,7 @@ test("module pages preserve navigation history, deep links and cancel inactive c
   await expect(page.getByTestId("api-key-panel")).toBeVisible();
   await page.setViewportSize({ width: 375, height: 812 });
   const trigger = page.getByRole("button", { name: "เปิดเมนูบัญชี" });
-  await trigger.click();
-  await page.getByRole("link", { name: "กราฟแท่งเทียน", exact: true }).click();
+  await (await navigationLink(page, "/paper/trade")).click();
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByTestId("candlestick-chart")).toBeVisible();
 });
@@ -193,10 +190,10 @@ test("removed prices bookmarks return to the chart without starting a price subs
   page.on("websocket", socket => { if (socket.url().includes("/market-data/prices")) priceRequests.push(socket.url()); });
   const email = await registerAccount(page);
   await page.goto("/prices?from=bookmark");
-  await expect(page).toHaveURL(/\/chart\?from=bookmark$/);
+  await expect(page).toHaveURL(/\/paper\/trade\?from=bookmark$/);
   await expect(page.getByTestId("candlestick-chart")).toBeVisible();
   await page.reload();
-  await expect(page).toHaveURL(/\/chart\?from=bookmark$/);
+  await expect(page).toHaveURL(/\/paper\/trade\?from=bookmark$/);
   await expect(page.getByTestId("candlestick-chart")).toBeVisible();
 
   for (const language of ["th", "en"]) {
@@ -218,7 +215,7 @@ test("removed prices bookmarks return to the chart without starting a price subs
       await (await navigationLink(page, "/account")).click();
       await expect(page.getByTestId("log-out")).toBeVisible();
       if (width === 375) await trigger.click();
-      const chartLink = await navigationLink(page, "/chart");
+      const chartLink = await navigationLink(page, "/paper/trade");
       await chartLink.focus();
       await expect(chartLink).toBeFocused();
       await page.keyboard.press("Enter");
@@ -242,7 +239,7 @@ test("removed prices bookmarks return to the chart without starting a price subs
   await page.getByLabel("อีเมล").fill(email);
   await page.getByLabel("รหัสผ่าน", { exact: true }).fill(PASSWORD);
   await page.getByTestId("submit").click();
-  await expect(page).toHaveURL(/\/chart$/);
+  await expect(page).toHaveURL(/\/paper\/trade$/);
   await expect(page.getByTestId("candlestick-chart")).toBeVisible();
   expect(priceRequests).toEqual([]);
 });
@@ -306,10 +303,10 @@ test("password login, series switching and actual latest-price worker", async ({
     await page.getByTestId("submit").click();
     const chart = page.getByTestId("candlestick-chart");
     await expect(chart).toBeVisible();
-    await chart.getByRole("combobox", { name: "คู่เทรด", exact: true }).selectOption("ETH");
+    await page.getByRole("combobox", { name: "คู่เทรด", exact: true }).selectOption("ETH");
     await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
-    await chart.getByRole("combobox", { name: "Timeframe", exact: true }).selectOption("5m");
-    await chart.getByRole("combobox", { name: "Timeframe", exact: true }).selectOption("1h");
+    await page.getByRole("combobox", { name: "Timeframe", exact: true }).selectOption("5m");
+    await page.getByRole("combobox", { name: "Timeframe", exact: true }).selectOption("1h");
     await expect(chart.getByText("100.000000000000000001 USDT", { exact: true })).toBeVisible({ timeout: 60_000 });
   } finally { await quotes.stop(); }
 });
@@ -499,8 +496,8 @@ test(native3mTitle, async ({ page }) => {
     const chart = page.getByTestId("candlestick-chart");
     for (const base of ["BTC", "ETH"]) {
       const open = base === "BTC" ? "200.000000000000000001" : "300.000000000000000001";
-      if (base === "BTC") await chart.getByRole("combobox", { name: "Timeframe" }).selectOption("3m");
-      else await chart.getByRole("combobox", { name: "คู่เทรด" }).selectOption(base);
+      if (base === "BTC") await page.getByRole("combobox", { name: "Timeframe", exact: true }).selectOption("3m");
+      else await page.getByRole("combobox", { name: "คู่เทรด" }).selectOption(base);
       // The existing test timeout bounds normal UI polling. A failed observer
       // fails the test; an aborted stale request cannot count as READY evidence.
       const captured = await page.waitForFunction(selectedBase => {

@@ -169,14 +169,16 @@ async def traced_worker(operation: Awaitable[None], metrics: Path) -> None:
 
     @asynccontextmanager
     async def transaction(
-        engine: Any, *, cleanup_seconds: float | None = None
+        engine: Any, *, cleanup_seconds: float | None = None, strict_rollback: bool = False
     ) -> AsyncIterator[Any]:
         started = monotonic()
         context: dict[str, Any] = {"phase": "other", "started_wall": time()}
         token = _CURRENT.set(context)
         outcome = "COMMIT"
         try:
-            async with original_begin(engine, cleanup_seconds=cleanup_seconds) as connection:
+            async with original_begin(
+                engine, cleanup_seconds=cleanup_seconds, strict_rollback=strict_rollback
+            ) as connection:
                 yield connection
         except BaseException as error:
             outcome = "ROLLBACK:" + type(error).__name__

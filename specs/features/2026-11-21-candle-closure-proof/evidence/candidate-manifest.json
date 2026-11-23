@@ -1,0 +1,91 @@
+{
+  "base": "46841d394f4fe23f94626114619ef0c4c66438d1",
+  "fingerprint": "a20a93a3031f7e63266c174e788a7c6e828d27c3b661ce9249032bac71649d25",
+  "files": [
+    {
+      "path": "backend/migrations/versions/0076_candle_closure_proof.py",
+      "sha256": "13d27132880238b995bd5bad87a823376f4d1843ebedecfceaf71782689d4a18"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/candle_closure.py",
+      "sha256": "cfe48a1ac39ea442203b94f0f8de98ceb4df1628d0cdfa66b03c50aad9f6c333"
+    },
+    {
+      "path": "backend/src/tiewtrade/core/strategy_candles.py",
+      "sha256": "50c76d0097cf61766a877cdedc96aa0ee8d34ded7b03364d5ade6907c092d181"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/authority.py",
+      "sha256": "6652468b859b9d7b4e665e6b1dcf8d62f5438eba9a80683419f9cab6285a8443"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/candle_sources.py",
+      "sha256": "860135f9b5e54290af09eb6e938a6c8943a7addfad5e9c33e3129359cf2385e8"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/evaluation.py",
+      "sha256": "d15318fc67bb442f8d5696ed8dd7c2dd7497c3257c42fdf204d0a4ceb8a816ed"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/indicator_tail.py",
+      "sha256": "d15c68cf677e1ea91fbdd0809a7e82d62ba95a7b047473cc64ff90a68bee2c86"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/bots/inputs.py",
+      "sha256": "a7d28c877016e3c06a969ecb22944c5e604020b241aa221d88584ea8b997f62f"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/indicators/prepared.py",
+      "sha256": "adeee8338d068990d8bf0c3413617d89f7305ea007445ecb2619fe718b7e1be4"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/candle_closure.py",
+      "sha256": "4e34f387aa8f4737ebb46a8b8d9ab6ea251360e34876495acb903d48b4708ee2"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/claims.py",
+      "sha256": "a2ac35ac7a0c4fa69e06021b0662fb5aa7ebcaf36bfe5dbf25efd05d72a6eb86"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/records.py",
+      "sha256": "050a757445d5c0f8358d6eb613072819d7d41d102f770b972bdff8ead8f4fb2b"
+    },
+    {
+      "path": "backend/src/tiewtrade/infra/market_data/storage.py",
+      "sha256": "e053f20b83a99f604ae5b7a4b97ccad72096248207e2e04051d49b8978153cee"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/candle_realtime.py",
+      "sha256": "4c789e695859c67d6874e967613479e6c7d75842a80b3b1eda457a417871bb73"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/ingestion.py",
+      "sha256": "f1ff79dadd78522f47267367285061fb1fabc1ed32f782067dd817f4682a182a"
+    },
+    {
+      "path": "backend/src/tiewtrade/services/market_data/main.py",
+      "sha256": "f7b227565fc50c90e7998f8fecc1ce809d6c85c57d70bae7ba4a07d31449087c"
+    },
+    {
+      "path": "backend/tests/core/test_candle_closure.py",
+      "sha256": "f63f8dc4e6169543928e9f2e3ee8987c1cf767efc358f5448735b12e7f012096"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/profile_candle_closure.py",
+      "sha256": "3b6d16b4f1da9191af34c6cf48ce9d357c4cd60f1848b5316dca5ae9850e8cb4"
+    },
+    {
+      "path": "backend/tests/infra/execution_market/test_candle_closure_proof.py",
+      "sha256": "489387c292ab1cabec1e57efd77faaa412f9cde6e56606145b1737458fd6a6bb"
+    },
+    {
+      "path": "backend/tests/infra/market_data/test_batch_write.py",
+      "sha256": "6c3e8f94984d599735765838d16f7677b287ee1d90a1587ca53de429b8b11649"
+    },
+    {
+      "path": "backend/tests/services/market_data/test_candle_realtime.py",
+      "sha256": "7ce2d0b6d42e6b44dac2cd4561f27e641554083d46f2fd6a2ec59f08e171ba37"
+    }
+  ],
+  "purpose": "Historical campaign candidate; public attempt ended Partial before activation. Later reviewed runtime correction is separate."
+}

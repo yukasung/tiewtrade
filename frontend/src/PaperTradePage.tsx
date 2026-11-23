@@ -136,9 +136,9 @@ function PaperTradeForOwner({ owner }: { owner: string }) {
   return <TradingWorkspace mode="PAPER" bases={bases} base={base} onBase={changeBase}
     pairDisabled={blocked || catalog.isPending || catalog.isError}
     marketPrice={market?.price}
-    chart={<CandlestickChartPanel userId={owner} base={base} onBaseChange={changeBase} embedded
+    chart={<CandlestickChartPanel userId={owner} base={base} onBaseChange={changeBase}
       onMarketSnapshot={setMarketSnapshot}/>}
-    form={<PaperBotPanel key={panelScope} owner={owner} available={availableQuote}
+    form={<PaperBotPanel key={panelScope} owner={owner} base={base} available={availableQuote}
       loading={snapshot.isPending || snapshot.isFetching}/>}
     details={details}
     orders={wallet && scope ? <div className="trade-workspace-orders trading-activity">

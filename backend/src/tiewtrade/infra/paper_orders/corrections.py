@@ -18,6 +18,7 @@ from tiewtrade.infra.audit import (
     SubjectKind,
     record_event,
 )
+from tiewtrade.infra.bots.baskets import invalidate_execution
 from tiewtrade.infra.db.session import UserSession, require_user_session
 from tiewtrade.infra.market_data.order_book_storage import read_latest_book
 from tiewtrade.infra.paper_orders.codec import intent_from_payload, object_payload
@@ -105,6 +106,7 @@ async def correct_fill(
     )
     if result.status is PositionWriteStatus.REPLAYED:
         return None
+    await invalidate_execution(session, fact.execution_id)
     if result.status is PositionWriteStatus.CONFLICTED:
         await session.execute(
             """UPDATE paper_order_activity SET availability='CONFLICTED',revision=revision+1,

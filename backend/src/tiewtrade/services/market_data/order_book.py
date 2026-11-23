@@ -364,8 +364,11 @@ async def ingest_execution_pair(
             if isinstance(event, FeedConnected):
                 if assembler is not None:
                     raise SourceUnavailableError("connection reused without new generation")
-                async with asyncio.timeout(5):
-                    loaded_capability = await feed.capability(symbol)
+                try:
+                    async with asyncio.timeout(5):
+                        loaded_capability = await feed.capability(symbol)
+                except TimeoutError as error:
+                    raise SourceUnavailableError("execution capability timed out") from error
                 capability = loaded_capability
                 minutes = max(
                     capability.market.average_price_minutes,
@@ -380,8 +383,11 @@ async def ingest_execution_pair(
                     trade_window = TradeWindow(symbol, minutes, started_at, ended_at, history)
                 # Take the depth snapshot after history pagination so buffered stream
                 # frames bridge a current book instead of ageing the snapshot in place.
-                async with asyncio.timeout(5):
-                    snapshot = await feed.snapshot(symbol)
+                try:
+                    async with asyncio.timeout(5):
+                        snapshot = await feed.snapshot(symbol)
+                except TimeoutError as error:
+                    raise SourceUnavailableError("execution snapshot timed out") from error
                 assembler = ExecutionBookAssembler(snapshot, lease.generation)
             elif isinstance(event, ExecutionFeedData):
                 if assembler is None or capability is None:

@@ -37,7 +37,7 @@ export function TradingWorkspace({ mode, bases, base, onBase, marketPrice,
       </div>
       <dl className="trade-market-summary">
         <div><dt>{t("latestPrice")}</dt><dd>{marketPrice && base
-          ? <MarketValue amount={displayedPrice(marketPrice)} unit="" grouped/> : t("unavailable")}</dd></div>
+          ? <MarketValue amount={displayedPrice(marketPrice)} unit="" grouped/> : "—"}</dd></div>
       </dl>
     </header>
     <div className="trade-workspace-chart">{chart}</div>

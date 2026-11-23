@@ -1,0 +1,40 @@
+{
+  "base_candidate": "762315ab75332791b26b23f364658ccd348609b5",
+  "ci_run": 45113386759,
+  "artifact": {
+    "id": 14790399958,
+    "name": "playwright-report",
+    "trace_sha256": "f9aa00acf112ab16eca9b6c4ce943ccc68546a9976fa11c494f5a918528cab54",
+    "raw_trace": "Retained locally only; may contain session data"
+  },
+  "established_observer_defect": {
+    "old_btc_request_started": "2026-11-23T04:48:11.923Z",
+    "old_wallet_present": false,
+    "post_reload_btc_request_started": "2026-11-23T04:48:12.870Z",
+    "new_wallet_present": true,
+    "new_admission_reasons": [],
+    "mechanism": "Response-only URL/method filter accepts old-document request; new-document wallet is ready"
+  },
+  "correction": "Observe request identities after main-frame reload navigation; shared F16/F17 helper; retain HTTP/wallet/UI assertions",
+  "regression": {
+    "without_guard": "Fails deterministic ordering test",
+    "with_guard": "2 passed; old response before/after navigation rejected, subframe cannot open scope; listener removed on success/failure"
+  },
+  "browser": {
+    "F17": "7 passed55.7s",
+    "F16_shared_helper": "1 passed16.3s",
+    "database": "Fresh tiewtrade_e2e_f17observer on isolated PostgreSQL, simulated sources; no Live"
+  },
+  "static": "Scoped ESLint, frontend tsc and diff check Passed",
+  "historical_local_issues": "First unit draft lint errors corrected; initial root npx invocation interrupted and rerun from frontend",
+  "review": "Test-only request observer; no API/schema/financial/session change; strict wallet assertion retained",
+  "limitations": "Corrects evidenced F17 observer defect; does not explain historical backend dispatch failures or certify final CI",
+  "ci_publication": "Not performed",
+  "sha256": {
+    "frontend/e2e/helpers/reloadResponse.ts": "bba005eda2e030256511db43b41ec6b95525dff8aa27b9c12cc814f8d5d1465b",
+    "frontend/e2e/helpers/paperOrders.ts": "74bc7953f00dbe7f8ab007f4eb0269db47d350978d8c3e8cc167983f3f7225fd",
+    "frontend/e2e/manual-orders.spec.ts": "34632d5a7d443728990d4bc4b3af8ab1e10881e711efb85eaa8d20aa4df41a5c",
+    "frontend/e2e/protections.spec.ts": "712d852ec89658584ba5da55f819746b952fff612252fddc3152c210d9bbf8a5",
+    "frontend/tests/ReloadResponse.test.ts": "25b9171113dffd7fa101b6f19dbd78b482db759172ffb67e8ccdf8b802c410de"
+  }
+}

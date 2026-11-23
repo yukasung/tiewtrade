@@ -1,0 +1,9 @@
+......                                                                   [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/gates/test_paper_isolation.py::test_paper_owned_modules_cannot_import_live_or_network_code
+PASSED tests/gates/test_paper_isolation.py::test_gate_rejects_alias_and_transitive_helper_fixtures
+PASSED tests/infra/bots/test_candle_finality_reason.py::test_nonclosed_indicator_point_is_rejected_with_precise_reason[UNCONFIRMED-False]
+PASSED tests/infra/bots/test_candle_finality_reason.py::test_nonclosed_indicator_point_is_rejected_with_precise_reason[UNCONFIRMED-True]
+PASSED tests/infra/bots/test_candle_finality_reason.py::test_nonclosed_indicator_point_is_rejected_with_precise_reason[OPEN-False]
+PASSED tests/infra/bots/test_candle_finality_reason.py::test_nonclosed_indicator_point_is_rejected_with_precise_reason[OPEN-True]

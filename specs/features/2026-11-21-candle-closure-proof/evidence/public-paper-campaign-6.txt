@@ -1,0 +1,48 @@
+Public-source Paper attempt6 —2026-11-22: PARTIAL
+
+Authorized: one attempt, BTC/ETH1m,100USDT/entry, new isolated Paper DB/accounts,
+source preparation<=300s, capture360s; no owner/Live action or implicit repeat.
+Candidate:94fcde334363d52f136089cc20a6749e92282cb4
+Manifest365source/migration/harness files:
+4ab839944558876b7cc900cee948c38acfdd3a0ab1787d8df2da61bc2ed892c6
+Source manifest matched working files before/after capture. Runtime/harness unchanged.
+Working changes before launch were only acceptance plan/validation/roadmap documents.
+
+Owned infrastructure: closure-campaign-6-pg(PostgreSQL16.15),closure-campaign-6-redis;
+loopback55426/56396, tiewtrade_e2e_closure_campaign_6, production migrations head0076.
+Reused attempt5 external launcher with candidate/path/port/database identity changed,
+permitting only known documentation changes. No production test hook or new guard.
+Exclusive /tmp/closure-campaign-6-report.json marker created once; never relaunched.
+
+Boot:2026-11-22T14:26:56.683487+00:00
+Stop:2026-11-22T14:27:14.763017+00:00
+Duration18.079530s; capture phase not reached, no campaign accounts created.
+Failure:ExceptionGroup; outer frames:profile_candle_closure.main/campaign ->
+order_book.ExecutionBookSupervisor.run/_produce -> ingest_execution_pair -> TaskGroup.
+Existing diagnostic did not retain child exception types/frames. Exact child cause
+cannot be reconstructed from this report; no claim that network/timeout/exchange/DB
+or the strategy is the cause. Runtime log empty; PostgreSQL log shows no SQL error.
+ETH execution state FEED_DISCONNECTED is a post-cleanup state; finally invalidates
+with that code even for other errors. BTC execution state not READY. Candle demand:
+BTC PENDING/attempt1/SOURCE_FAILURE; ETH RUNNING/attempt1, existing lease retained.
+
+Independent read-only audit after shutdown:
+users0,wallets0,candles0,closureproofs0,decisions0,orderlinks0,orders0,executions0,
+positions0,reservations0,anchors0,ledger0; other database sessions0.
+No Paper BUY/fill/ATR-anchored TP/SL or public next-candle entry evidence obtained.
+Money/Quantity proof verification completed with0proofs/decisions; no positive proof.
+Audit correctly labels no accounts/empty ledger, not unchanged10000USDT wallets.
+Stopped only this attempt's two owned containers; retained for inspection.
+
+Artifacts:public-paper-campaign-6.json,-verification.json,-diagnostics.json,
+-candidate-manifest.json. Raw external-launcher/bootstrap/runtime and scanner logs
+under /tmp/closure-campaign-6-*. Existing gitleaks config scan of four new JSON
+artifacts:exit0/no findings; no exception changed. No credentials/raw error messages
+are added to evidence.
+
+Runtime CI/Security remain Passed on94fcde33; V12/V15/V16/V17 remain Partial.
+No repeated campaign, time extension, source/strategy/financial change, fake fill,
+owner preview activation, publication/CI/merge. This authorized attempt is consumed.
+Next: offline sanitized child-exception diagnostics and controlled failure handling
+checks; public attempt7 requires separate bounded approval. Owner/independent and
+deployment acceptance remain outstanding; Batch/Release Pending Full Validation.

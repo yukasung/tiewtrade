@@ -1,0 +1,28 @@
+{
+  "candidate": "c5f724f3b64cd25e8fb6d60a22c980defc4c694a",
+  "ci": {
+    "id": 45055199794,
+    "result": "Failed",
+    "passed": 6126,
+    "failed": 1,
+    "skipped": 2,
+    "deselected": 32,
+    "failing_test": "tests/infra/execution_market/test_candle_closure_proof.py::test_proof_to_prepared_indicators_strategy_and_paper_admission[awaiting_proof_reconnect]",
+    "location": 922,
+    "observed": "Expected non-null recovery decision; returned None. Actual reason not established by captured assertion.",
+    "downstream_isolated_backend_steps": "Skipped"
+  },
+  "security": {
+    "id": 45055199790,
+    "result": "Passed"
+  },
+  "other_ci": [
+    "Frontend Passed",
+    "API contract Passed",
+    "Container Passed",
+    "E2E Passed including F21 and Paper Test Entry",
+    "Backend Ruff/format/mypy/imports Passed"
+  ],
+  "public_attempt9": "Not run",
+  "merge": "Not performed"
+}

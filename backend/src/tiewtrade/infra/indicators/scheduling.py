@@ -2,6 +2,7 @@
 
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from tiewtrade.infra.db.errors import DatabaseLockTimeoutError
 from tiewtrade.infra.indicators.session import (
     IndicatorWriterSession,
     indicator_writer_session,
@@ -11,15 +12,27 @@ from tiewtrade.infra.indicators.session import (
 POLL_SECONDS = 10.0
 
 
+class CoalescingBusyError(DatabaseLockTimeoutError):
+    """Statement-only lock contention; callers must complete rollback before retry."""
+
+
 async def coalesce_session(session: IndicatorWriterSession) -> int:
     session = require_indicator_writer_session(session)
     await session.execute("""SELECT set_config('lock_timeout','200ms',true),
         set_config('statement_timeout','500ms',true)""")
-    return int(
-        (await session.execute("SELECT public.coalesce_indicator_build_jobs()")).scalar_one()
-    )
+    # Only one coalescer needs to update the shared catalog per transaction.
+    # Keep this gate through commit/rollback, independent of the attempt lock (711,1).
+    # A busy caller leaves durable work to the holder and the next regular poll.
+    if not (await session.execute("SELECT pg_try_advisory_xact_lock(711,2)")).scalar_one():
+        return 0
+    try:
+        return int(
+            (await session.execute("SELECT public.coalesce_indicator_build_jobs()")).scalar_one()
+        )
+    except DatabaseLockTimeoutError:
+        raise CoalescingBusyError("indicator coalescing lock contention") from None
 
 
 async def coalesce_jobs(engine: AsyncEngine) -> int:
-    async with indicator_writer_session(engine) as session:
+    async with indicator_writer_session(engine, strict_rollback=True) as session:
         return await coalesce_session(session)

@@ -13,13 +13,9 @@ afterEach(() => {
   document.documentElement.classList.remove("dark");
   delete document.documentElement.dataset.colorScheme;
 });
-it("lets the chart page use the full workspace width", () => {
-  const { container } = render(<AccountLayout page="chart"><p>chart</p></AccountLayout>);
-  expect(container.querySelector(".account-content-chart")).toBeTruthy();
-});
 it("keeps the standard content width on other module pages", () => {
   const { container } = render(<AccountLayout page="account"><p>account</p></AccountLayout>);
-  expect(container.querySelector(".account-content-chart")).toBeNull();
+  expect(container.querySelector(".account-content-trade")).toBeNull();
 });
 it("uses the full-width workspace and removes the duplicate breadcrumb on trade routes", () => {
   const { container } = render(<AccountLayout page="paper/trade"><p>workspace</p></AccountLayout>);

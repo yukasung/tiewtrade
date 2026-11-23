@@ -25,7 +25,6 @@ function resize(width: number) {
 }
 beforeEach(() => {
   vi.stubGlobal("innerWidth", 1440);
-  vi.stubEnv("VITE_CHART_ENABLED", "1");
   window.history.replaceState(null, "", "/account");
 });
 afterEach(async () => {
@@ -47,10 +46,9 @@ function stopFixture() {
   vi.stubGlobal("fetch", fetcher);
   return fetcher;
 }
-it.each([false, true])("filters shared navigation by chart flag and admin role (%s)", admin => {
-  expect(visibleAccountPages("primary", false, admin)).toEqual(["paper/trade", "live/trade"]);
-  expect(visibleAccountPages("primary", true, admin)).toEqual(["chart", "paper/trade", "live/trade"]);
-  expect(visibleAccountPages("account", true, admin)).toEqual([
+it.each([false, true])("filters shared navigation by admin role (%s)", admin => {
+  expect(visibleAccountPages("primary", admin)).toEqual(["paper/trade", "live/trade"]);
+  expect(visibleAccountPages("account", admin)).toEqual([
     "account", "security", "api-keys", "trading-account", ...(admin ? ["supported-symbols", "system-safety"] : []),
   ]);
 });

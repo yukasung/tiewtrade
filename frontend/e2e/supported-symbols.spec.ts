@@ -116,7 +116,7 @@ test("trader cannot see or force-open the administration page", async ({ page })
   await register(page, `e2e-catalog-trader-${String(Date.now())}@example.com`);
   await expect(page.getByRole("link", { name: "คู่เทรดที่รองรับ" })).toHaveCount(0);
   await page.goto("/supported-symbols");
-  await expect(page).toHaveURL(/\/chart$/);
+  await expect(page).toHaveURL(/\/paper\/trade$/);
   const response = await page.request.get("/api/admin/supported-symbols");
   expect(response.status()).toBe(403);
 });

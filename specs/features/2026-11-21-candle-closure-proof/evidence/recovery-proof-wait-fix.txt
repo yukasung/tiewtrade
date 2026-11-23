@@ -1,0 +1,45 @@
+Recovery/proof-wait correction —2026-11-22
+Base commit: f2418d2928d7302f5e70c43541b351ec11911cbe; correction remains local/unpublished.
+No public attempt6, owner-preview activation, Live action, commit/push/CI/merge.
+
+Reproduction against unmodified runtime: 2 selected real-PostgreSQL tests failed.
+Both fail at exact progress-preservation assertion: normal UNCONFIRMED polling changed
+eligible_after and recovery_required false→true. No mocked transaction or financial math.
+Raw reproduction retained in /tmp/closure-recovery-wait-red.log.
+
+Correction: classify BOT_CANDLE_UNCONFIRMED with existing preparation waits. Still PAUSED;
+no order before proof. Source/price/indicator epochs and ready() recovery cutoff unchanged.
+Rename indicator_wait to preparation_wait to reflect the same existing grouping.
+Reuse existing PostgreSQL closure composition and F11 RSI tail-input fixtures.
+
+After correction: both new cases passed (ordinary wait→one BUY/fill, real reconnect→0BUY).
+Broader selected real-PG regression:45passed, no failures (new cases included):
+python /tmp/closure-review-tests.py
+ tests/infra/execution_market/test_candle_closure_proof.py
+ tests/infra/execution_market/test_strategy_tail_inputs.py
+ tests/infra/execution_market/test_strategy_commit_fences.py
+ -k 'proof_to_prepared or normal_preparation_wait or source_failure_and_recovery or price_recovery or commit or queued'
+Covers RSI ARM after UNCONFIRMED wait, Paper proof→entry→real matcher/ledger, repeat
+input→same decision/one command, absent proof→0command/unchanged balance, reconnect
+cutoff→no old entry, source/feed recovery, source correction, STOP/risk/catalog/wallet,
+queued deadline and accepted/SELL-driven matching proof invalidation.
+Financial assertions use existing Money/Quantity and actual matching; no venue order.
+Test setup explicitly supplies historical boundaries as deterministic fixtures, unlike
+the public campaign. It is not proof of actual public-source availability or fills.
+
+Ruff check and format:3files passed. Strict MYPYPATH=src mypy:3files passed.
+Initial mypy found2new test-local variable name collisions with later wallet/tuple locals;
+renamed progress_before/progress_after, no behavioral change. One diagnostic edit command
+used the wrong relative path and changed no file; corrected before final checks.
+lint-imports:7kept,0broken. git diff --check passed.
+Review: no remaining correctness/security finding in this correction. Persistent authority
+remains PostgreSQL under existing owner/source locks and revision/proof comparisons.
+No session/global authority, schema, financial formula, quantity, TP/SL or risk changes.
+Known market-source interruptions from campaign5 remain real and fail closed; don't claim
+all green candles must trade. Actual corrected-candidate public BUY/fill/protection, final
+SHA required CI and owner/independent acceptance remain open. Prior CI doesn't cover fix.
+
+Source/test fingerprints:
+e56f064870aebe24a834ec94a9137b51d23d17c93c5a3e5db3fdccc564b9ccfd  backend/src/tiewtrade/infra/bots/evaluation.py
+21358be66d3ed7fb78f02a0ba15e65bc376a4a350649b49c392325ab5e42c7bb  backend/tests/infra/execution_market/test_candle_closure_proof.py
+bf85cbd1089d8d5877626c914db6827a07830887c9fe7a4c91195ad67cd7bad0  backend/tests/infra/execution_market/test_strategy_tail_inputs.py

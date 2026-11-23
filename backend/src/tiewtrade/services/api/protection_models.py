@@ -50,6 +50,7 @@ class ProtectionView(BaseModel):
     take_profit_price: str | None
     stop_loss_price: str | None
     entry_order_id: UUID | None
+    strategy_managed: bool = False
     exit_order_id: UUID | None = None
     exit_order_state: str | None = None
     exit_command_state: str | None = None

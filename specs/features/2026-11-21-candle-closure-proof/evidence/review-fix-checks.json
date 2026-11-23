@@ -1,0 +1,28 @@
+{
+  "candidate_fingerprint": "51ab7d36cf1e2bd02b49cab5deaa6255c74117c41ba22f1bd0b2c7383eecdbba",
+  "checks": {
+    "review-fix-final-pg.txt": {
+      "passed": 83,
+      "failed": 4
+    },
+    "review-fix-entry-slot.txt": {
+      "passed": 4,
+      "failed": 0
+    },
+    "review-fix-final-regression.txt": {
+      "passed": 67,
+      "failed": 0
+    },
+    "review-fix-final-units.txt": {
+      "passed": 116,
+      "failed": 0
+    },
+    "review-fix-gates.txt": {
+      "passed": 6,
+      "failed": 0
+    }
+  },
+  "counts_overlap": true,
+  "required_CI": "Not Run",
+  "public_campaign": "Not Run on corrected candidate; prior attempt4 Partial remains historical"
+}

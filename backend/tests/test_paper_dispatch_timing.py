@@ -45,8 +45,9 @@ def test_detail_bound_is_explicit_and_never_silently_accepted(tmp_path: Path) ->
 
 
 @pytest.mark.parametrize("fail", [False, True])
+@pytest.mark.parametrize("strict", [False, True])
 async def test_transaction_identity_outcome_and_patch_restoration(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fail: bool
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fail: bool, strict: bool
 ) -> None:
     owner, request, attempt = uuid4(), uuid4(), uuid4()
     metrics = control(tmp_path, str(owner))
@@ -55,6 +56,7 @@ async def test_transaction_identity_outcome_and_patch_restoration(
 
     @asynccontextmanager
     async def begin(*args: Any, **kwargs: Any) -> Any:
+        assert kwargs["strict_rollback"] is strict
         try:
             yield None
         except BaseException:
@@ -73,7 +75,7 @@ async def test_transaction_identity_outcome_and_patch_restoration(
     engine: Any = None
 
     async def work() -> None:
-        async with db._begin(engine):
+        async with db._begin(engine, strict_rollback=strict):
             process_call: Any = vars(manual_order)["process_request"]
             await process_call(
                 None,

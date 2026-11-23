@@ -16,12 +16,22 @@ const row: Protection = { protection_id: "armed", wallet_id: "wallet", episode_i
   base: "BTC", quote: "USDT", quantity: "0.00131868", protected_quantity: "0.00131",
   executable_quantity: "0.00131", step_residual_quantity: "0.00000868", state: "ARMED", revision: 4,
   take_profit_price: "76500", stop_loss_price: "75000", conflicted: false, failure_code: null,
-  market_ready: true, entry_order_id: null, snapshot_at: "2026-11-08T04:00:00Z" };
+  market_ready: true, strategy_managed: false, entry_order_id: null, snapshot_at: "2026-11-08T04:00:00Z" };
 const props = { owner: "owner", base: "BTC", scope: { expected_wallet_id: "wallet", expected_episode_id: "episode" },
   view: "OPEN" as const, onViewChange: vi.fn(), ordersDisabled: false, onCancelOrder: vi.fn(), rows: [row], visible: true, disabled: false, ready: true, error: false, available: "0", enabled: true };
 beforeEach(() => { send.mockReset(); state.busy = false; state.storageError = false; });
 afterEach(cleanup);
 const dataRows = () => screen.getAllByRole("row").slice(1);
+it("keeps F-21 TP read-only while allowing details and explicit cancellation", () => {
+  render(<PaperTradingActivity {...props} rows={[{ ...row, strategy_managed: true }]}/>);
+  expect(screen.queryByRole("button", { name: t("edit") })).toBeNull();
+  expect(screen.getByText(t("strategyManaged"))).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: t("details") }));
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  fireEvent.keyDown(document, { key: "Escape" });
+  fireEvent.click(screen.getByRole("button", { name: t("cancel") }));
+  expect(send).toHaveBeenLastCalledWith(expect.objectContaining({ action: "CANCEL", target: "armed" }));
+});
 it("keeps current, failed, conflicted and unknown rows visible, moving only completed history", () => {
   const states = ["WAITING_ENTRY", "ARMING", "ARMED", "EXITING", "FAILED", "NEW_UNKNOWN", "CLOSED", "CANCELED"];
   const rows = states.map(value => ({ ...row, protection_id: value, state: value }));

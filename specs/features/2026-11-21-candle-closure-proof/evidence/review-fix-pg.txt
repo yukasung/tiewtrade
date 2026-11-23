@@ -1,0 +1,166 @@
+...................................................FFFFFFFFFFFF          [100%]
+=================================== FAILURES ===================================
+__________ test_buy_decision_and_exit_fill_serialize[decision-first] ___________
+tests/infra/execution_market/test_strategy_exit_races.py:119: in test_buy_decision_and_exit_fill_serialize
+    _, group = await entry(engine_engine, owner, wallet, run, source)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+____________ test_buy_decision_and_exit_fill_serialize[exit-first] _____________
+tests/infra/execution_market/test_strategy_exit_races.py:119: in test_buy_decision_and_exit_fill_serialize
+    _, group = await entry(engine_engine, owner, wallet, run, source)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+________ test_delayed_buy_match_and_tp_share_one_winner[buy-fill-first] ________
+tests/infra/execution_market/test_strategy_exit_races.py:206: in test_delayed_buy_match_and_tp_share_one_winner
+    _, first = await entry(engine_engine, owner, wallet, run, source)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+___________ test_delayed_buy_match_and_tp_share_one_winner[tp-first] ___________
+tests/infra/execution_market/test_strategy_exit_races.py:206: in test_delayed_buy_match_and_tp_share_one_winner
+    _, first = await entry(engine_engine, owner, wallet, run, source)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+_______ test_delayed_entry_price_correction_after_tp_close_replays_once ________
+tests/infra/execution_market/test_strategy_exit_races.py:271: in test_delayed_entry_price_correction_after_tp_close_replays_once
+    order, group = await entry(engine_engine, owner, wallet, run, source)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+___ test_partial_buy_feedback_delivered_after_tp_close_cannot_reopen_basket ____
+tests/infra/execution_market/test_strategy_exit_races.py:404: in test_partial_buy_feedback_delivered_after_tp_close_cannot_reopen_basket
+    await drive(engine_engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+_______________ test_accepted_buy_vs_authority_change[True-risk] _______________
+tests/infra/execution_market/test_strategy_exit_races.py:522: in test_accepted_buy_vs_authority_change
+    await entry(engine_engine, owner, wallet, run, source)
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+_____________ test_accepted_buy_vs_authority_change[True-takeover] _____________
+tests/infra/execution_market/test_strategy_exit_races.py:522: in test_accepted_buy_vs_authority_change
+    await entry(engine_engine, owner, wallet, run, source)
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+_____________ test_accepted_buy_vs_authority_change[True-catalog] ______________
+tests/infra/execution_market/test_strategy_exit_races.py:522: in test_accepted_buy_vs_authority_change
+    await entry(engine_engine, owner, wallet, run, source)
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+______________ test_accepted_buy_vs_authority_change[False-risk] _______________
+tests/infra/execution_market/test_strategy_exit_races.py:522: in test_accepted_buy_vs_authority_change
+    await entry(engine_engine, owner, wallet, run, source)
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+____________ test_accepted_buy_vs_authority_change[False-takeover] _____________
+tests/infra/execution_market/test_strategy_exit_races.py:522: in test_accepted_buy_vs_authority_change
+    await entry(engine_engine, owner, wallet, run, source)
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+_____________ test_accepted_buy_vs_authority_change[False-catalog] _____________
+tests/infra/execution_market/test_strategy_exit_races.py:522: in test_accepted_buy_vs_authority_change
+    await entry(engine_engine, owner, wallet, run, source)
+tests/infra/execution_market/test_strategy_baskets.py:309: in entry
+    await drive(engine, owner, command)
+tests/infra/risk_limits/test_execution.py:274: in drive
+    assert token is not None
+E   assert None is not None
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_campaign_audit_sees_real_ledger_hidden_from_migrator
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_public_recordings_match_or_conflict_without_forged_finality
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_concurrent_duplicate_proofs_publish_once_and_survive_new_pool
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_resolution_failure_rolls_back_native_proof_and_promotion_together[result]
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_resolution_failure_rolls_back_native_proof_and_promotion_together[promotion]
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_runtime_roles_cannot_forge_closure_or_rewrite_evidence
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_closed_source_invalidation_demotes_atomically_and_fences_readers
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_rest_correction_is_not_hidden_by_closed_skip
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_native_close_only_change_is_persisted_before_next_slot
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_disconnected_or_old_epoch_cannot_supply_current_proof
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_duplicate_conflict_refresh_cannot_revive_exhausted_claim
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_proof_to_prepared_indicators_strategy_and_paper_admission[unchanged]
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_proof_to_prepared_indicators_strategy_and_paper_admission[commit]
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_proof_to_prepared_indicators_strategy_and_paper_admission[queued]
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_proof_to_prepared_indicators_strategy_and_paper_admission[expired]
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_proof_to_prepared_indicators_strategy_and_paper_admission[accepted]
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_proof_to_prepared_indicators_strategy_and_paper_admission[filled]
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_default_off_empty_migration_roundtrip
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_accepted_history_prevents_destructive_downgrade
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_missing_inventory_and_disabled_guard_reject_activation_and_reads
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_known_conflict_blocks_later_entry_until_fresh_matching_repair
+PASSED tests/infra/execution_market/test_candle_closure_proof.py::test_conflicting_open_to_close_never_publishes_a_tradable_proof
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-unchanged]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-quote]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-candle]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-catalog]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-risk]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-worker]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-generation]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-numeric_failure]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-rollout]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-run]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[commit-stop]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-unchanged]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-quote]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-candle]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-catalog]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-risk]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-worker]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-generation]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-numeric_failure]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-rollout]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-run]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-stop]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-expired_lease]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-lease_expires_during_read]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-tail]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-corrected_tail]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-source_recovery]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-feed_recovery]
+PASSED tests/infra/execution_market/test_strategy_commit_fences.py::test_buy_rechecks_current_authority[queued-legacy]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_buy_decision_and_exit_fill_serialize[decision-first]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_buy_decision_and_exit_fill_serialize[exit-first]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_delayed_buy_match_and_tp_share_one_winner[buy-fill-first]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_delayed_buy_match_and_tp_share_one_winner[tp-first]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_delayed_entry_price_correction_after_tp_close_replays_once
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_partial_buy_feedback_delivered_after_tp_close_cannot_reopen_basket
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[True-risk]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[True-takeover]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[True-catalog]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[False-risk]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[False-takeover]
+FAILED tests/infra/execution_market/test_strategy_exit_races.py::test_accepted_buy_vs_authority_change[False-catalog]

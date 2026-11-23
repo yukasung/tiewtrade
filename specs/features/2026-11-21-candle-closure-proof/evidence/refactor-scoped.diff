@@ -1,0 +1,129 @@
+--- before/backend/src/tiewtrade/infra/bots/authority.py
++++ after/backend/src/tiewtrade/infra/bots/authority.py
+@@ -206,8 +206,9 @@
+         session, row.base, row.quote, timeframe, FORMULA_VERSION
+     )
+     now: datetime = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+-    end = advance(row.signal_open_at, timeframe, 1)
+-    if not end <= now < advance(end, timeframe, 1):
++    signal_end = advance(row.signal_open_at, timeframe, 1)
++    entry_end = advance(signal_end, timeframe, 1)
++    if not signal_end <= now < entry_end:
+         return False
+     fence = row.input_provenance.get("source_fence")
+     prefix = row.input_provenance.get("indicator_prefix_end")
+@@ -236,17 +237,22 @@
+         provenance=row.input_provenance,
+     ):
+         return False
+-    if not (prefix_end is None and end <= head["calculation_end"]) and not await require_tail_proof(
++    if not (
++        prefix_end is None and signal_end <= head["calculation_end"]
++    ) and not await require_tail_proof(
+         session,
+         head,
+         IndicatorTailProof(
+-            SourceFence(head["source_epoch"], fence), head["calculation_start"], end, prefix_end
++            SourceFence(head["source_epoch"], fence),
++            head["calculation_start"],
++            signal_end,
++            prefix_end,
+         ),
+     ):
+         return False
+     # Proof reads themselves may cross the boundary or exhaust the lease.
+     now = (await session.execute("SELECT clock_timestamp()")).scalar_one()
+-    return bool(now < row.lease_until and end <= now < advance(end, timeframe, 1))
++    return bool(now < row.lease_until and signal_end <= now < entry_end)
+ 
+ 
+ async def paper_bot_authority(
+--- before/backend/src/tiewtrade/services/market_data/candle_realtime.py
++++ after/backend/src/tiewtrade/services/market_data/candle_realtime.py
+@@ -205,45 +205,47 @@
+     async def _persist_closure(self, event: FeedCandle) -> None:
+         # Persist actual native x=true before the next candle replaces the slot.
+         # Sticky display hints never enter this path.
+-        if event.generation == self.epoch and self.lease is not None:
+-            native = event.observation
+-            c = native.candle
+-            previous = self.rows.get((c.base, c.quote, c.timeframe))
+-            same_slot = previous is not None and previous[0].candle.open_at == c.open_at
+-            progression = compare(previous[0], native) if same_slot and previous else None
+-            conflicts = progression is Progress.CONFLICT or (
+-                native.closed_hint
+-                and previous is not None
+-                and not previous[0].closed_hint
+-                and progression is Progress.OLDER
+-            )
+-            contradicts = (
+-                previous is not None
+-                and previous[0].closed_hint
+-                and same_slot
+-                and progression in (Progress.NEWER, Progress.CONFLICT)
+-            )
+-            if native.closed_hint or contradicts:
+-                async with market_data_session(self.engine) as session:
+-                    active = await candle_closure.prepare_write(session, acquire=True)
+-                    if active and contradicts:
+-                        await fence(session, self.lease)
+-                        await candle_closure.invalidate(
+-                            session,
+-                            c,
+-                            fetch_started_at=native.received_at,
+-                            reason="NATIVE_AFTER_CLOSE",
+-                            native=native,
+-                        )
+-                    elif active:
+-                        await candle_closure.record_candidate(
+-                            session,
+-                            self.lease,
+-                            native,
+-                            conflicting_with=previous[0] if conflicts and previous else None,
+-                        )
+-                if active and (contradicts or conflicts):
+-                    raise CandleConflictError()
++        if event.generation != self.epoch or self.lease is None:
++            return
++        native = event.observation
++        c = native.candle
++        previous = self.rows.get((c.base, c.quote, c.timeframe))
++        prior = previous[0] if previous is not None else None
++        same_slot = prior is not None and prior.candle.open_at == c.open_at
++        progression = compare(prior, native) if same_slot and prior is not None else None
++        conflicts = progression is Progress.CONFLICT or (
++            native.closed_hint
++            and prior is not None
++            and not prior.closed_hint
++            and progression is Progress.OLDER
++        )
++        contradicts = (
++            prior is not None
++            and prior.closed_hint
++            and same_slot
++            and progression in (Progress.NEWER, Progress.CONFLICT)
++        )
++        if native.closed_hint or contradicts:
++            async with market_data_session(self.engine) as session:
++                active = await candle_closure.prepare_write(session, acquire=True)
++                if active and contradicts:
++                    await fence(session, self.lease)
++                    await candle_closure.invalidate(
++                        session,
++                        c,
++                        fetch_started_at=native.received_at,
++                        reason="NATIVE_AFTER_CLOSE",
++                        native=native,
++                    )
++                elif active:
++                    await candle_closure.record_candidate(
++                        session,
++                        self.lease,
++                        native,
++                        conflicting_with=prior if conflicts else None,
++                    )
++            if active and (contradicts or conflicts):
++                raise CandleConflictError()
+ 
+     async def _consume(self) -> None:
+         async with aclosing(self.feed.events(self.series)) as events:

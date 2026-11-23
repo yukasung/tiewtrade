@@ -1,0 +1,66 @@
+{
+  "candidate_fingerprint": "1cb730117f99db2f67fb7a35673131878aa7f1ae0e2cd76f0cebbd949ed6b319",
+  "result": "PARTIAL",
+  "boot_started_at": "2026-11-21T09:21:42.565301+00:00",
+  "phase": "OWNED_API_SETUP",
+  "builds": [
+    "READY",
+    "READY"
+  ],
+  "stopped_at": "2026-11-21T09:22:51.787119+00:00",
+  "build_jobs": [
+    {
+      "base": "BTC",
+      "timeframe": "1m",
+      "status": "READY",
+      "attempts_used": 0,
+      "failure_reason": null,
+      "failure_category": null,
+      "availability_deadline": "2026-11-21 09:31:46.045817+00:00",
+      "retry_not_before": null
+    },
+    {
+      "base": "ETH",
+      "timeframe": "1m",
+      "status": "READY",
+      "attempts_used": 0,
+      "failure_reason": null,
+      "failure_category": null,
+      "availability_deadline": "2026-11-21 09:31:46.045817+00:00",
+      "retry_not_before": null
+    }
+  ],
+  "execution_sources": [
+    {
+      "base": "ETH",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 1,
+      "last_input_id": 1960,
+      "received_at": "2026-11-21 09:22:31.896610+00:00",
+      "verified_at": "2026-11-21 09:22:31.845005+00:00"
+    },
+    {
+      "base": "BTC",
+      "ready": false,
+      "failure_code": "FEED_DISCONNECTED",
+      "generation": 2,
+      "last_input_id": 1711,
+      "received_at": "2026-11-21 09:22:45.798831+00:00",
+      "verified_at": "2026-11-21 09:22:45.749552+00:00"
+    }
+  ],
+  "closure_states": [],
+  "closure_results": [],
+  "closure_observations": [],
+  "decisions": [],
+  "links": [],
+  "canonical": [],
+  "ledger": [],
+  "executions": [],
+  "orders": [],
+  "positions": [],
+  "reservations": [],
+  "anchors": [],
+  "failure_type": "RuntimeError"
+}

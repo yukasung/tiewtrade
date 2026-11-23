@@ -1,8 +1,14 @@
 """Actual-role coalescing, recovery evidence and scheduler/attempt integration."""
 
 import asyncio
+import json
+import os
+from contextlib import nullcontext
 from datetime import datetime, timedelta
-from typing import Any
+from pathlib import Path
+from time import monotonic
+from typing import Any, cast
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -14,6 +20,9 @@ from tests.infra.indicators.test_claims import prepared as prepared
 from tests.infra.indicators.test_claims import slot
 from tests.infra.indicators.test_source import active as active
 from tests.services.indicator_builder.scheduler_lock_diagnostic import (
+    observe,
+)
+from tests.services.indicator_builder.scheduler_lock_diagnostic import (
     scheduler_lock_observer as scheduler_lock_observer,
 )
 from tests.services.indicator_builder.test_attempt import metadata, seed
@@ -21,17 +30,25 @@ from tiewtrade.core.market_catalog import PAIRS
 from tiewtrade.core.market_data import Timeframe, align_ceil, align_floor, retention_cutoff
 from tiewtrade.core.money import OutOfRangeError
 from tiewtrade.infra.db import DatabaseRole, create_engine_for
-from tiewtrade.infra.db.errors import DatabaseTimeoutError, SourceProofStateError
+from tiewtrade.infra.db.errors import (
+    DatabaseLockTimeoutError,
+    DatabaseTimeoutError,
+    SourceProofStateError,
+)
 from tiewtrade.infra.db.session import market_data_session
 from tiewtrade.infra.indicators import scan as scanner
 from tiewtrade.infra.indicators.claims import AttemptOutcome
 from tiewtrade.infra.indicators.pinned import PinnedIndicatorWriter, pinned_indicator_writer
-from tiewtrade.infra.indicators.scheduling import coalesce_jobs
-from tiewtrade.infra.indicators.session import indicator_source_session
+from tiewtrade.infra.indicators.scheduling import (
+    CoalescingBusyError,
+    coalesce_jobs,
+    coalesce_session,
+)
+from tiewtrade.infra.indicators.session import indicator_source_session, indicator_writer_session
 from tiewtrade.infra.indicators.source import begin_source_write
 from tiewtrade.infra.indicators.staging import append_checkpoint, capture_snapshot, initialize
 from tiewtrade.services.indicator_builder import scheduler
-from tiewtrade.services.indicator_builder.attempt import AttemptStatus, run_attempt
+from tiewtrade.services.indicator_builder.attempt import AttemptResult, AttemptStatus, run_attempt
 
 
 async def change_source(admin: AsyncEngine, *, base: str = "BTC", outside: bool = False) -> None:
@@ -110,6 +127,88 @@ async def test_catalog_and_control_gate(
         assert j["desired_end"] == align_floor(j["observed"], tf)
         assert j["attempts_used"] == 0 and j["last_served_round"] == 0
     assert (await slot(migrator_engine))["fence"] == 0
+
+
+@pytest.mark.parametrize("seeded", [False, True])
+@pytest.mark.parametrize("rollback", [False, True])
+async def test_concurrent_coalescer_does_not_wait_for_holder_transaction(
+    prepared: None,
+    builder_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    seeded: bool,
+    rollback: bool,
+) -> None:
+    if seeded:
+        await coalesce_jobs(builder_engine)
+    expected_rows = len(PAIRS) * len(Timeframe)
+    before = await slot(migrator_engine)
+    contender = create_engine_for(DatabaseRole.INDICATOR_BUILDER, pool_size=2, max_overflow=0)
+    try:
+        with pytest.raises(RuntimeError, match="rollback coalescer") if rollback else nullcontext():
+            async with indicator_writer_session(builder_engine) as holder:
+                await coalesce_session(holder)
+                # Hold real seed/update locks beyond SQL completion, without sleeping.
+                # Another instance must leave the in-flight transaction alone.
+                async with asyncio.timeout(2):
+                    assert await coalesce_jobs(contender) == 0
+                async with migrator_engine.connect() as observer:
+                    assert (
+                        await observer.execute(text("SELECT count(*) FROM indicator_build_jobs"))
+                    ).scalar_one() == (expected_rows if seeded else 0)
+                if rollback:
+                    raise RuntimeError("rollback coalescer")
+        # Commit and rollback both release the gate; a later normal poll does all work.
+        async with indicator_writer_session(contender) as session:
+            assert (await session.execute("SELECT pg_try_advisory_xact_lock(711,2)")).scalar_one()
+            await coalesce_session(session)
+        async with migrator_engine.connect() as observer:
+            jobs = (
+                (await observer.execute(text("SELECT * FROM indicator_build_jobs")))
+                .mappings()
+                .all()
+            )
+        assert len(jobs) == expected_rows
+        assert (
+            len({(j["source"], j["base"], j["quote"], j["timeframe"]) for j in jobs})
+            == expected_rows
+        )
+        assert all(j["attempts_used"] == 0 and j["last_served_round"] == 0 for j in jobs)
+        assert await slot(migrator_engine) == before
+    finally:
+        await contender.dispose()
+
+
+async def test_cancelled_coalescer_releases_transaction_gate(
+    prepared: None,
+    builder_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+) -> None:
+    ready = asyncio.Event()
+
+    async def hold() -> None:
+        async with indicator_writer_session(builder_engine) as session:
+            await coalesce_session(session)
+            ready.set()
+            await asyncio.Event().wait()
+
+    task = asyncio.create_task(hold())
+    try:
+        async with asyncio.timeout(2):
+            await ready.wait()
+            assert await coalesce_jobs(builder_engine) == 0
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+        # Rolled-back seed and the transaction lock cannot survive cancellation.
+        await coalesce_jobs(builder_engine)
+        async with migrator_engine.connect() as observer:
+            assert (
+                await observer.execute(text("SELECT count(*) FROM indicator_build_jobs"))
+            ).scalar_one() == len(PAIRS) * len(Timeframe)
+        assert (await slot(migrator_engine))["fence"] == 0
+    finally:
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
 
 
 async def test_pending_window_preserves_running_identity_and_queued_budget(
@@ -360,7 +459,9 @@ async def test_api_cannot_schedule(prepared: None, api_engine: AsyncEngine) -> N
             await c.execute(text("SELECT coalesce_indicator_build_jobs()"))
 
 
+@pytest.mark.parametrize("contended", [False, True])
 async def test_scheduled_scan_coalesces_using_same_writer_with_pool_two(
+    contended: bool,
     prepared: None,
     builder_engine: AsyncEngine,
     migrator_engine: AsyncEngine,
@@ -371,12 +472,20 @@ async def test_scheduled_scan_coalesces_using_same_writer_with_pool_two(
     original_coalesce = PinnedIndicatorWriter.coalesce
     polled = asyncio.Event()
     pids: list[int] = []
+    remaining = 3 if contended else 0
 
     async def pause(*args: Any) -> None:
         await original_append(*args)
         await asyncio.wait_for(polled.wait(), 2)
 
     async def observe(writer: PinnedIndicatorWriter) -> int:
+        nonlocal remaining
+        if remaining:
+            remaining -= 1
+            async with migrator_engine.begin() as blocker:
+                await blocker.execute(text("SELECT begin_indicator_source_write()"))
+                await original_coalesce(writer)
+            pytest.fail("held source guard did not block coalescing")
         result = await original_coalesce(writer)
         pids.append(writer.backend_pid)
         polled.set()
@@ -387,6 +496,7 @@ async def test_scheduled_scan_coalesces_using_same_writer_with_pool_two(
     monkeypatch.setattr(PinnedIndicatorWriter, "coalesce", observe)
     result = await run_attempt(builder_engine, uuid4(), scheduled=True)
     assert result.status is AttemptStatus.READY and pids and len(set(pids)) == 1
+    assert remaining == 0
     assert (await slot(migrator_engine))["state"] == "IDLE"
 
 
@@ -450,7 +560,7 @@ async def test_scheduler_dispatches_two_unserved_series_in_same_round(
     stop = asyncio.Event()
     seen: list[Any] = []
 
-    async def dispatch(*args: Any, **kwargs: Any) -> Any:
+    async def dispatch(*args: Any, **kwargs: Any) -> AttemptResult:
         result = await run_attempt(*args, **kwargs)
         assert result.status is AttemptStatus.READY
         seen.append(result.job_id)
@@ -491,3 +601,202 @@ async def test_cancel_scheduler_during_scheduled_scan_releases_before_propagatio
         if not task.done():
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)
+
+
+@pytest.mark.parametrize("blocker", ["source", "job"])
+@pytest.mark.parametrize("rollback", [False, True])
+async def test_coalescer_contention_rolls_back_and_recovers(
+    prepared: None,
+    builder_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    tmp_path: Path,
+    blocker: str,
+    rollback: bool,
+) -> None:
+    await seed(builder_engine, migrator_engine)
+    before = await metadata(migrator_engine)
+    source = create_engine_for(DatabaseRole.MARKET_DATA)
+    report_path = tmp_path / "contention.json"
+
+    class RollbackError(Exception):
+        pass
+
+    try:
+        async with observe(report_path, os.environ):
+            try:
+                # Source uses its actual write scope. Job contention uses a separate
+                # admin transaction to model a row holder without fabricating a claim.
+                if blocker == "job":
+                    async with migrator_engine.begin() as connection:
+                        await connection.execute(
+                            text("SELECT id FROM indicator_build_jobs FOR UPDATE")
+                        )
+                        with pytest.raises(DatabaseLockTimeoutError):
+                            await coalesce_jobs(builder_engine)
+                        if rollback:
+                            raise RollbackError
+                else:
+                    async with market_data_session(source) as session:
+                        await begin_source_write(session)
+                        with pytest.raises(DatabaseLockTimeoutError):
+                            await coalesce_jobs(builder_engine)
+                        if rollback:
+                            raise RollbackError
+            except RollbackError:
+                pass
+        report = json.loads(report_path.read_text())
+        assert report["status"] == "Captured"
+        assert any(
+            row["coalescing"] and row["blockers"]
+            for sample in report["samples"]
+            for row in sample["activity"]["rows"]
+        )
+        supplied = os.environ.get("TIEWTRADE_TEST_SCHEDULER_LOCK_REPORT")
+        if supplied:
+            Path(f"{supplied}.{blocker}.{rollback}.json").write_text(json.dumps(report, indent=2))
+        assert (await metadata(migrator_engine)) == before
+        await coalesce_jobs(builder_engine)
+        after = await metadata(migrator_engine)
+        assert after["attempts_used"] == before["attempts_used"]
+        assert after["status"] == before["status"]
+    finally:
+        await source.dispose()
+
+
+async def test_pinned_coalescer_reuses_connection_after_lock_rollback(
+    prepared: None,
+    builder_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+) -> None:
+    await seed(builder_engine, migrator_engine)
+    async with pinned_indicator_writer(builder_engine, connection_mode="direct") as writer:
+        assert writer is not None
+        pid = writer.backend_pid
+        async with migrator_engine.begin() as blocker:
+            await blocker.execute(text("SELECT * FROM indicator_source_guard FOR UPDATE"))
+            with pytest.raises(DatabaseLockTimeoutError):
+                await writer.coalesce()
+        await writer.coalesce()
+        assert writer.backend_pid == pid
+
+
+async def test_scheduler_defers_dispatch_until_poll_after_lock_contention(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    stop = asyncio.Event()
+    coalesce = AsyncMock(side_effect=[CoalescingBusyError(), 0])
+    monkeypatch.setattr(scheduler, "collect", AsyncMock())
+    monkeypatch.setattr(scheduler, "coalesce_jobs", coalesce)
+    monkeypatch.setattr(scheduler, "POLL_SECONDS", 0.01)
+    started = monotonic()
+
+    async def dispatch(*args: Any, **kwargs: Any) -> AttemptResult:
+        assert coalesce.await_count == 2
+        assert monotonic() - started >= 0.01
+        stop.set()
+        return AttemptResult(AttemptStatus.NO_JOB)
+
+    monkeypatch.setattr(scheduler, "run_attempt", dispatch)
+    await scheduler.run_scheduler(cast(AsyncEngine, None), uuid4(), stop)
+
+
+@pytest.mark.parametrize("cancel", [False, True])
+async def test_scheduler_contention_wait_honors_stop_and_cancellation(
+    monkeypatch: pytest.MonkeyPatch,
+    cancel: bool,
+) -> None:
+    stop, encountered = asyncio.Event(), asyncio.Event()
+
+    async def coalesce(*args: Any) -> int:
+        encountered.set()
+        raise CoalescingBusyError()
+
+    attempt = AsyncMock()
+    monkeypatch.setattr(scheduler, "collect", AsyncMock())
+    monkeypatch.setattr(scheduler, "coalesce_jobs", coalesce)
+    monkeypatch.setattr(scheduler, "run_attempt", attempt)
+    task = asyncio.create_task(scheduler.run_scheduler(cast(AsyncEngine, None), uuid4(), stop))
+    try:
+        await asyncio.wait_for(encountered.wait(), 1)
+        if cancel:
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+        else:
+            stop.set()
+            assert await asyncio.wait_for(task, 1) is None
+        attempt.assert_not_awaited()
+    finally:
+        if not task.done():
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+
+@pytest.mark.parametrize("failure", [DatabaseTimeoutError, DatabaseLockTimeoutError])
+async def test_scheduler_does_not_retry_other_database_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+    failure: type[DatabaseTimeoutError],
+) -> None:
+    coalesce = AsyncMock(side_effect=failure())
+    attempt = AsyncMock()
+    monkeypatch.setattr(scheduler, "collect", AsyncMock())
+    monkeypatch.setattr(scheduler, "coalesce_jobs", coalesce)
+    monkeypatch.setattr(scheduler, "run_attempt", attempt)
+    with pytest.raises(DatabaseTimeoutError):
+        await scheduler.run_scheduler(cast(AsyncEngine, None), uuid4(), asyncio.Event())
+    coalesce.assert_awaited_once()
+    attempt.assert_not_awaited()
+
+
+async def test_pinned_coalescing_cleanup_failure_cannot_be_retried(
+    prepared: None,
+    builder_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tiewtrade.infra.db.errors import IndicatorBuildOwnershipError
+    from tiewtrade.infra.indicators import pinned
+
+    await seed(builder_engine, migrator_engine)
+    original = pinned._finish_transaction
+
+    async def failed_cleanup(*args: Any, **kwargs: Any) -> None:
+        await original(*args, **kwargs)
+        if not kwargs["commit"]:
+            raise TimeoutError("controlled cleanup uncertainty")
+
+    async with pinned_indicator_writer(builder_engine, connection_mode="direct") as writer:
+        assert writer is not None
+        async with migrator_engine.begin() as blocker:
+            await blocker.execute(text("SELECT * FROM indicator_source_guard FOR UPDATE"))
+            with monkeypatch.context() as patch:
+                patch.setattr(pinned, "_finish_transaction", failed_cleanup)
+                with pytest.raises(IndicatorBuildOwnershipError):
+                    await writer.coalesce()
+        with pytest.raises(IndicatorBuildOwnershipError):
+            await writer.coalesce()
+
+
+async def test_standalone_coalescing_cleanup_failure_is_not_retryable(
+    prepared: None,
+    builder_engine: AsyncEngine,
+    migrator_engine: AsyncEngine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from tiewtrade.infra.db import session as db_session
+
+    await seed(builder_engine, migrator_engine)
+    original = db_session._bounded_cleanup
+
+    async def uncertain_cleanup(*args: Any, **kwargs: Any) -> None:
+        await original(*args, **kwargs)
+        raise DatabaseTimeoutError("controlled cleanup uncertainty")
+
+    async with migrator_engine.begin() as blocker:
+        await blocker.execute(text("SELECT * FROM indicator_source_guard FOR UPDATE"))
+        with monkeypatch.context() as patch:
+            patch.setattr(db_session, "_bounded_cleanup", uncertain_cleanup)
+            with pytest.raises(DatabaseTimeoutError) as caught:
+                await coalesce_jobs(builder_engine)
+        assert type(caught.value) is DatabaseTimeoutError
+    await coalesce_jobs(builder_engine)

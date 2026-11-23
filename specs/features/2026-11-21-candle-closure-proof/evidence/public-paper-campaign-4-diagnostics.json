@@ -1,0 +1,595 @@
+{
+  "captured_at": "2026-11-21T13:00:34.277130+00:00",
+  "purpose": "Read-only post-campaign diagnostics; no additional market/trading run",
+  "commands": [
+    {
+      "id": "67eeda66-63ec-4ea1-bebe-0a17479ef86d",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "wallet_id": "565d83a9-5aef-46f4-9da4-f6a7e46985f0",
+      "episode_id": "21615440-668c-4beb-bbca-946f71d34b42",
+      "mode": "PAPER",
+      "action": "NEW",
+      "idempotency_key": "6b0da718-f685-5254-9472-11a37dcf1034",
+      "order_id": "6b0da718-f685-5254-9472-11a37dcf1034",
+      "request_fingerprint": "d6a2ea5c5f8be5255fbf1540bc9da878c3ff33b73fc8a598af7ed553c0420084",
+      "payload": {
+        "intent": {
+          "key": "6b0da718-f685-5254-9472-11a37dcf1034",
+          "tif": null,
+          "base": "BTC",
+          "kind": "MARKET",
+          "mode": "PAPER",
+          "side": "BUY",
+          "limit": null,
+          "owner": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+          "quote": "USDT",
+          "budget": "100",
+          "origin": "BOT",
+          "episode": "21615440-668c-4beb-bbca-946f71d34b42",
+          "order_id": "6b0da718-f685-5254-9472-11a37dcf1034",
+          "quantity": null
+        },
+        "wallet": "565d83a9-5aef-46f4-9da4-f6a7e46985f0",
+        "episode": "21615440-668c-4beb-bbca-946f71d34b42",
+        "catalog_revision": 2
+      },
+      "requested_at": "2026-11-21 12:55:41.081358+00:00",
+      "risk_recorded_at": "2026-11-21 12:55:41.570484+00:00",
+      "admitted_global_stop_revision": 0,
+      "admitted_owner_stop_revision": 0
+    }
+  ],
+  "command_results": [
+    {
+      "command_id": "67eeda66-63ec-4ea1-bebe-0a17479ef86d",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "episode_id": "21615440-668c-4beb-bbca-946f71d34b42",
+      "state": "REJECTED",
+      "failure_code": "ORDER_SAFETY_UNAVAILABLE",
+      "snapshot": {
+        "status": "REJECTED",
+        "order_id": "6b0da718-f685-5254-9472-11a37dcf1034"
+      },
+      "completed_at": "2026-11-21 12:56:24.323755+00:00",
+      "risk_recorded_at": "2026-11-21 12:56:24.396331+00:00"
+    }
+  ],
+  "dispatch": [
+    {
+      "command_id": "67eeda66-63ec-4ea1-bebe-0a17479ef86d",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "episode_id": "21615440-668c-4beb-bbca-946f71d34b42",
+      "state": "TERMINAL",
+      "worker": null,
+      "claim_id": null,
+      "claim_revision": 4,
+      "lease_until": null,
+      "attempts": 0,
+      "next_attempt_at": "2026-11-21 12:56:24.466170+00:00",
+      "routing_action": "NEW",
+      "routing_base": "BTC",
+      "routing_quote": "USDT",
+      "routing_stage": "TERMINAL",
+      "preferred_for_due": null,
+      "source_wait_since": null,
+      "source_wait_revision": null,
+      "source_resume_used": false,
+      "source_resume_claim": false
+    }
+  ],
+  "bot_events": [
+    {
+      "id": "6ef7a9e2-15aa-5970-9f52-78550796e904",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 1,
+      "event": "START_REQUEST_APPLIED",
+      "details": {
+        "base": "BTC",
+        "quote": "USDT",
+        "request_id": "4bf87f8e-7c88-4174-a782-68fb15728401",
+        "catalog_revision": 2
+      },
+      "recorded_at": "2026-11-21 12:53:16.400586+00:00"
+    },
+    {
+      "id": "7686340e-9297-5682-a41f-aa6491f7b83d",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 1,
+      "event": "START_REQUEST_APPLIED",
+      "details": {
+        "base": "ETH",
+        "quote": "USDT",
+        "request_id": "102d0cf1-dffc-40fc-b404-be667b9beacc",
+        "catalog_revision": 2
+      },
+      "recorded_at": "2026-11-21 12:53:16.796361+00:00"
+    },
+    {
+      "id": "03c5c766-6766-5c3f-8e49-7c3c00f32cc6",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 2,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "BOT_CANDLE_UNCONFIRMED"
+      },
+      "recorded_at": "2026-11-21 12:53:18.014385+00:00"
+    },
+    {
+      "id": "af0cdf67-4adf-5e69-9bfd-72dddb73f453",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 2,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "BOT_CANDLE_UNCONFIRMED"
+      },
+      "recorded_at": "2026-11-21 12:53:18.653444+00:00"
+    },
+    {
+      "id": "38e76b06-cc28-5a63-9452-020a1fc47d66",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 3,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:54:01.094612+00:00"
+    },
+    {
+      "id": "6c8349dc-07d4-5a6e-a851-346ecaee12cb",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 3,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:54:01.472032+00:00"
+    },
+    {
+      "id": "0c0ae489-95e9-5b35-bd53-2a93f267c424",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 4,
+      "event": "RUN_READY",
+      "details": {
+        "reason": null
+      },
+      "recorded_at": "2026-11-21 12:54:22.594966+00:00"
+    },
+    {
+      "id": "0cabdb3e-5995-54da-905c-dc182585c782",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 5,
+      "event": "DECISION_RECORDED",
+      "details": {
+        "decision_id": "0cabdb3e-5995-54da-905c-dc182585c782"
+      },
+      "recorded_at": "2026-11-21 12:54:22.594966+00:00"
+    },
+    {
+      "id": "0551a927-ccc4-502f-84ab-f489a2c902dc",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 4,
+      "event": "RUN_READY",
+      "details": {
+        "reason": null
+      },
+      "recorded_at": "2026-11-21 12:54:23.556811+00:00"
+    },
+    {
+      "id": "d797000b-664a-5bfe-9b23-b85a0512f85c",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 5,
+      "event": "DECISION_RECORDED",
+      "details": {
+        "decision_id": "d797000b-664a-5bfe-9b23-b85a0512f85c"
+      },
+      "recorded_at": "2026-11-21 12:54:23.556811+00:00"
+    },
+    {
+      "id": "b706525f-0a90-5d6e-b82f-c5642b983f0b",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 6,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:55:01.485770+00:00"
+    },
+    {
+      "id": "7c8cf5a5-5f1e-50b1-88dd-37e11fa49e84",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 6,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:55:02.976792+00:00"
+    },
+    {
+      "id": "7dccd559-21b8-5e08-9f72-71ef49076411",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 7,
+      "event": "RUN_READY",
+      "details": {
+        "reason": null
+      },
+      "recorded_at": "2026-11-21 12:55:32.749152+00:00"
+    },
+    {
+      "id": "e73a3c7a-edec-5a93-b400-a55f5b24569d",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 8,
+      "event": "DECISION_RECORDED",
+      "details": {
+        "decision_id": "e73a3c7a-edec-5a93-b400-a55f5b24569d"
+      },
+      "recorded_at": "2026-11-21 12:55:32.749152+00:00"
+    },
+    {
+      "id": "9d3f6186-c6ff-50aa-9944-50ed3be65b92",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 7,
+      "event": "RUN_READY",
+      "details": {
+        "reason": null
+      },
+      "recorded_at": "2026-11-21 12:55:41.081358+00:00"
+    },
+    {
+      "id": "ed25f63f-fc32-5266-941e-7dc79afe6c66",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 8,
+      "event": "DECISION_RECORDED",
+      "details": {
+        "decision_id": "ed25f63f-fc32-5266-941e-7dc79afe6c66"
+      },
+      "recorded_at": "2026-11-21 12:55:41.081358+00:00"
+    },
+    {
+      "id": "6ba199d3-c53c-54fe-b397-c805fbdf1ec5",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 9,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:56:00.673466+00:00"
+    },
+    {
+      "id": "f763ddf3-0406-5c21-8f6c-f345cf49683e",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 9,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:56:00.922752+00:00"
+    },
+    {
+      "id": "3b96f01a-7dde-5adc-9ded-fae6f3ddd651",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 10,
+      "event": "RUN_READY",
+      "details": {
+        "reason": null
+      },
+      "recorded_at": "2026-11-21 12:56:27.953508+00:00"
+    },
+    {
+      "id": "3467dacf-3cae-57c5-85c5-1712aa4cb7ee",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 11,
+      "event": "DECISION_RECORDED",
+      "details": {
+        "decision_id": "3467dacf-3cae-57c5-85c5-1712aa4cb7ee"
+      },
+      "recorded_at": "2026-11-21 12:56:27.953508+00:00"
+    },
+    {
+      "id": "d001bb3f-18db-5e24-9fa0-7d6bfb615ca6",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 10,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "BOT_CANDLE_UNCONFIRMED"
+      },
+      "recorded_at": "2026-11-21 12:56:28.529581+00:00"
+    },
+    {
+      "id": "95389fc2-ce0f-568c-8fa8-a9ab300c91e6",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 12,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "BOT_CANDLE_UNCONFIRMED"
+      },
+      "recorded_at": "2026-11-21 12:56:29.487634+00:00"
+    },
+    {
+      "id": "bbc53334-8714-5540-be4e-fd748bad6101",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 11,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:57:01.111524+00:00"
+    },
+    {
+      "id": "84ce3573-019e-5b20-87f4-14984aed5338",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 13,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:57:01.887005+00:00"
+    },
+    {
+      "id": "a091390e-a905-5c7d-96b8-7a3a029a05d5",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 12,
+      "event": "RUN_READY",
+      "details": {
+        "reason": null
+      },
+      "recorded_at": "2026-11-21 12:57:40.533799+00:00"
+    },
+    {
+      "id": "91026749-e16c-52ec-9681-9bef304cb1cd",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 13,
+      "event": "DECISION_RECORDED",
+      "details": {
+        "decision_id": "91026749-e16c-52ec-9681-9bef304cb1cd"
+      },
+      "recorded_at": "2026-11-21 12:57:40.533799+00:00"
+    },
+    {
+      "id": "baab7d87-536a-532d-8eb7-d026a05083de",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 14,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "BOT_CANDLE_SOURCE_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:58:01.114273+00:00"
+    },
+    {
+      "id": "a8cb2bd2-18ea-5772-b1d5-d2c229a7802c",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 15,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:58:03.461970+00:00"
+    },
+    {
+      "id": "91c2bb9a-f7fc-5dd2-9de9-16e31cec0bbb",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 14,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "BOT_CANDLE_SOURCE_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:58:06.052127+00:00"
+    },
+    {
+      "id": "f8a338cd-5005-5671-a9b1-d8ae811009d4",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 16,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "BOT_CANDLE_SOURCE_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:58:06.363382+00:00"
+    },
+    {
+      "id": "1d4203e5-fcbe-5568-8a9b-296d61d8b04a",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 17,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "BOT_CANDLE_UNCONFIRMED"
+      },
+      "recorded_at": "2026-11-21 12:58:32.084420+00:00"
+    },
+    {
+      "id": "07b24b8a-ece0-56c5-ab0e-4581c34bf16d",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 15,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "BOT_CANDLE_UNCONFIRMED"
+      },
+      "recorded_at": "2026-11-21 12:58:33.079259+00:00"
+    },
+    {
+      "id": "ea2f8166-d83f-5c93-a508-6b53bb654bec",
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "revision": 18,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:59:01.621247+00:00"
+    },
+    {
+      "id": "389fa3b9-7c2c-52c9-b032-f8da1e96b1fe",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 16,
+      "event": "SOURCE_NOT_READY",
+      "details": {
+        "reason": "INDICATOR_NOT_READY"
+      },
+      "recorded_at": "2026-11-21 12:59:03.222866+00:00"
+    },
+    {
+      "id": "7d87d685-0236-53d8-ba16-75766dfefceb",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 17,
+      "event": "RUN_READY",
+      "details": {
+        "reason": null
+      },
+      "recorded_at": "2026-11-21 12:59:13.648953+00:00"
+    },
+    {
+      "id": "f4722bc5-92a8-5d15-9d29-07314d0da1e7",
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "revision": 18,
+      "event": "DECISION_RECORDED",
+      "details": {
+        "decision_id": "f4722bc5-92a8-5d15-9d29-07314d0da1e7"
+      },
+      "recorded_at": "2026-11-21 12:59:13.648953+00:00"
+    }
+  ],
+  "progress": [
+    {
+      "run_id": "f423b13c-2ff6-5e3f-8189-d05f4543cd2a",
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "episode_id": "84095cda-e7e4-4080-8073-8f05588ea7ae",
+      "guard_revision": 0,
+      "reconciliation_required": false,
+      "eligible_after": "2026-11-21 12:58:32.106271+00:00",
+      "recovery_required": true,
+      "source_recovery_at": "2026-11-21 12:56:13.832814+00:00",
+      "price_recovery_at": "2026-11-21 12:51:38.886258+00:00",
+      "indicator_source_epoch": "e8424989-ddbb-400b-9a3c-11652a3bac21"
+    },
+    {
+      "run_id": "ca57325a-c19c-55c8-b1a6-bff2d11efe5e",
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "episode_id": "21615440-668c-4beb-bbca-946f71d34b42",
+      "guard_revision": 0,
+      "reconciliation_required": false,
+      "eligible_after": "2026-11-21 12:59:13.773004+00:00",
+      "recovery_required": false,
+      "source_recovery_at": "2026-11-21 12:58:31.505428+00:00",
+      "price_recovery_at": "2026-11-21 12:51:38.886258+00:00",
+      "indicator_source_epoch": "e8424989-ddbb-400b-9a3c-11652a3bac21"
+    }
+  ],
+  "risk_evaluations": [
+    {
+      "user_id": "0afdfec5-5788-46af-aec2-b48c4950f1b7",
+      "mode": "PAPER",
+      "setting_revision": 1,
+      "source_revision": 2,
+      "price_watermark": 2626,
+      "reason": "READY",
+      "loss": "0",
+      "latched": false,
+      "evaluated_at": "2026-11-21 12:59:15.722713+00:00",
+      "input_ready_at": "2026-11-21 12:59:15.719164+00:00",
+      "replay_pending": false,
+      "unavailable_since": null,
+      "pause_alert_due": false
+    },
+    {
+      "user_id": "3982766e-f008-411b-bfee-99133760b589",
+      "mode": "PAPER",
+      "setting_revision": 1,
+      "source_revision": 2,
+      "price_watermark": 2626,
+      "reason": "READY",
+      "loss": "0",
+      "latched": false,
+      "evaluated_at": "2026-11-21 12:59:15.786538+00:00",
+      "input_ready_at": "2026-11-21 12:59:15.785628+00:00",
+      "replay_pending": false,
+      "unavailable_since": null,
+      "pause_alert_due": false
+    }
+  ],
+  "feed": [
+    {
+      "source": "primary_spot",
+      "owner": "36fe6fe6-1191-47b2-a290-5797aa9ecef1",
+      "epoch": 7,
+      "lease_until": "2026-11-21 12:59:15.976794+00:00",
+      "connected": false,
+      "bootstrapped": true,
+      "failure_code": null,
+      "metadata": {
+        "BTC/USDT/1m": "2026-11-21T12:59:00+00:00",
+        "ETH/USDT/1m": "2026-11-21T12:59:00+00:00"
+      }
+    }
+  ]
+}

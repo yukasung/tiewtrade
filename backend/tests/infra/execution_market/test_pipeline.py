@@ -207,3 +207,64 @@ async def test_fake_public_pipeline_matches_exactly_and_disconnect_invalidates(
                     await task
     finally:
         await engine.dispose()
+
+
+@pytest.mark.parametrize("stage", ["capability", "snapshot"])
+@pytest.mark.parametrize("cancel", [False, True])
+async def test_bootstrap_deadline_invalidates_and_allows_fresh_recovery(
+    engine_engine: AsyncEngine, stage: str, cancel: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    engine = create_engine_for(DatabaseRole.MARKET_DATA)
+    pair = PositionPair("BTC", "USDT")
+    feed = FixtureFeed(datetime.now(UTC))
+    entered = asyncio.Event()
+
+    async def blocked(symbol: Symbol) -> None:
+        del symbol
+        entered.set()
+        await asyncio.Event().wait()
+
+    monkeypatch.setattr(feed, stage, blocked)
+    task = None
+    try:
+        async with market_data_session(engine) as session:
+            await session.execute("""UPDATE market_execution_state
+              SET lease_until=clock_timestamp()-interval '1 second' WHERE base='BTC'""")
+        task = asyncio.create_task(
+            ingest_execution_pair(engine=engine, feed=feed, symbol=SYMBOL, owner=uuid4())
+        )
+        await asyncio.wait_for(entered.wait(), 3)
+        if cancel:
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+        else:
+            with pytest.raises(ExceptionGroup) as caught:
+                await asyncio.wait_for(task, 8)
+            assert caught.value.subgroup(SourceUnavailableError) is not None
+            assert caught.value.subgroup(TimeoutError) is None
+        assert feed.closed.is_set()
+        async with user_session(engine_engine, uuid4(), role=DatabaseRole.ENGINE) as reader_session:
+            with pytest.raises(SourceUnavailableError):
+                await read_inputs(reader_session, pair, after=0)
+        async with market_data_session(engine) as session:
+            generation = (
+                await session.execute(
+                    "SELECT generation FROM market_execution_state WHERE base='BTC'"
+                )
+            ).scalar_one()
+        await test_fake_public_pipeline_matches_exactly_and_disconnect_invalidates(
+            engine_engine, "BTC"
+        )
+        async with market_data_session(engine) as session:
+            recovered_generation = (
+                await session.execute(
+                    "SELECT generation FROM market_execution_state WHERE base='BTC'"
+                )
+            ).scalar_one()
+        assert recovered_generation > generation
+    finally:
+        if task is not None and not task.done():
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+        await engine.dispose()

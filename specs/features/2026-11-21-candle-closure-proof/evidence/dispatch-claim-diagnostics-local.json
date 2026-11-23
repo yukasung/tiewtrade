@@ -1,0 +1,20 @@
+{
+  "base_candidate": "3a5a1d7fdead8941c2e0a7682bde3f97c5ba7fe2",
+  "historical_ci": 45106792952,
+  "established": "traceback is second drive in verify_queued_result, after first admission processing",
+  "cause": "Unconfirmed; historical failure did not retain admission result/dispatch predicates",
+  "changes": "assert successful admission before matching round; capture safe dispatch/result/DB-clock predicates on claim failure",
+  "limitations": "post-failure snapshot cannot reconstruct transient advisory or row lock ownership; does not prove historical cause",
+  "validation": {
+    "closure_and_commit_fences": "61 passed",
+    "dispatch": "8 passed2.14s",
+    "historical_setup_errors": "8 SQLSTATE3D000 from temporary launcher database name; corrected launcher and reran only affected cases",
+    "static": "Ruff/format/mypy2files passed; diff check passed"
+  },
+  "runtime_changed": false,
+  "ci_or_public_campaign": "Not run",
+  "sha256": {
+    "backend/tests/infra/risk_limits/test_execution.py": "045237912444b9b882fe4d32e1db725ea65bb7410355120eebc51907fdd1ad43",
+    "backend/tests/infra/execution_market/test_strategy_commit_fences.py": "a51c3027270aa84602aec37e08897e9d0aaa753da45b36b13eda9a27c656c899"
+  }
+}

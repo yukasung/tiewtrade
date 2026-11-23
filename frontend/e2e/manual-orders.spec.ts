@@ -1,4 +1,4 @@
-import { postFixtureBuy, seedLegacyBuy, openSell, submitSell } from "./helpers/paperOrders";
+import { reloadPaperPair, postFixtureBuy, seedLegacyBuy, openSell, submitSell } from "./helpers/paperOrders";
 import { navigationLink } from "./helpers/ui";
 import { mkdirSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
@@ -12,25 +12,7 @@ async function capture(page: Page, name: string) {
   mkdirSync(evidence, { recursive: true });
   await page.screenshot({ path: `${evidence}/${name}`, fullPage: true });
 }
-async function reloadPaperPair(page: Page) {
-  // Arm before reload: the chart can select BTC before the selector is ready.
-  const snapshot = page.waitForResponse(response => {
-    const url = new URL(response.url());
-    return url.pathname === "/api/paper/trade" && url.searchParams.get("base") === "BTC" &&
-      response.request().method() === "GET";
-  });
-  await page.reload();
-  await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
-  await page.getByLabel("คู่เทรด").selectOption("BTC");
-  const response = await snapshot;
-  expect(response.status()).toBe(200);
-  const data: unknown = await response.json();
-  expect(data).toMatchObject({ mode: "PAPER", base: "BTC", wallet: {
-    wallet_id: expect.any(String), episode_id: expect.any(String),
-  } });
-  // The wallet scope must render before filling: its first arrival remounts the form.
-  await expect(page.locator('[aria-labelledby="paper-bot-title"] dd .market-value')).toBeVisible();
-}
+
 async function register(page: Page, email = `manual-${Date.now()}@example.com`) {
   await page.goto("/paper/trade");
   await page.getByTestId("switch-mode").click();
@@ -341,6 +323,7 @@ test("DB connection loss before intake commit rolls back and same-key recovery c
 
 test("reset replaces an unsent draft and a lost closed-episode refusal recovers with the same key", async ({ page }) => {
   await register(page);
+  const draftBudget = page.locator("#paper-bot-budget");
   async function reset() {
     const wallet = (await (await page.request.get("/api/paper-wallet")).json() as { wallet: { episode_id: string } }).wallet;
     const csrf = (await page.context().cookies()).find(cookie => cookie.name === "tiewtrade_csrf")!.value;
@@ -351,10 +334,10 @@ test("reset replaces an unsent draft and a lost closed-episode refusal recovers 
     expect(await (await page.request.get(`/api/paper-wallet/commands/${command.command_id}`)).json()).toMatchObject({ state: "SUCCEEDED" });
   }
   await fresh(page);
-  await page.getByLabel("งบรวม (USDT)").fill("100");
+  await draftBudget.fill("100");
   await reset();
   await fresh(page);
-  await expect(page.getByLabel("งบรวม (USDT)")).toHaveValue("");
+  await expect(draftBudget).toHaveValue("");
   let original: string | null = null;
   let originalKey: string | undefined;
   let refusalLost = false;
@@ -386,5 +369,5 @@ test("reset replaces an unsent draft and a lost closed-episode refusal recovers 
   await waitResolved(page);
   expect((await page.request.get(`/api/paper/order-requests/by-key/${originalKey}?action=NEW`)).status()).toBe(404);
   await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
-  await expect(page.getByLabel("งบรวม (USDT)")).toHaveValue("");
+  await expect(draftBudget).toHaveValue("");
 });

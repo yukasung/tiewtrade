@@ -1,0 +1,75 @@
+Scheduler contention correction — local checkpoint 2026-11-22
+Base: b538070b0feac4c41731c1b06fe3cd126b064f2a; feature/candle-closure-proof
+Scope: owner requested local reproduction, scoped correction, tests and diff review.
+No commit/push/new CI/public campaign/owner activation/merge authorized or performed.
+
+Original required CI45003959474 remains Failed. Historical bounded lock evidence:
+proof-wait-ci-scheduler-lock.json. One builder waited on another transaction; the
+original internal SQL point and reason for the holder delay remain unproven.
+
+Before runtime edit:
+  backend/.venv/bin/python /tmp/closure-review-tests.py
+    tests/services/indicator_builder/test_scheduler.py::test_concurrent_coalescer_does_not_wait_for_holder_transaction -x
+  Failed first case[False-False] while a real builder-role transaction held the
+  completed coalescing SQL uncommitted, with a separate engine calling coalesce_jobs.
+  DatabaseTimeoutError SQLSTATE55P03 at scheduling.py SELECT coalesce_indicator_build_jobs().
+  No sleeps, artificial database error, extra retry, or enlarged200ms/500ms budget.
+  This reproduces the failure class, not the original CI holder's timing cause.
+
+Correction:
+  coalesce_session acquires pg_try_advisory_xact_lock(711,2); busy returns0 without
+  metadata changes. Both scheduler and pinned scheduled scan use this boundary.
+  Distinct from attempt session-lock(711,1) and bigint wallet locks. PostgreSQL
+  shared coordination; automatic commit/rollback release. No migration/grants/infra.
+  Existing durable polling, guards, attempt budgets, fairness and error propagation
+  remain; no broad exception handling, money/order/strategy/Live or session change.
+  Direct privileged SQL and old binaries are not coordinated by this application
+  boundary; existing deployment inventory/drain checks must still be satisfied.
+
+After correction:
+  New four-case independent-engine commit/rollback x empty/preseeded matrix passed.
+  Added cancellation case before the combined regression run below.
+  backend/.venv/bin/python /tmp/closure-review-tests.py
+    tests/services/indicator_builder/test_scheduler.py
+    tests/infra/indicators/test_claims.py
+  Exit0, all85passed: scheduler38, physical writer/claims47. New cases5.
+  Original parallel catalog/recovery assertions retained. Includes source-guard
+  timeout/trigger damage, API denial, pool-two scan, fairness/backoff, dispatch/stop,
+  cancellation, physical writer ownership and safe recovery.
+  Commit/rollback matrix explicitly checks gate reacquisition, uncommitted visibility,
+  unique complete catalog, untouched attempts/fairness and unchanged slot identity.
+  Cancellation case proves rollback and subsequent ordinary polling creates catalog.
+
+Static checks (cwd backend):
+  .venv/bin/ruff check src/tiewtrade/infra/indicators/scheduling.py tests/services/indicator_builder/test_scheduler.py
+    All checks passed.
+  .venv/bin/ruff format --check src/tiewtrade/infra/indicators/scheduling.py tests/services/indicator_builder/test_scheduler.py
+    2files already formatted.
+  .venv/bin/mypy src/tiewtrade/infra/indicators/scheduling.py tests/services/indicator_builder/test_scheduler.py
+    Success: no issues found in2source files.
+  .venv/bin/lint-imports
+    7contracts kept,0broken.
+  git diff --check
+    Exit0.
+
+Environment: isolated existing closure-recovery-fix-pg(PostgreSQL16)/redis containers,
+  PostgreSQL127.0.0.1:55424/tiewtrade_e2e_closure_review, Redis56394.
+  /tmp/closure-review-tests.py reuses CI role configuration with isolated ports/database;
+  no production/owner account, public exchange traffic or Live order used.
+  Started only these test containers for this run; stopped at checkpoint.
+
+Scoped review: shared-call coverage, transaction lifetime, cancellation rollback,
+  independent instances, namespaces, error/role/source/claim boundaries, unchanged
+  numerical suppression/fairness/backoff/financial rules and test cleanup reviewed.
+  No unresolved finding. No beneficial extra abstraction/refactor for five-line fix.
+  This self-review does not replace independent/owner acceptance.
+
+Runtime/test SHA256:
+  0a2ec9d42a71ef66212c5525e680c5772e389499b0fcf56ddbadcc413e72c9c0  backend/src/tiewtrade/infra/indicators/scheduling.py
+  2554d7ba469ba4efd935aae6301010c7471604337bd5f9861ce68e23bb741d1a  backend/tests/services/indicator_builder/test_scheduler.py
+
+Remaining: final-candidate required CI(including previously unreached isolated
+  backend gates), deployment inventory/drain and owner/independent/public-fill/other
+  Partial Feature gates. Batch/Release Pending Full Validation. No additional public
+  attempt or CI round implied. Include existing failed-CI receipts in the next related
+  authorized publication; do not create documentation-only CI loops.

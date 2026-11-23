@@ -1,0 +1,1152 @@
+# Shared Candle Closure Proof — Plan
+
+สถานะ: **Approved - owner replied approve2026-11-21; implementation authorized within this plan**
+วันที่: 2026-11-21 (Asia/Bangkok)
+ฐาน: CP-01–CP-16 Approved; branch `feature/candle-closure-proof`
+
+## 1. ผลลัพธ์และขอบเขต
+
+รับ native close event ของ Binance TH ที่ x=true เป็น candidate ตรวจเทียบ canonical
+REST รุ่นที่ request เริ่มหลัง end_at และ identity/OHLCV ตรงกัน จึงสร้าง durable proof
+และประกาศ CLOSED ใน transaction เดียว ไม่มี inference จาก clock/REST/ATR อย่างเดียว
+
+โค้ด REST adapter และ stream preview ยังคงให้ original finality/hint ตามเดิม
+เพิ่ม verifier ระหว่าง public-source ingest กับ canonical publication ไม่ย้ายการยืนยัน
+เข้า strategy/browser/indicator ไม่มีสูตร ATR, sizing, PnL, fees หรือ execution ใหม่
+Paper Test Entry และ RSI ยังคง require CLOSED และผ่าน common guards เดิม
+
+## 2. Dependency และ candidate
+
+- Worktree ปัจจุบันมีฐาน local F-21 e811800; Paper Test Entry candidate อยู่ใน worktree
+  แยกพร้อม migration0075 และ diagnostic/UI fixes ล่าสุด ยังไม่ถือว่า merged/ผ่าน required CI
+- ก่อน source edits ให้ materialize/rebase local dependency candidate ที่รวม F-21/Paper
+  ที่ได้รับอนุมัติไว้แล้วอย่าง reviewable บันทึก base SHA และ content fingerprint รักษา WIP/index
+  เดิม ไม่ reset/copy ทับ source worktree และไม่ publish snapshot แทน final reviewed commit
+- ตรวจ diff ของ dependency กับแผนนี้ก่อนแก้ ส่วนที่ไม่กระทบใช้หลักฐานเดิมต่อ ไม่รีวิวทั้ง repo ซ้ำ
+- ใช้ migration0076 หลัง0075 เมื่อ dependency base พร้อม; หาก upstream ใช้เลขนี้แล้ว ให้เลือก
+  revision ถัดไปและบันทึกก่อนสร้าง migration ไม่สร้าง conflicting Alembic heads เงียบ ๆ
+- Required CI และ owner acceptance ต้องตรวจบน combined final candidate เดียวกันก่อน merge
+
+## 3. ของเดิมที่ใช้ซ้ำ
+
+| Path / function | ใช้อย่างไร |
+|---|---|
+| `core/candle_preview.py::CandleObservation, compare` | native typed observation และ partial-order/duplicate/conflict rules |
+| `core/market_data.py`, `core/timeframes.py` | native identity, inclusive-end normalization, calendar alignment/retention |
+| `core/money/::Money, Quantity` | exact OHLCV equality ไม่เพิ่ม tolerance/rounding หรือ raw float/Decimal |
+| `venues/binance_th/candle_stream_mapping.py`, `candle_feed.py`, `stream_transport.py` | strict payload/subscription/connection generation; ไม่ต่อ stream ต่อ user |
+| `services/market_data/candle_realtime.py::CandleSupervisor` | observe/flush/connection/catalog fencing; เพิ่ม candidate capture จาก native event |
+| `infra/market_data/candle_preview.py::fence, enqueue_ended` | feed lease/epoch checks และ refresh coalescing |
+| `infra/market_data/storage.py::coalesce_demand, refresh_due` | request-after-end semantics; ไม่สร้าง REST polling framework ใหม่ |
+| `services/market_data/ingestion.py::_apply_page, run_round` | existing request/claim/backoff/rate-limit path; ไม่มี HTTP ใน DB transaction |
+| `infra/market_data/claims.py::write_candles, lock_claim` | canonical row/claim locking และ correction inspection ก่อน skip/upsert เดิม |
+| `infra/indicators/source.py::begin_source_write, PROOF_SQL` | source scope ก่อน row locks, revision journal และ consumer invalidation |
+| `infra/bots/inputs.py::require_current_indicators, require_current_candle` | commit-time proof checks; version/fingerprint เป็น server-derived |
+| `infra/bots/authority.py::_queued_signal_current` | queued BUY revalidation; lost proof/correction ห้ามผ่าน |
+| `infra/indicators/rollout.py`, `infra/platform/storage.py` | inventory/explicit attestation และ heartbeat patterns สำหรับ compatible deployment |
+
+## 4. โครงสร้างที่เพิ่มให้น้อยที่สุด
+
+- `core/candle_closure.py`: immutable typed candidate/result และ pure exact-match decision
+  ใช้ CandleObservation/Money/Quantity/native-time helpers ไม่มี network/SQL/persistent cache
+- `infra/market_data/candle_closure.py`: persistence, protocol/fence checks และ verifier
+  เรียกผ่าน MarketDataSession ตาม architecture ไม่ import venues/services/strategies
+- migration: public source evidence, append-only resolution records, bounded mutable work/status
+  projection และ singleton protocol control version1/default OFF ใน PostgreSQL เดิม
+  ไม่มี Redis/service/storage ใหม่ และไม่สร้าง generic proof/worker plugin framework
+
+Evidence เก็บ native series identity, OHLCV, actual closed_hint, progress IDs/count, event/receive
+เวลา, writer lease/epoch, digest และข้อมูล normalized ที่ reconstruct ได้; ไม่เก็บ digest อย่างเดียว
+Resolution ผูก observation กับ canonical fingerprint/request times/source fence/policyversion
+พร้อม MATCHED/CONFLICT/INVALIDATED outcome แบบ append-only; projection เก็บ pending/due/state
+
+ยึด unique logical candle/policy/observation fingerprint สำหรับ dedup ไม่ใช้ arrival timestamp
+เป็น price authority. Public data ไม่มี user/session credential จึงใช้ public-market role grants
+ไม่เพิ่ม owner RLS ปลอม; API/engine/indicator-builder อ่านได้เฉพาะคอลัมน์ที่จำเป็น เขียนไม่ได้
+market-data เขียนเฉพาะ public-source/proof paths ไม่มีสิทธิ์ข้อมูลบัญชี/secret
+
+Accepted proof เก็บ native/canonical snapshot ที่ตรวจย้อนหลังได้แม้ history partitionหมด retention
+ไม่ใช้ FK ที่บังคับเก็บ market_candles partition ตลอดชีวิต ledger; ใช้ FK ภายใน evidence/resolution,
+checks/unique และ transactional canonical validation. Proof ที่อ้าง candle ซึ่งไม่มีแล้วใช้เปิด tradeไม่ได้
+ห้ามลบ evidence ที่ยังถูก pin ใน decision/audit; cleanup ใช้ retention policy เดิมและตรวจ reference
+
+## 5. Flow และ transaction
+
+### 5.1 Native event → durable candidate
+
+- ตรวจ strict adapter/series/market identity และ existing compare ก่อนรับ ไม่เชื่อข้อมูลจาก client
+- Capture เฉพาะ **native actual closed_hint=true** ก่อน sticky-preview hint transformation
+  ห้ามใช้ hint ที่ carry จาก event เก่า หรือหมดเวลาแล้ว synthesize เป็น native proof
+- FALSE→TRUE ที่ OHLCV/progress เท่าเดิมยังต้องบันทึก closure candidate แม้ compareเป็น DUPLICATE
+  และต้องไม่ทำให้ duplicate price revisions เกิด BUY ซ้ำ; negative testsครอบคลุม E/arrival ordering
+- Persist candidate ก่อน latest-series slot ถูกแท่ง B ทับ; ใช้ bounded pending buffer เป็น transient
+  schedulingเท่านั้น ถ้า persist ไม่สำเร็จห้ามถือว่ารับ proofแล้ว; recoveryใช้DBไม่พึ่งself.rows
+- ใน transaction ที่จะแตะ proof/canonical: begin_source_write ก่อน feed/candle/projection locks
+  fence current lease/epoch/connection/subscription และ catalog ไม่มีการจับ source guardหลังrowlocks
+- ถ้ามี canonical post-end observation ที่ตรงและยัง valid ใช้ verifier ได้ทันทีโดยไม่ยิง GETเพิ่ม
+  มิฉะนั้น enqueue refresh ของแท่งนั้นผ่าน existing coalescing เดียวกับ F09/F11
+
+### 5.2 REST → atomic verification/publication
+
+- HTTP อยู่นอก transaction; ใช้ saved request-start timestamp ของ request ที่ให้ OHLC รุ่นนั้นจริง
+- หลังตอบกลับ: source write scope → feed/source fence → claim → native candle row → evidence/state
+  recheck epoch/claim/catalog/request bounds และ normalize exact numeric values ก่อนเขียน
+- ตรวจ pending native proof กับ row/fingerprint ล่าสุด ไม่ใช้ REST จาก stale claim หรือ observationเก่า
+- เมื่อ match: append accepted resolution และ promote canonical finality CLOSED พร้อม proof reference
+  ใน transaction เดียว ให้ source triggers/journal invalidate indicator metadata ตามปกติ
+- เมื่อ missing/mismatch: ไม่ promote; append durable resultเมื่อ evidence/stateเปลี่ยน และคง pending/
+  conflict stateตามเหตุ ใช้ backoff/claim/availability deadline เดิม ไม่ retryทุกquoteหรือเพิ่ม grace window
+- หาก transaction/ackล้ม: replay proofkey/claim/result เดิมได้ ไม่สร้าง closure opportunity/entryซ้ำ
+
+### 5.3 Correction และ invalidation
+
+`claims.write_candles` ปัจจุบันข้าม incoming UNCONFIRMED ถ้า canonicalเป็น CLOSED
+ต้องตรวจ evidence contradiction **ก่อน** branchข้ามนั้น ไม่ทำให้ correctionหายไปเงียบ ๆ
+
+- Conflicting closed event/REST ทำให้ append invalidation และ mark current proof non-tradable
+  โดยใช้ source write lockก่อนทุกrowlock และเปลี่ยน revision/journalในtransactionเดียว
+- เมื่อ proof ของ current CLOSED ถูกเพิกถอน: trusted verifier demote **finality** กลับ UNCONFIRMED
+  อย่างมี invalidation evidence; ไม่เขียนเลือก OHLC ตัวที่ชอบ ไม่ลบ accepted history เดิม
+  การ demote ใช้ dedicated verified path ไม่ให้ generic/old REST writer overwrite finalityเอง
+- ใช้ F09 repair/source readiness เดิมจนมี accepted proof ชุดใหม่ครบ; RESTอย่างเดียวไม่ re-close
+- Consumers จึงเห็น source revision/finalityใหม่ และต้องปฏิเสธ old prepared/queued BUY ตาม fences
+  หาก fill commitก่อน invalidation ให้เก็บ ledgerจริง ไม่มีออเดอร์ย้อนหรือ TP/SL retargetของtest
+- Invalidationหลังcommitต้องเห็นทุกinstance; transient buffers/Redis notification ไม่ใช่ authority
+
+### 5.4 DB enforcement และ lock order
+
+- Closure control read/fence และ `begin_source_write` ต้องมาก่อน feed/claim/canonical/state locks
+  ยึด source/advisory ordering เดิมทั้ง ingest, proof verifier, correction และ cleanup
+- ใช้ append-only guards, unique/FKs/checks และ runtime grants ตาม database standard
+- canonical promotionต้องมี matching accepted proof reference/version ใน transactionเดียว;
+  runtime direct UPDATE เป็น CLOSED โดยไม่มี proof ถูกปฏิเสธเมื่อ protocolเปิด
+- invalidation/demotionต้องมี append-only invalidation reference; ทดสอบfaultทุกจุดสำคัญกับPGจริง
+- ไม่มี REST await ภายใต้ source/row lock และไม่ขยาย DB deadlines เพียงเพราะ contention
+
+## 6. Consumer และความสด
+
+- Pure strategiesยัง reject non-CLOSED เหมือนเดิม ไม่มี UNCONFIRMED exception หรือสูตรใหม่
+- Rebind F11 generation/source metadata ตาม journal: closure finalityเป็น source change ที่ต้อง
+  พิสูจน์ prefix/checkpoint ใหม่ ใช้ bounded suffixที่เริ่มก่อนแท่งเปลี่ยน ไม่แค่แก้ finalityในcachedpoint
+  ไม่เพิ่ม full-history scan ต่อ quote หรือขยาย preparation deadlineเดิมเพื่อกลบปัญหา
+- ใส่ proof ID/policy version/canonical fingerprint ใน server-derived decision provenance
+  และ recheckใน require_current_candle/_queued_signal_current ไม่เชื่อ booleanจากbrowser
+- Preserve start/source-recovery cutoff และ exit-candle guards; same candleมีได้หนึ่งentry
+  แม้ proof/revisionเปลี่ยน ถ้าสัญญาณ A ไม่ทันช่วง B/freshnessเดิมให้skip ไม่ backfill BUY
+- Existing warm-upใช้ F11 NC31 ตามเดิม ส่วน signal candleต้องCLOSEDและ current proof valid
+- API/graphอ่าน canonical finalityจริง ไม่ให้ preview overrideหลักฐาน และไม่คืนhidden UI copyที่เจ้าของลบ
+
+## 7. Rollout/compatibility และการปิดกลับ
+
+- Expand migrationโดย control OFF: old pathsยังทำงานเดิม ไม่มีpromoteย้อนหลัง ไม่มีauto-start
+- Extend existing inventory/heartbeat **patterns** ด้วย closure-specific capability/version attestation
+  เท่าที่จำเป็นในDBcontrol/activation tooling ไม่เปลี่ยน catalog protocol1เป็น2ทั้งระบบ
+  ไม่สร้าง heartbeat infrastructureใหม่หรืออ้าง health endpointว่าเป็น compatibility proof
+- ก่อนเปิด:หยุด/ยืนยันdrain old canonical writers และปิดrestartเก่า ตรวจprocess inventory,
+  role/version/schema, source proof READY, source-trigger inventory และ consumer compatibility
+  การเงียบskipของoldwriterตรวจจากrowtriggerไม่ได้ จึงไม่อนุญาตmixed legacywriterขณะเปิด
+- Source-protocol guard/DBchecksปฏิเสธlegacy writesที่ไม่ประกาศ compatible source-write path
+  consumerเก่าจะถือcompatibleได้เฉพาะมีtestsพิสูจน์ canonical/proof/invalidation invariantsครบ
+  ไม่พบหลักฐานให้ปฏิเสธactivation แทนการสมมติว่าอ่าน CLOSEDได้จึงปลอดภัย
+- Ownerอนุมัติแผนนี้อนุญาตสร้าง/เปิด **isolated owned Paper validation DB** หลัง pre-activation
+  safety tests+source evidence+review ผ่าน เพื่อเก็บ Feature evidence ไม่มีcredentialเงินจริง
+- Previewเจ้าของ15121ไม่ถูกเปลี่ยนขณะ research/implementation; หลังตรวจครบให้แจ้งcandidate/
+  ผลกระทบและส่งowner acceptance checkpointก่อนเปลี่ยนactivationที่นั่น ไม่เริ่ม/หยุด/เปลี่ยนconfig
+  ของเจ้าของแทนเอง การเปิด source อาจทำให้ runที่เคยStartไว้ซื้อเมื่อสัญญาณผ่าน ต้องแจ้งชัด
+- ปิดกลับ:หยุดpublish CLOSEDใหม่/ปิดentry admissionตามexistingSTOP ก่อน drain incompatiblewriter
+  เก็บaccepted history/evidence ห้าม downgradeทำลายข้อมูล; downgradeอนุญาตเฉพาะOFF+ไม่มีproofhistory
+  ถ้ามีhistoryให้forward fix ไม่ DROP/แก้ledgerเพื่อทำให้rollbackผ่าน
+
+## 8. ลำดับลงมือและขอบเขตตรวจ
+
+1. P0 dependency/candidate inventory, schema/grants/source-lock analysis ยืนยันก่อน source changes
+2. P1 pure verifier/codec และ migration OFF + real PG DB/security/rollback tests
+3. P2 native capture/REST integration, correction/dedup/lease/recovery และ source guard regressions
+4. P3 consumers/indicator tail/queued authority, default-off compatibility และ existing Paper/RSI regression
+5. P4 actual source→proof→Paper campaignตาม validation.md ที่จำกัดไว้; no fake CLOSED promotion
+6. P5 แจ้ง Ready for Code Review → reviewdiff/callers/security/stateless/financial → แก้/refactorเฉพาะที่จำเป็น
+   → affected checks → ส่งcheckpointเดียว พร้อมowner/CI/Batch/Releaseค้างตามจริง
+7. P6 owner acceptanceตามขอบเขตและrequired CIบนfinalcandidateก่อนpublication/mergeตามAGENTS
+
+Localใช้targetedchecksก่อน ไม่รันfull suiteซ้ำทุกpatch ส่วนกลางนี้กระทบหลายระบบจึงต้องมี
+full backend correctness/security/financial regressionบนcandidateที่นิ่งก่อนmerge ใช้requiredCI
+ชุดเต็มตามconfigurationจริงเป็นหลักฐาน ไม่เลื่อนsafetyไปBatch. Scope/เวลาชุดยาวแจ้งก่อนรัน
+
+## 9. จุดหยุด
+
+- plan+validationต้องApprovedก่อนP0 materialization/source implementation
+- หาก proof/source permissions, conflict repairหรือactivationต้องเปลี่ยนCPที่อนุมัติ ให้amendก่อนโค้ด
+  เรื่องเงิน/Live/ผ่อนsafetyต้องให้เจ้าของตัดสินใจ ไม่ใช้engineeringdelegationข้าม
+- เงื่อนไขเดิมแก้แล้วยังไม่ผ่าน3รอบหรือownerแจ้งใช้เวลามากไป ให้หยุดเสนอทางเลือก
+- public campaignมีหนึ่งattemptตามvalidation;หากไม่ครบผลให้Partial/NotRun ไม่วนรอแท่งดีไม่จำกัด
+- ไม่มีpublication/mergeจนowner Feature gates และrequiredCIครบ; Batch/Release pendingตามจริง
+
+P0 dependency materialized locally: 46841d394f4fe23f94626114619ef0c4c66438d1 from approved Paper candidate working tree, original index/WIP/preview preserved. No publication. Planning stash 2033af9595fde1809d03e827e075b9d10af3a82c retained as backup.
+
+## P1 engineering detail before persistence implementation
+
+Use normalized immutable observations/results plus mutable per-candle state. Resolution
+records form an append-only predecessor chain, so invalidate -> independently rematch
+can create a new acceptance receipt without overwriting the old one; exact repeated
+state/fingerprint/outcome is a no-op. Bind state/result to the same observation with
+composite FKs. Include activation epoch in candidate dedup, not just feed epoch.
+Reuse storage._stored for canonical decoding rather than copying Candle construction.
+When active, preview bootstrap/connection/flush and canonical ingest must acquire source
+write scope before their row locks; no added HTTP under a source/row lock. Feature env
+opt-in plus DB default-off control both required for compatible writers. Activation is
+migrator-only with strict existing-style explicit inventory attestations; missing/null
+fields must reject. Consumer proof checks preserve existing source/recovery fences.
+
+P1 PG role test exposed missing source-fence read privileges for receipt creation.
+Grant market-data SELECT(epoch,revision) only on the public indicator_source_guard;
+no table-wide SELECT/UPDATE, account, secret or trading permission. Revoke these two
+column grants on empty downgrade. This is the smallest public-metadata privilege needed
+for the approved durable source-fence receipt and is covered by role regression tests.
+Await both concurrent test workers even on failure before closing pools/scratch DB.
+
+P1 permission follow-up: the singleton source-fence query must read only its granted
+epoch/revision columns (no WHERE id dependency). Engine closure readiness additionally
+needs SELECT(source,connected,bootstrapped,failure_code,lease_until) on the public candle
+feed state; no owner/epoch/write privilege. Add and revoke these narrow column grants
+with0076, retain table-wide/secret denials. The first two PG runs failed on this missing
+column privilege; do not report them as passed or relax role/atomicity assertions.
+
+P2 binding detail before integration: save venue/market and per-symbol/catalog revision
+with native evidence, validate known PUBLIC/PREPARING runtime pair before capture and
+check symbol revision on consumption. Keep source identity primary_spot/Binance TH spot;
+no Global adapter substitution. Strict CLOSED matching alone does not replace catalog fences.
+For repair, extend existing StoredCandle refresh metadata/coalesced demand only while
+closure protocol is active, and use the existing claim attempt/deadline/backoff limits;
+matched post-end history must not suppress a bounded REST refresh for a closure conflict.
+
+P3 bounded-tail implementation detail (engineering delegation, before changes): source
+promotion can change a candle already inside the current F11 head. Existing tail fallback
+only handles candles after head_end and would reject an otherwise fresh prefix until the
+builder republishes. Reuse the latest published generation, find the earliest journal change
+and the nearest checkpoint before it, prove the unchanged prefix at the original fence,
+then replay fewer than1000 candles from that checkpoint under a new scoped source fence.
+Keep codec/age/rollout/numeric-failure/head-authority gates and validate both prefix and
+new suffix again before commit/queued admission. Record checkpoint boundary in provenance;
+never relabel cached finality. Original full-generation proof remains the default everywhere.
+
+P2/P3 safety-check findings before fixes: disconnected recovery requires the market-data
+role to advance only control.recovery_at; grant UPDATE(recovery_at), retain migrator-only
+activation/inventory/version fields and add a denial test. OFF-mode accounting fixtures
+intentionally inject decision signals without canonical candles; keep original authority
+path OFF, enforce proof rebinding when ON or provenance names a proof. Canonical batch
+publication adds two constant schema/control reads, so update the query budget from6to8,
+retaining one batch insert/partition lookup and no per-candle read while OFF.
+
+P2 review identified a retry hazard before the repair fix: periodic enqueue_ended could
+advance requested_at for the same unresolved close after the existing three-attempt budget
+failed. Bind closure-only refresh requests to the immutable candidate.created_at, while
+ordinary missing/pre-end requests retain their existing timestamps. Repeated heartbeats
+then cannot revive FAILED for the same native evidence; a new candidate may request new
+bounded work. Add a real-PG failed-demand replay test. Mutable closure state follows the
+existing candle cleanup cutoffs; immutable receipts remain available for execution audit.
+
+P3 deterministic composition exposed a distinct finality contract issue before the fix:
+F11 IndicatorStream intentionally accumulates UNCONFIRMED provenance across eligible
+NC31 warm-up history. read_bot_indicators treated that aggregate as the signal candle's
+own finality, rejecting even a canonical CLOSED signal with a current closure receipt.
+Keep F11 point metadata untouched. For the approved candle strategies under the enabled
+protocol, permit READY indicator values with inherited UNCONFIRMED provenance only after
+_candle_context verifies the actual signal is CLOSED with a current receipt. Other
+strategies and protocol-OFF retain the original aggregate guard. Add real-PG composition
+using250 eligible UNCONFIRMED history bars and one verified green signal, plus commit/
+queued invalidation. This implements CP08/12's explicit history/signal separation without
+relaxing source/age/codec/cutoff/numeric or pure strategy CLOSED gates.
+
+P3 review before guard hardening: changing only closure_proof_id is outside F11's original
+row-field journal comparison. The new closure guard will journal that native scope using
+the existing statement revision (ON CONFLICT coalesces normal finality changes), so proof
+rebinding also invalidates prepared/queued authority. Add a closure-trigger inventory
+function following F11's catalog-only recursive partition check; activation, compatible
+writers and current-proof readers reject missing/disabled closure guards. No relation-lock
+inventory scan or new infrastructure. Keep downgrade refusal once evidence exists.
+
+Review finding CP06/08 (before correction): invalidating A demotes its finality, but F11
+NC31 may still accept its post-end REST values as historical UNCONFIRMED input when B
+later closes. A current B receipt alone must not release a series with a known unresolved
+contradiction. Reuse per-series source readiness/recovery semantics: closure state keeps
+recovery_at; CONFLICT/INVALIDATED blocks that pair/timeframe, and repair advances its
+cutoff before new entries. Ordinary missing/stale close evidence does not become a new
+risk trigger and remains subject to the existing signal/warm-up guards.
+A REST-conflict receipt can reconcile only against a newer independently fetched post-end
+REST snapshot matching the native evidence, with current lease/catalog/protocol guards;
+native contradictions still require new native evidence. Keep contradiction state across
+candidate replacement until matching succeeds. No price winner or history/ledger rewrite.
+Add real-PG blocked-next-entry/readiness and fresh repair regressions. Default OFF unchanged.
+The one public campaign already ended Partial during F11 preparation (READY/SUPERSEDED),
+zero orders/positions and protocol never enabled. Do not retry that campaign automatically;
+its report is retained and cannot validate this later runtime correction.
+
+Final migration regression adjustment before edit: the existing F21/Paper downgrade
+refusal tests hard-code their former head0074/0075. With0076 installed, transactional
+refusal must preserve the current head, not assert an older one. Capture revision before
+the attempted downgrade and assert it remains unchanged afterwards; retain history/RLS/
+privilege assertions. This changes the migration harness expectation only.
+
+Correction to the preceding migration-harness assumption: real tests showed Alembic
+commits each revision separately. Empty0076/0075 downgrades correctly succeed before
+an earlier history-bearing migration refuses. Therefore the original assertions of
+0075/0074 were correct. Restored both existing tests exactly; no migration semantics or
+assertions weakened. The attempted expectation change failed2/4 tests and is retained
+in the run history; rerun the restored tests only. No production change resulted.
+
+
+Final review checkpoint: see review.md and validation.md for Passed/Partial/Failed/Not Run
+results. Engine public-feed grants additionally include source writer owner/epoch to bind
+current receipts to the native lease; the earlier P1 note omitting those columns is historical.
+These are generated public writer IDs, not user ownership/credentials; no account privilege
+was added. Narrow recovery_at update remains distinct from migrator-only activation.
+No further public campaign, owner-preview activation or publication follows this checkpoint
+without the outstanding gates/authorization described in validation.md.
+
+## Owner continuation —2026-11-21
+
+Owner replied “เริ่มทำ” after the checkpoint explicitly listing CI type blockers and a
+new bounded public attempt as next steps. Continue the same approved feature: include
+only the ten F21 dependency test files named by the full-mypy evidence for annotation,
+optional/union narrowing, correctly typed interception callbacks and SQL Row conversion.
+No runtime trading behavior, test assertions, mypy configuration or safety gates will be
+weakened. Use direct imports rather than accidental module re-exports. This is necessary
+combined-candidate CI cleanup under the engineering delegation and this continuation.
+Retain the prior90-errors failure and Partial public attempt as history.
+
+Interpret this continuation as authorizing one additional campaign with the same approved
+BTC/ETH1m/Paper funds/6-minute capture limits after readiness; no repeated attempts or
+owner-preview activation. Before consuming it, review the previous harness failure:
+SUPERSEDED is an existing safe builder outcome, not failed numeric evidence. Preparation
+must use existing bounded source-recovery scheduling and verify actual quote/book/source
+readiness; no forced READY, synthetic prices/closed bars, cutoffs, ARM or fills. Record any
+harness correction and bounded preparation budget before edits/run. No scope to relax
+venue ordering/financial/entry rules is inferred.
+
+Continuation harness review before correction: previous capture required READY from exactly
+two run_attempt calls; F11 can safely supersede a scan when a current candle settles while
+that scan is running. Preserve the real600-second failed-cycle cooldown and existing DB
+attempt limits; do not reset jobs, counters or source fences. Use coalesce_jobs plus fresh
+published-head authority checks within one300-second total preparation budget. Capture
+remains at most360seconds after readiness; preparation timeout yields Partial and consumes
+this authorized attempt without retries. Preflight must additionally pass existing quote
+readiness and read_latest_book/BookState.require_ready for both pairs before activation.
+Read-only inspection of the earlier owned DB showed real verified books had been published
+(ETH2455/BTC2280 retained input IDs), so intermittent producer warnings alone do not prove
+a permanently broken venue contract. No execution-book business rule change is justified.
+
+Continuation environment finding: the temporary owned test launcher originally read all
+job environments from ci.yml, unintentionally enabling E2E's chart flag for backend tests.
+The secret-canary test correctly rejected HTTP200 instead of the default-off HTTP404;
+focused reproduction confirmed it. Stop that invalid-environment full run, retain its
+failure/interruption, restrict the launcher to backend-run's env, and verify the exact
+failed case before restarting the full run on a fresh owned DB. No canary assertion,
+security expectation or production flag default is changed. The public campaign alone
+receives the required CI test sealing keys and explicit stop-authority activation.
+
+Correct backend environment then exposed a genuine F21 test-inventory gap: the all-route
+secret canary lacks a value/expected404 for /paper/bots/configurations/{identity}. Extend
+only this canary's explicit placeholder and BOT_CONFIGURATION_NOT_FOUND assertion; keep
+its no-unfilled-template assertion, default-off chart assertion and all forbidden-secret
+checks. This is coverage for the approved F21 endpoint, not a security-policy relaxation.
+
+Full backend continuation findings (before test fixes): the renewing-route inventory lacks
+F21's existing POST /paper/bots/configurations, while the protected production policy already
+classifies that explicit user mutation as renewing. Add the exact route to the test inventory,
+retaining equality/public-route/polling exclusions. F21 API status tests depend on shared
+market/indicator state: inventory=True fails without the F11 authority required by its
+injected accounting BUY, and a shared-suite flat case differs from a fresh DB. Reuse the
+existing isolated PostgreSQL fixture and a module-local client depending on it; seed actual
+F11 codec/head authority only for the injected accounting entry, using existing seed_prepared.
+Keep actual matcher/ledger/flat replacement/read-only TP assertions. No start-readiness,
+financial, session or protection behavior in production is changed.
+
+Additional full-suite coverage findings before fixes: Paper isolation's explicit internal
+module inventory predates F21/Paper/Candle Closure dependencies. All current violations
+are 'unexpected internal dependency', not forbidden network/venue/credential edges.
+Inventory the exact approved domain/SQL-only modules (basket_disposals, strategy_candles,
+strategy_config, bot baskets/candle_sources/configurations/indicator_tail, indicator codec/
+source, public candle_closure/storage/indicator_reader, entry_anchor and the two pure
+strategies); retain recursive traversal, all forbidden imports/markers and alias/transitive
+negative fixtures. No wildcard or network/secret allowance is added.
+The readiness-reason unit mock assumes aggregate UNCONFIRMED always exits before reading
+values. CP08/12 now requires distinguishing eligible history from the actual signal/proof.
+Supply complete READY indicator/page metadata and a classification-only candle-context
+mock with no proof; preserve exact BOT_CANDLE_UNCONFIRMED rejection and verify context is
+consulted only for inherited UNCONFIRMED, while OPEN rejects immediately. Real PG proof/
+financial safety tests remain authoritative and are not replaced with this unit mock.
+
+
+Continuation validation-environment finding: Redis Pub/Sub is shared across logical
+Redis databases. The owner-preview Redis instance therefore cannot isolate the actual
+notification-idle test by selecting DB10; the full run observed a completed public event
+before its controlled publish. A dedicated disposable Redis instance on localhost56394
+passed all3 notification checks without source/assertion changes. Use that instance for
+the final focused failures and the authorized campaign; do not stop/reconfigure the owner
+Redis. Two protection timing cases failed while full regression was active (one5s timeout,
+one1.44309s versus required1s). Preserve these failures and rerun only those cases when
+heavy regression is quiescent, with unchanged deadlines/SLA. This is diagnostic environment
+isolation under the engineering delegation, not production infrastructure or a relaxed gate.
+The full backend run completed6012passed/7failed/32deselected in2157.74s; six failures are
+covered by the documented test-inventory/fixture fixes, and the seventh is notification
+isolation. Keep its raw result and use affected reruns; do not claim it was a green full run.
+
+
+Authorized second public attempt reached both actual F11 heads READY, source preflight
+and owned closure activation, then stopped during OWNED_API_SETUP before any user/wallet/
+order was created. Its result records RuntimeError only, which is insufficient to identify
+the rejected setup step. Offline API-only signup in another fresh DB succeeded; this does
+not establish the campaign's original failure cause and is not a third public campaign.
+Before any future attempt, improve harness-only diagnostics: a typed API rejection with
+controlled path/HTTP status, and traceback file/function/line without exception text,
+request/response bodies, locals, cookies or secrets. Preserve the second Partial report and
+its candidate manifest exactly. Test diagnostic sanitization offline, do not retry source/
+trading campaign or modify production admission to make it pass. This is observability
+work under engineering delegation; another public attempt still needs owner authorization.
+
+
+## Owner completion continuation —2026-11-21
+
+Owner explicitly approved proceeding to finish and report Ready for Code Review after the
+previous checkpoint. Authorize one new actual-source attempt with the same300s preparation/
+360s capture budgets, owned DB/Redis and existing funds/pairs/guards. Use corrected safe
+API diagnostics, preserve earlier Partial reports and manifests. Continue engineering fixes,
+affected tests and review within the delegated scope. This is not owner UI acceptance,
+Live permission, relaxation of entry/proof/financial criteria or unlimited public reruns.
+P5 remains the requested code-review checkpoint; report external owner/CI gates truthfully.
+
+
+Attempt3 finding before harness edits: both actual F11 heads became READY and owned
+activation succeeded, but /paper/bots/configurations rejected HTTP422. The RSI configuration
+model forbids strategy_name, while the harness sends it to both strategy variants. Build
+request payloads with existing StrategyConfigurationInput/PaperTestConfigurationInput,
+not a parallel handwritten API contract. Add a real API test for both payloads.
+The migrator is subject to FORCE RLS: earlier generic count/financial evidence queries
+could hide existing users/wallets. Their empty results must not be used as proof of absence.
+Use the already required test-admin URL only after strict owned-database/local guards,
+with a read-only evidence/inventory engine (hide_parameters=True); keep runtime writers
+on their existing narrow roles. Reuse this collector to append independently read corrected
+historical evidence without overwriting old reports. Add actual-PG proof that a real wallet
+ledger hidden from migrator is present in read-only evidence; no RLS/security policy change.
+This is a diagnostic harness correction under engineering delegation. Attempt3 is Partial,
+not retried, and the three-attempt stop rule remains in force before any further public run.
+
+
+## Owner authorized attempt4 —2026-11-21
+
+Owner explicitly selected “อนุมัติเพิ่ม 1 รอบเพื่อยืนยันการซื้อจริง” after the three-attempt
+stop. Run exactly one additional public-source Paper attempt on the reviewed completion
+candidate, using a new owned DB and separate disposable Redis; preparation300s and capture
+360s, same BTC/ETH1m, existing funds/guards. Payload/RLS harness fixes are already tested.
+No fifth attempt, time extension, synthetic readiness/fill or owner-preview activation is
+inferred. Preserve original reports; inspect actual proof/decision/order/ledger/anchor chain
+and report Partial honestly if the attempt does not demonstrate real entry.
+
+## Review corrections —2026-11-22 (before implementation)
+
+Owner requested fixes after the read-only review of candidate51f65193. Apply the
+2026-11-14 engineering delegation to restore CP06/08/11 without new strategy/risk rules.
+Evidence: queued authority accepts a healthy but expired B; accepted command processing
+skips queued checks; native capture commits before observe detects an open→close conflict.
+
+- Reuse native advance() and database clock: initial queued admission requires
+  end(A) <= now < end(B), including exact boundaries. Keep fill timestamps factual.
+- Extract the existing closure-reference check for reuse by queued and accepted BUYs.
+  Before matching nonterminal candle-strategy BUYs, acquire existing financial/source
+  fences in their established order and revalidate closure authority, including shared
+  matchers driven by SELL. Do not reuse queued run-revision equality for accepted orders:
+  ordinary feedback legitimately changes revisions. Preserve executions, balances and
+  protection facts already committed; invalidated signals may not acquire new fills.
+- Check native progression against the existing slot before publishing. For conflicting
+  actual close events, persist candidate plus invalidation in the same source transaction,
+  without an intermediate CLOSED publication. Reuse record_candidate/invalidate rather
+  than introducing a second evidence writer. Existing closed→newer contradiction handling
+  and sticky-hint separation remain intact.
+- Add targeted real-PG regressions: expired/boundary queued admission, accepted BUY
+  invalidation before first fill (including SELL-driven matching), and conflicting open→
+  close with a competing reader. Keep deterministic fixture labels and all safety assertions.
+
+Alternative of waiting for the bot to pause leaves a multi-instance race; accepting then
+revoking a contradictory proof exposes an intermediate tradable state. Reject both.
+Scope: authority, closure capture, affected matcher callers/tests only. No Live, owner
+preview activation, extra public attempt, commit/push/merge or strategy/financial formula
+change. Existing partial public evidence and required CI/owner gates remain open.
+
+Affected-test evidence before fixture edits: legacy accounting queue_entry uses the
+currently OPEN slot as signal, and one feedback fixture pins old calendar dates. The new
+CP11 guard correctly rejects these before matching. Update those synthetic accounting
+fixtures to the last CLOSED slot (two consecutive closed slots for ARM/FIRE), not the guard
+or financial/race assertions. The SELL-driven regression needs free manual inventory after
+its pending test BUY exists; prepare account-use metadata only with the isolated fixture's
+test-admin connection (normal API correctly denies UPDATE), restore BOT before the actual
+SELL-driven assertion, and create all inventory/execution facts through the real matcher.
+No production account-use capability or RLS policy changes.
+
+The corrected CLOSED-slot fixture exposes a related real race: an exit in B advances
+progress.guard_revision, but queued authority never compares it with the decision's pinned
+guard_revision; the old same-candle check compared the exit B to signal A and missed it.
+Keep the existing rejection assertion. Reuse the already recorded guard_revision in queued
+and accepted-opening invalidation queries under the owner lock. This restores the existing
+exit guard (CP12), adds no cooldown/new trigger, and preserves existing positions/protections.
+
+Broader affected basket/recovery tests retain four same-candle rejection failures after
+fixing fixture timestamps: registration/context check exit(A), whereas orders enter in B.
+Existing SR08/Paper RQ08 and these assertions require no re-entry in the current exit slot.
+Before edits: extend the existing exit lookup to both signal A and its immediate entry slot
+B, using native advance() (including month/week); retain the guard-revision race check.
+Reuse the lookup through current context and register_entry, with a shared infra helper
+in baskets.py to avoid three copies. No extra cooldown or TP/SL/financial formula change.
+
+
+## Scoped review-fix refactor —2026-11-22 (before edits)
+
+Owner requested review/refactor of the latest correction only. Reuse native advance() in
+authority.py and compare()/existing prior observation in candle_realtime.py. Name signal
+and entry boundaries once; flatten closure capture with an early generation/lease return
+and resolve the previous observation once instead of repeating tuple access/None checks.
+Keep every progression condition, branch priority, fence, transaction, error and time
+check unchanged. Existing signal_exit_guarded and _closure_signal_current already remove
+the relevant duplication; do not add abstractions or touch financial/domain formulas.
+Alternative: retain nested code; selected cleanup improves readability with a two-file diff.
+Engineering delegation applies. No strategy/session/persistent-state/Live/activation change.
+Run existing closure PostgreSQL boundary/conflict/accepted-matcher regressions, realtime
+unit tests and scoped Ruff/mypy/import checks. Existing Partial gates and campaign limit
+remain unchanged; no public run, publication or merge is part of this refactor.
+
+
+## Local Feature-gate continuation —2026-11-22 (before tests)
+
+Owner requested continuation after refactor. Publication exception is awaiting an explicit
+answer; do not commit/push/merge or run public campaign5. Close concrete V08 durable
+recovery gaps first under engineering delegation using existing ready(), market_data_session,
+PreviewLease acquire/connection and claim_next/write_candles test patterns in
+tests/infra/execution_market/test_candle_closure_proof.py. Add real-PG tests for a committed
+WAITING_REST observation surviving pool disposal and completing through actual claimed
+REST persistence, and expired-writer takeover refusing both old lease submissions and
+old-epoch pending reconciliation until a fresh current-writer close arrives. Keep exact
+proof/row/result counts and lease checks; no runtime/business behavior change or mock
+for durable/transaction correctness. Full multi-process deployment/public matrices remain
+Partial unless separately evidenced. Inspect existing attempt4 dispatch evidence offline;
+do not infer missing historical claim timing from terminal metadata.
+
+
+## Owner draft-publication continuation —2026-11-22
+
+Owner replied “เริ่มทำ” after the explicit next-step request for commit/push and a draft PR
+solely to run required CI, without merge or another public campaign. This authorizes that
+publication exception to P6; it does not approve owner acceptance, activation, merge, Live
+or campaign5. Preserve remaining Partial gates. Integrate origin/main005ec483 (merged F17
+refactor8e5bab69) before publication, preserving its existing trigger/manual-sale behavior
+and the approved first-fill ATR extension. Run affected protection tests/static checks,
+commit the combined reviewed source/docs/evidence once and open one draft PR. Follow required
+CI on the final SHA, fix in-scope failures and report run links/status. Do not create a
+document-only commit/PR loop merely to record the subsequent CI result. Prior source
+manifests remain historical; final Git SHA binds the integrated candidate.
+
+
+Pre-publication security-tool diagnostic: the unpublished integration commit is a merge
+with newly added evidence. Existing tree occurrence mapping finds introduction commits
+using git log --diff-filter=A without merge expansion, so merge-only additions have no
+resolvable introduction and the scan fails INVALID_STRING. Do not weaken the scanner.
+Preserve the unpublished integration as a local backup ref and create one linear final
+reviewed commit with exactly the same tree on main005ec483, as permitted by the dependency
+materialization plan. This also avoids publishing intermediary local dependency snapshots.
+Source/evidence bytes and historical manifests remain intact; only unpublished topology
+changes. Run the unchanged scanner on that final candidate before pushing.
+
+
+## Owner-approved exact evidence exception —2026-11-22 (before registry edit)
+
+Owner explicitly replied “อนุมัติข้อยกเว้นเฉพาะ 2 จุดนี้” for generic-api-key at lines12/17
+of evidence/public-paper-campaign-4-diagnostics.json introduced by
+c864411eb730d200cbb8dad3410a356e20579e88. Both values exactly equal the actual disposable
+Paper order_id and intent.order_id, not authentication credentials. Add one immutable
+binding to .github/security/evidence-exceptions.json using existing schema/resolver:
+blobefa230cc4f1a248517af06f124cde0083936cb9b, deduplicatedcount2, occurrence-setdigest
+39300c3e82add96b48536196bda5185f27485de40840e12f45b5a0622e43f892.
+Preserve every previous approval; no new regex/path-wide suppression, identity/coverage
+change or secret-scanner code change. Existing Security RQ7/approved immutable-evidence
+contract applies. Run evidence resolver tests and full pinned history/tree scan on the
+new commit before push, then required CI on that SHA. Other gates remain unchanged.
+
+
+## Combined-candidate E2E fixture correction —2026-11-22 (before edits)
+
+CI44986019642 general browser E2E:34passed/2failed. Failure1 selects chart Timeframe
+by substring and now matches the bot Timeframe too. Reuse the exact:true chart locator
+already used elsewhere in e2e/candlestick-chart.spec.ts. Failure2 still expects the
+strategy selector disabled, contradicting the approved selectable strategy UI when no
+run is pinned. Update e2e/paper-bot-panel.spec.ts to require enabled/focusable selection
+and verify keyboard navigation through that existing control. Preserve Start-disabled,
+budget persistence,16responsive/language/theme combinations, no-form/no-tabs and final
+zero-mutating-request assertions. Do not alter runtime UI, admission, feature flags,
+timeouts or financial safety. These are harness corrections under engineering delegation
+for approved F21/Paper dependencies. Run the two failing browser tests on a fresh isolated
+local E2E database/Redis, plus frontend static checks, then push and track final required CI.
+
+
+## F16 draft selector correction —2026-11-22 (before edits)
+
+CI44987001408 general browser suite passed, then F16 manual suite7passed/1failed at
+manual-orders.spec.ts354: obsolete label “งบรวม (USDT)” no longer exists. Main's
+PaperBotPanel used that copy for the same paper-bot-budget control; approved F21 renamed
+it to capital per entry. The existing test's unsent draft is that bot card, while its
+manual BUY recovery uses seedLegacyBuy and the real request UI/API. Reuse the stable
+#paper-bot-budget locator already used by related tests, named once locally, for all three
+existing draft assertions. Retain reset success, original body/key equality, UNKNOWN,
+409closed-episode response, empty journal and404no-request assertions unchanged. No runtime
+change, manual order UI restoration, safety/assertion/timeout relaxation. Search of E2E
+found no other obsolete budget label or matching strategy/Timeframe expectation remaining.
+Run only this failing real browser case locally on disposable E2E services (about1–2min),
+scoped ESLint/types, then final-candidate required CI under engineering delegation.
+
+
+## Bounded E2E continuation —2026-11-22 (owner approved, before edits)
+
+Owner approved correcting stale E2E presentation expectations, checking the remaining
+suites on isolated services, and exactly one further required CI candidate run after
+three consecutive E2E failures. No merge or further public-source campaign is authorized.
+CI44988072782 passed general browser36, catalog2, F16eight and F17seven cases;
+F20failed at bots.spec.ts51 expecting disabled Start during a pending request.
+Reuse existing role locators/API status helper: pending requires compact Stop and no
+Start; legacy F20 runs without pinned configuration retain the full status component.
+Paper PAUSED badge is intentionally hidden; assert PAUSED from the real API plus absence
+of that badge. After STOP the card now shows Start and its existing review-stop trigger;
+use that trigger for summary/resume/focus recovery. Preserve real filled quantities,
+protection state, balance, single durable STOP, unchanged exposure and owner/mode isolation.
+Do not change runtime, financial behavior, timeouts or safety assertions. Review remaining
+F21/Paper Test/risk E2E contracts; run these suites on disposable databases/Redis and
+alternate local frontend ports to avoid the owner preview. Preserve original failed CI.
+Run scoped ESLint/types, inspect final diff, push once, and monitor the one new CI run.
+
+
+Remaining-suite local evidence: F21 actual five-candle entry/shared-TP case passed;
+the two recovery cases raced route handling at immediate keys.length assertions
+(0before first intercepted POST /1before asynchronous retry POST). Use existing
+expect.poll pattern for unchanged exact request counts and receipt HTTP status, so the
+committed branch also waits for its route.fetch commit. Keep identical idempotency-key,
+receipt run/failure, zero orders/executions and balance assertions; no timeout increase.
+Rerun only those two cases after Paper Test/risk suites, retaining the first F21 failure.
+
+
+## Post-CI Feature recovery continuation —2026-11-22 (before edits)
+
+Owner instructed “เริ่มทำ” after the final publication checkpoint. Continue the
+remaining approved Feature checks locally; no additional public campaign, owner-preview
+activation, merge or CI rerun is inferred. PR85 head e193fd3237a489f152a0643ff25105227c4e82f6
+has required CI44990595087 and Security44990595105 Passed. Preserve these as the
+runtime candidate evidence; later test additions require their own final-head CI before merge.
+
+V08 currently proves pool recreation and expired-writer takeover, but not process death
+at actual transaction boundaries. Under engineering delegation add four targeted cases
+in tests/infra/execution_market/test_candle_closure_proof.py: kill a real child process
+before/after native pending commit and before/after atomic accepted-proof publication.
+Reuse ready/recorded fixtures, market_data_session, claim_next/write_candles and the
+stdout marker helper in test_process_recovery.py. No production code changes or new
+subprocess abstraction. Child processes use MARKET_DATA runtime role and inherited
+isolated database URLs. Verify rollback visibility, committed pending/proof durability,
+real claimed REST completion and exact observation/result/proof dedup after replay.
+Preserve source revision across rolled-back work and duplicate replay. Keep V08 Partial
+for deployment compatibility/failover cases not covered by these four process boundaries.
+Run the four cases and related pool/takeover/rollback cases on disposable PostgreSQL,
+plus scoped Ruff/format/mypy. Do not rerun full regression or publish test-only changes
+until the authorized checkpoint; independent/owner acceptance and V17 stay open.
+
+
+First local pass exposed a harness omission: the post-kill reconcile assertion must
+acquire the existing source-write scope, as production callers do; TT011 correctly
+rejected the unscoped call in the two pre-commit cases. Add prepare_write(acquire=True)
+without changing production enforcement or the no-proof assertion. Scoped mypy also
+needs MYPYPATH=src to inspect the local package rather than its untyped editable-install
+entry; preserve the initial440import-derived errors as a diagnostic failure, not a code pass.
+
+
+## Deployment compatibility matrix continuation —2026-11-22 (before edits)
+
+Owner instructed “เริ่มทำ” after the process-crash checkpoint. Continue V14 locally,
+with no public campaign, preview activation, CI rerun or publication inferred.
+Existing tests cover missing inventory and disabled trigger, but not each attestation
+field, source-proof PENDING, or a separate runtime process with/without writer capability.
+Use tests/infra/execution_market/test_candle_closure_compatibility.py, importing existing
+ready/INVENTORY and marker fixtures. Test boolean attestations missing/false/string,
+invalid candidate SHA, source proof PENDING rejection and unchanged activation state.
+Use subprocess runtime MARKET_DATA sessions for three supported matrix cells: protocol
+OFF with unmarked legacy-style SQL succeeds without promotion, ON with that exact old
+write path is rejected, ON with current v1 writer yields one valid proof. The legacy
+cell exercises the old SQL path, not a historical executable compatibility claim.
+After proof publication, deactivation requires admission_paused and proof becomes
+non-tradable while append-only evidence stays unchanged. No production implementation,
+new accepted version, deployment inventory architecture, security relaxation or money
+change. Use inherited isolated DB URLs and scoped subprocess cleanup. Actual deployed
+process inventory/drain/restart-disable evidence remains an owner deployment gate;
+synthetic attestation fixtures cannot certify it. V14 remains Partial for that evidence.
+Run only new matrix cases and related activation/default-OFF/role/migration regressions
+on disposable PostgreSQL; scoped Ruff/format/mypy and diff review. Keep the earlier
+process-crash changes and green runtime CI evidence distinct from these local additions.
+
+
+## Owner-authorized recovery/compatibility publication —2026-11-22
+
+Owner explicitly approved committing/pushing the reviewed recovery/compatibility tests
+to draft PR85 and exactly one additional required CI candidate run. Include both local
+test batches, existing plan/validation/review/roadmap updates and their fingerprinted
+evidence in one commit. No source/financial behavior change; no further public campaign,
+owner-preview activation or merge. Local evidence fingerprints were rechecked before
+staging. Required CI and Security must run on the new head; keep historical results and
+remaining Partial Feature/deployment/public-fill/acceptance gates unchanged. Report
+final SHA and workflow links in the PR/checkpoint without doc-only CI commit loops.
+
+
+## Campaign5 recovery/readiness correction —2026-11-22 (before edits)
+
+Owner requests fixing the reported no-entry issue through a reviewed/tested checkpoint
+without repeated permission requests. Campaign5 observed a green, proven BTC candle and
+one no-op Paper Test decision; repeated UNCONFIRMED/indicator/source readiness pauses
+occurred. Code inspection identifies a concrete defect: evaluation._write_status treats
+BOT_CANDLE_UNCONFIRMED as a recovery event, advancing eligible_after/recovery_required.
+Normal native-close/post-end REST publication latency therefore makes a fresh candle
+backfilled when its proof arrives. This differs from normal F11 preparation waiting,
+which already preserves the live boundary. CP05 still requires no trading before proof;
+CP10 still requires durable cutoffs after real disconnect/conflict/source recovery.
+
+Under the engineering delegation, reuse the existing indicator_wait classification in
+infra/bots/evaluation.py for ordinary BOT_CANDLE_UNCONFIRMED waits. Do not alter ready(),
+price/source recovery timestamps, closure health, proof admission or strategy rules.
+Alternative: permit backfilled entries or move cutoffs backward; rejected because it
+would weaken CP10/11. Source-not-ready and actual recovery remain fail closed. No new
+session/global state, schema, financial arithmetic, infrastructure or UI behavior.
+
+Before production edits extend the existing real-PG proof→F11→strategy→matcher matrix in
+tests/infra/execution_market/test_candle_closure_proof.py with pre-proof polling, exact
+progress/capital preservation and subsequent one-order/fill assertions. Cover repeated
+polls and a real disconnect before proof (unchanged cutoffs block replay), reusing runtime,
+f21_run, native adapter/supervisor and verify_queued_result. Run affected tail/recovery,
+closure/queued safety cases and scoped Ruff/mypy/import checks. Capture failures honestly.
+No public attempt6, owner-preview activation, commit/push/CI/merge authorization is inferred;
+existing final-candidate/owner/independent/public-fill gates remain required.
+
+Also extend test_strategy_tail_inputs.py's existing normal-wait case with an explicit
+UNCONFIRMED signal before publication, proving the same preserved boundary and RSI ARM
+transition through the shared path. Reuse its seed/append/F11 comparison helpers.
+
+
+## Owner-authorized proof-wait patch publication —2026-11-22
+
+Owner replied approve to commit/push the reviewed proof-wait patch into draft PR85 and
+run exactly one additional required CI candidate round (approximately25–35minutes).
+Include the existing campaign5 evidence, scoped fix/tests and their plan/validation/
+review/roadmap checkpoint together. No source changes after the45case regression and
+scoped static/import checks; fingerprints revalidated before staging. No new tests run
+merely for publication. This supersedes only the prior local/unpublished boundary for
+this patch, not the public campaign limits, owner-preview activation or merge gates.
+No merge or public attempt6. Report final SHA/CI URLs and remaining gates without
+creating a documentation-only commit loop to record the resulting CI.
+
+
+## Required-CI scheduler contention correction —2026-11-22 (before edits)
+
+Owner instructed proceeding through deterministic PostgreSQL reproduction, a scoped
+fix, targeted checks and diff review; no push/CI round or public campaign is authorized.
+Required CI45003959474 failed in unchanged test_catalog_and_control_gate[PREPARING].
+Its two coalesce transactions contend on a transactionid lock (55P03); the bounded
+artifact does not identify the internal SQL statement or explain the holder's delay.
+A local unchanged rerun passed, so do not call this proven runner slowness or flakiness.
+
+Under AGENTS.md engineering delegation, first hold an actual builder-role coalescing
+transaction open after its SQL completes and call coalesce_jobs through a separate
+engine. Cover empty/pre-existing catalog and holder commit/rollback. This reproduces
+contention deterministically without sleeps or changing the200ms/500ms DB budgets.
+Keep the original concurrent catalog/recovery assertions and guard-timeout rejection.
+
+Reuse infra/indicators/scheduling.py::coalesce_session, indicator_writer_session and
+the PostgreSQL nonblocking transaction advisory-lock pattern already used by
+infra/paper_orders/request_dispatch.py::claim_request. Serialize only coalescing with
+the distinct two-integer key(711,2); (711,1) remains attempt session ownership, and
+the bigint wallet-lock namespace is separate. Both scheduler and pinned scan use
+coalesce_session. If another coalescer holds the transaction lock, return0 (no local
+metadata changes); existing durable jobs and next normal poll remain authoritative.
+No new retry loop, process-local mutex/cache, schema, privileges or infrastructure.
+The lock must survive SQL completion through commit/rollback and release automatically
+on transaction cancellation/connection loss. Genuine guard/database failures propagate.
+
+Alternatives rejected: increasing budgets hides contention and changes F11 limits;
+retrying arbitrary timeout risks replaying an ambiguous operation; an in-memory lock
+cannot protect multiple instances; migration/wrapping the restricted SQL function is
+unnecessary when all runtime coalescing calls already share this boundary. Direct
+privileged SQL/standalone seed helpers retain their existing behavior and timeout.
+Skipping a redundant in-flight coalescer may defer metadata to the next existing poll
+if the holder rolls back; freshness/source/claim/publication gates still reject stale
+inputs, no trading opportunity or readiness is fabricated and no counters reset.
+
+Validate actual PG independent-engine contention, commit/rollback lock release,
+uncommitted visibility and eventual complete catalog with no duplicates/claim changes;
+run existing scheduler, physical writer/claim and source-guard regressions, plus scoped
+Ruff/format/mypy/import checks. Preserve historical CI Failed and all Partial owner/
+deployment/public-fill gates; local results do not replace required CI.
+
+
+## Owner-authorized scheduler correction publication —2026-11-22
+
+Owner replied "เริ่มทำ" to the checkpoint proposing commit/push and exactly one new
+required-CI round for the reviewed scheduler correction. Publish the fingerprinted
+runtime/test change, its local85case/static/review evidence and the existing failed-CI
+blocker receipts together to draft PR85. No further source edits or repeated local
+tests are needed: the reviewed fingerprints remain unchanged. Track required CI and
+Security on the new SHA, report their run links/results, and preserve all remaining
+owner/independent/deployment/public-fill Feature gates and Batch/Release pending work.
+No merge, owner activation, extra public campaign or additional CI retry is authorized.
+Do not create a documentation-only commit/CI loop for the resulting checkpoint.
+
+
+## Owner-authorized public-source Paper attempt6 —2026-11-22
+
+Owner explicitly approved one further public-source Paper campaign on reviewed/CI-green
+94fcde334363d52f136089cc20a6749e92282cb4: BTC/USDT and ETH/USDT1m,100USDT per entry,
+new isolated accounts/database, existing profile preparation<=300s and capture360s,
+then stop/capture/report facts. No owner account/preview/Live action, extra campaign,
+time extension, fabricated CLOSED/indicator/order/fill or relaxed guard is authorized.
+
+Reuse tests/infra/execution_market/profile_candle_closure.py unchanged, the attempt5
+external launcher/bootstrap role configuration, source manifest and independent
+proof/ledger verification helpers. Use fresh campaign6 names/ports/output exclusive
+marker; never overwrite/restart an earlier attempt. Working source/test/migrations
+must match94fcde33; only existing acceptance documentation changes may be present.
+Keep the actual running source manifest, SHA and environment identity with the report.
+Adapt only external launch/audit paths and candidate identity, not runtime/harness
+business logic. Stop only this campaign's owned services after cleanup, retain data
+for inspection, and report Partial if the required proof-to-BUY/fill/protection chain
+does not occur within the approved period. Existing owner/independent/deployment and
+Batch/Release gates remain open; no additional CI/publication/merge is inferred.
+
+## Offline nested-failure diagnostics —2026-11-22
+
+Owner replied "เริ่มทำ" to the offline follow-up after attempt6. Under the delegated
+engineering authority in AGENTS.md, improve only the campaign's safe failure report
+and controlled failure-handling tests. Attempt6 retained an outer ExceptionGroup but
+lost child types/locations; its precise cause cannot be recovered or inferred.
+
+Reuse profile_candle_closure.py's existing exclusive output marker, failure_type,
+failure_frames and API status/path reporting. Add a bounded depth-first child tree
+with child-index paths, exception types and basename/function/line frames only.
+Limit nodes to32, child depth to8 and frames per node to16; explicitly mark truncation.
+Never serialize exception messages, arguments, notes, chained context/cause text,
+locals, source lines or absolute paths. Existing leaf traversals in
+tests/infra/execution_market/test_runtime_observation.py::leaves and
+services/market_data/order_book.py::_failure_reasons do not provide bounded safe
+report metadata; the latter renders messages, so neither is imported into the
+campaign. Keep a small local helper rather than a cross-layer diagnostic framework.
+
+Use existing test_closure_campaign.py and test_order_book.py patterns to prove nested
+error visibility, redaction, bounds, exclusive attempt ownership and cancellation,
+plus expected source/venue/lease retry and unexpected mixed-group propagation with
+sibling-task cleanup. Controlled events/mocks test supervisor control flow only;
+they do not replace real source/PG/trading acceptance. No production source changes,
+retry/deadline changes, trading rules, money, schema, privileges or infrastructure.
+Reject raw traceback formatting because it leaks messages/context; reject a new
+public attempt because diagnostics can be verified offline first. Run targeted unit
+tests and scoped Ruff/format/mypy checks, then review this diff. Preserve all existing
+Partial/Not Run gates and the94fcde33 CI receipt; new harness/tests have no required
+CI receipt yet. No public attempt7, publication, extra CI, merge or owner activation.
+
+## Bootstrap deadline classification —2026-11-22
+
+Owner approved the proposed offline investigation/repair plan. The capability and
+snapshot asyncio.timeout(5) boundaries currently emit TimeoutError, which is outside
+the supervisor's expected source-error retry classification. Prove this using the
+existing real-PG test_pipeline FixtureFeed with a blocked capability/snapshot and
+the actual five-second deadline. Then translate TimeoutError only at those public
+read boundaries to SourceUnavailableError, retaining the cause for local diagnosis.
+Reuse existing supervisor retry and database fencing/invalidation behavior. Do not
+catch database errors or cancellation, expand deadlines, add retries or change money.
+Add cancellation and successful next-generation recovery assertions with real PG;
+retain existing matching/disconnection tests. This fixes a demonstrable path, not a
+claim about attempt6's unknown child cause. Public attempt7 remains separately gated.
+
+
+## Timeout correction publication —2026-11-22
+
+Owner replied "เริ่มทำ" to the next required-CI step. Publish the reviewed timeout
+correction, offline diagnostic tests, and existing attempt6 evidence together to
+existing draft PR85; run one required-CI round on the resulting candidate. Preserve
+owner/independent/deployment and public-fill gates. No merge or public attempt7 is
+included; the latter remains separately bounded and authorized. Report CI results
+with SHA/run links without a documentation-only publication loop.
+
+## Owner-authorized public-source Paper attempt7 —2026-11-22
+
+After CI45035954903 and Security45035954851 passed on ddcd469c, owner replied
+"เริ่มทำ" to the concrete proposal for exactly one further public Paper attempt:
+BTC/ETH 1m, 100 USDT per entry, new isolated Paper accounts/database, preparation
+at most 300 seconds and capture at most 360 seconds. This is campaign7 only; no
+extension, retry, owner-account/Live action, merge or additional CI round.
+
+Reuse the unchanged profile_candle_closure.py campaign harness and existing external
+attempt6 launcher, manifest, independent proof verifier and read-only admin audit.
+Change only external campaign identity, fresh loopback ports/database/output marker
+and reviewed commit; assert a clean runtime/test/migration tree before launch.
+Retain the exclusive report marker, exact source fingerprint and CI SHA. Stop only
+owned campaign7 services after cleanup. Report Partial if proof-to-BUY/fill/TP/SL
+does not complete within the approved bounds; preserve all existing owner,
+independent, deployment and Batch/Release gates.
+
+
+## Owner-approved offline contention investigation —2026-11-22
+
+Owner approved the proposed offline investigation/repair plan. Reuse real-role
+scheduler tests and scheduler_lock_diagnostic observer on the isolated review DB.
+Reproduce source-guard and job-row contention before editing production code; retain
+blocker evidence and metadata snapshots. Existing coalescer contention tests cover
+independent engines and rollback/commit/cancellation. Do not infer attempt7's exact
+blocker from an offline reproduction.
+
+If normal contention is confirmed, distinguish SQLSTATE55P03 with a backwards-
+compatible DatabaseTimeoutError subclass, retaining safe fixed messages/code. Handle
+only this subtype around coalescing after transaction rollback: scheduler/preparation
+wait the existing10s poll before dispatch, scheduled scan proceeds to its next normal
+poll while keeping heartbeat/publication guards. All other timeouts and ownership,
+configuration/connection errors propagate. No timeout increase, schema/API change,
+new infrastructure or order replay. Record validation and review before checkpoint;
+no new public campaign, CI round or publication is authorized.
+
+
+Offline evidence: four source/job blocker × commit/rollback cases captured PostgreSQL
+blocker links and unchanged job metadata before the fix. Initial121case regression
+passed. Review identified cleanup ambiguity: pinned rollback errors are suppressed
+and a generic55P03 could arise outside the coalescing statement. Narrow recovery to
+CoalescingBusyError raised only around that statement; cleanup errors must override
+it. Mark a pinned writer tainted on failed rollback and reject recovery from tainted/
+invalidated connections. Add rollback-failure regression before final validation.
+This is required to uphold the approved no-ambiguous-retry rule, not a new feature.
+
+
+Final cleanup audit also found shared _begin deliberately preserves the original
+error when rollback fails. Add an opt-in strict rollback mode used only by the
+standalone coalescing transaction; default behavior for existing callers remains.
+Strict cleanup failures override the retry marker with their safe database error,
+while task cancellation remains cancellation. Validate both standalone and pinned
+rollback-failure paths. No caller may treat an uncertain cleanup as a safe retry.
+
+
+## Owner-authorized coalescing recovery publication —2026-11-22
+
+Owner replied "เริ่มทำ" to the next commit/push and required-CI step. Publish the
+reviewed, fingerprint-matched offline coalescing correction,278case/static evidence
+and retained attempt7 artifacts together to existing draft PR85, then track one
+required-CI round on the resulting SHA. Public attempt8 remains separately bounded
+and unapproved. No merge or owner deployment activation. Preserve Partial acceptance
+gates; report CI links/SHA without a documentation-only publication loop.
+
+
+## CI wrapper compatibility correction —2026-11-22
+
+CI45042222741 on9e992141 failed full mypy at six diagnostic wrappers assigning
+_db._begin: their signatures omit strict_rollback. Scoped type checks missed these
+reverse callers. Under delegated engineering authority, forward strict_rollback
+(defaultFalse) through every affected observer wrapper, including fake wrapper
+helpers used by their tests. Preserve observation/transaction behavior and add a
+forwarding regression. Run full mypy to discover any remaining reverse callers,
+scoped lint/format and affected diagnostic tests. No runtime safety relaxation or
+new CI/public round; publication of a corrected candidate needs a further CI round.
+
+
+## Owner-authorized wrapper publication —2026-11-22
+
+Owner replied "approve" to commit/push the reviewed wrapper compatibility patch
+and run one additional required-CI round. Publish the existing correction and
+evidence to draft PR85 and track the resulting candidate to completion. Prior
+9e992141 CI failure remains recorded. This does not authorize public attempt8,
+merge or deployment activation. Report final CI links/SHA without creating a
+documentation-only publication loop.
+
+
+## CI financial-boundary cleanup correction —2026-11-23
+
+CI45044685661 on a46dbe0d passed mypy but failed one of6105 backend tests:
+queued-catalog authority fixture setup timed out (SQLSTATE57014) restoring
+statement_timeout in risk_limits/boundaries.py after RELEASE SAVEPOINT. The
+optional100ms replay budget still applied to restoration, but the savepoint had
+already been released, so the intended deferred-replay fallback could not run.
+6104 passed;2skipped;32deselected. Other CI jobs and Security passed.
+
+Delegated engineering authority permits the necessary shared dependency bug fix.
+Reuse financial_boundary's existing savepoint and SOURCE_UNAVAILABLE/replay_pending
+fallback: restore the prior timeout inside the protected try, before release.
+If restoration itself times out, rollback to the savepoint restores its prior
+settings and rolls back only derived replay; retain the financial marker and
+existing conservative fallback. Do not increase100ms, retry the financial operation,
+change risk rules or suppress rollback/release failures. Alternatives (rerunning CI
+without a fix or raising timeout) do not correct this uncovered cleanup gap.
+
+Before source edits, reproduce deterministic PostgreSQL timeout at restoration
+using the existing UserSession test interception pattern and real pg_sleep. Cover
+normal and failed restoration with prior timeout0/nonzero, persisted financial
+facts, restored timeout, deferred risk state and atomic rollback. Then run affected
+boundary/authority regressions and scoped static checks. No further CI/public round
+is authorized by this local repair.
+
+
+## Owner-authorized risk cleanup publication —2026-11-23
+
+Owner replied "approve" to commit/push the reviewed risk replay timeout-restoration
+correction and track one additional required-CI round on the resulting candidate.
+Publish the fingerprint-matched source/tests with existing evidence to draft PR85.
+Retain the a46dbe0d failure history; report final SHA/run links without a separate
+documentation-only publication loop. No public attempt8, merge or activation.
+
+
+## Owner-authorized public-source Paper attempt8 —2026-11-23
+
+Owner replied "approve" after c435dad1 passed CI45048519021/Security45048518987
+and the proposal to validate actual-source Paper BUY/fill/TP/SL. Authorize exactly
+one attempt on c435dad12e9427c51f75990b7ed39c9c0e8a1db7 using the existing
+bounded campaign: BTC Paper Test Entry and ETH RSI Step Grid,1m,100USDT per entry,
+new isolated Paper users/database/Redis, preparation<=300s and capture<=360s.
+No extension/restart, owner account, Live, merge or further CI round.
+
+Reuse the committed profile_candle_closure.py and external attempt7 launcher/proof
+verifier with only candidate, attempt identity, isolated ports55428/56398 and output
+paths changed. Keep exclusive attempt marker, clean runtime/test/migration check,
+source manifest and read-only administrator audit. Preserve prior Partial results.
+Stop only owned attempt8 services after audit. If BUY/fill/frozen protection is not
+proved within bounds, report Partial rather than manufacturing candles or signals.
+
+
+## Approved offline matcher recovery investigation —2026-11-23
+
+Owner approved the proposed offline plan with "Please implement the plan". Start
+from attempt8 retained facts and an isolated copy of its stopped PostgreSQL data;
+never resume original workers or mutate original campaign evidence. Match source
+content/digests/constraints to checkpoint and reproduce the recovery path before
+source edits. Ten checkpoint codec round trips are lossless. Pure reproduction
+using checkpoint input6056 changes only rebaseFalse→True and raises the same
+OrderConflictError, while identical replay is a no-op. This is a demonstrated
+mechanism, not yet proof of the exact failed runtime input.
+
+If retained facts cannot establish that recovery's only change is consumer rebase
+intent, stop at evidence/report and refine the plan rather than relaxing identity.
+Otherwise fix the worker input selection: an already consumed identical verified
+book is not applied again; consume only contiguous subsequent inputs, or use the
+existing no-new-input wait. Preserve strict core payload/capability equality and
+all source freshness/generation, financial, admission/expiry/risk/STOP gates.
+Use existing evidence codec/provenance routines and targeted recovery/worker tests;
+verify PostgreSQL transaction/restart/concurrency and first-fill protection paths.
+No public attempt9, publication/CI/merge or original-order resumption.
+
+
+## Owner-authorized offline recovery publication —2026-11-23
+
+Owner replied "approve" to publish the reviewed offline matcher correction and
+track one required-CI round. Publish fingerprint-matched source/tests and related
+existing evidence to draft PR85. No public attempt9, merge or Live action. Report
+CI against the resulting SHA without a documentation-only publication loop.
+
+
+## Offline reconnect CI diagnosis —2026-11-23
+
+Owner instructed focused diagnosis of c5f724f3 CI failure. Under delegated
+engineering authority reuse the existing reconnect integration case and isolated
+PostgreSQL review database. Enrich assertion with durable bot events before
+selecting runtime or fixture changes. Preserve safety assertions. No public
+campaign or new CI round.
+
+Fixture inspection establishes a clock mismatch: seed end=align_floor(initial now),
+but source.price defaults to a later wall-clock trade time. Indicator selection
+uses align_floor(snapshot.observed_at), so crossing a minute selects an unseeded
+window. Pin only this synthetic fixture's price trade_time to its captured now;
+received_at stays actual clock and all freshness/closure/recovery assertions stay.
+This removes a demonstrated fixture hazard, not proof of the captured CI cause.
+No runtime change is justified without a reproduced runtime failure.
+
+
+## Owner-authorized reconnect fixture publication —2026-11-23
+
+Owner instructed "เริ่มทำ" after the proposal to commit/push the reviewed fixture
+correction and run one additional required-CI round. Publish the fixture and
+related existing evidence to draft PR85. No additional public campaign or merge.
+
+
+## Repeated CI failure investigation checkpoint —2026-11-23
+
+Owner requested systematic handling because repeated CI rounds delay development.
+Use delegated diagnostic authority; do not infer another publication/CI campaign.
+
+Observed: c5f724f3 reconnect decision=None;3a5a1d7f reconnect Passed, awaiting_proof
+claim token=None. Neither captured failure proves its rejection cause. Preserve
+all historical failures and distinguish fixture hazards from reproduced causes.
+
+Investigate existing drive/verify_queued_result and claim_order before runtime
+changes. Ordinary claim can reject for busy advisory owner, terminal dispatch,
+stale expected_due, not-yet-due schedule, active lease, another active owner claim,
+or skipped row lock. Current test helper overwrites next_attempt_at and then only
+asserts token is not None, losing the predicate evidence. Record minimal safe
+dispatch fields, DB clock, command result, relevant lock ownership and call phase
+(first admission vs subsequent matching) on failure. Do not mutate lease/state to
+make tests pass or automatically retry an unexplained claim failure.
+
+Before choosing a correction: deterministic PostgreSQL cases must distinguish
+active/expired lease, busy owner, stale scheduling hint, terminal dispatch, and
+transaction completion/restart. Reuse existing dispatch and concurrency cases;
+add only missing evidence/behavior. Check whether timing/window selection and
+claim failure share a cause; do not assume it.
+
+Local prepublication set: closure proof integration, strategy commit fences,
+dispatch claim/lease/concurrency, same-book recovery and affected financial/protection
+paths; scoped static checks. Select actual existing cases after causal diagnosis,
+rather than blanket full regression after each patch. Keep production Money/Quantity,
+admission, expiry, lease, idempotency and security invariants unchanged.
+
+Exit criteria for this repair checkpoint: reproduced or predicate-proven failure,
+causal correction, regression that fails before/passes after, relevant PostgreSQL
+and static checks, scoped diff review. If exact historical cause remains unknowable,
+state it explicitly and publish diagnostics only with that limitation. Required CI
+remains mandatory; no local green replaces it. No "fixed" claim based only on a
+passing rerun. Additional CI needs the separately bounded authorization.
+
+
+## Dispatch claim diagnostic implementation —2026-11-23
+
+CI45106792952 traceback locates failure at verify_queued_result line67: second
+drive after admission, sleep and next_book, not the first admission claim. Existing
+helper loses the preceding admission outcome. Add safe predicate snapshot on claim
+failure (schedule/lease/state/busy owner/DB clock and command outcome) and assert
+expected successful admission before second drive. This distinguishes terminal
+rejection from lease/lock failures without retries or production changes. Historical
+cause remains unconfirmed. Reuse existing drive and PostgreSQL integration module;
+no publication/CI/public campaign authorized.
+
+
+## Owner-authorized dispatch diagnostics CI —2026-11-23
+
+Owner instructed "เริ่มทำ" after the proposal for one additional diagnostics
+publication/CI round. Publish fingerprint-matched test diagnostics with related
+evidence and approved testing-standard amendment to draft PR85. Hypothesis: first
+admission may be terminal/rejected before second claim; retain actual admission
+and claim predicates. One round only; no public campaign, runtime safety changes
+or merge. Report captured cause or remaining uncertainty honestly.
+
+
+## F17 stale response observer correction —2026-11-23
+
+Owner instructed offline diagnosis. Downloaded CI45113386759 playwright-report
+trace: original BTC request starts04:48:11.923Z, wallet:null; post-reload BTC starts
+04:48:12.870Z, wallet present and no admission reasons. prepare204 starts11.868Z.
+Original response waiter accepts any matching response, including a request from
+the previous document. This establishes an observer defect; no wallet/runtime
+change justified. Keep raw trace local (may contain session data), record only
+safe timings/presence flags and source artifact identity in evidence.
+
+Reuse existing identical reloadPaperPair in F16/F17 by centralizing it in paperOrders
+helper; track requests only after main-frame navigation request of page.reload.
+Reject old in-flight response identity; retain HTTP/wallet/UI assertions. Add
+deterministic request ordering regression that fails before guard and passes
+after, check listener cleanup. Run scoped frontend lint/types/unit checks then
+isolated F17 browser/PG acceptance if environment available. No CI/public round
+or runtime change authorized.
+
+
+## Owner-authorized reload observer publication —2026-11-23
+
+Owner instructed "เริ่มทำ" after proposal to commit/push the causal F17 observer
+correction and run one required-CI round. Publish fingerprint-matched helpers,
+regressions and related existing evidence to draft PR85. No further public campaign
+or merge. Track final SHA/run links and retain prior failures and uncertainty.

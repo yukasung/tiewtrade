@@ -100,8 +100,10 @@ def _consume_cleanup_result(task: asyncio.Task[None]) -> None:
 
 
 @asynccontextmanager
-async def indicator_writer_session(engine: AsyncEngine) -> AsyncIterator[IndicatorWriterSession]:
-    async with _begin(engine, cleanup_seconds=2) as connection:
+async def indicator_writer_session(
+    engine: AsyncEngine, *, strict_rollback: bool = False
+) -> AsyncIterator[IndicatorWriterSession]:
+    async with _begin(engine, cleanup_seconds=2, strict_rollback=strict_rollback) as connection:
         await _assert_role(connection, DatabaseRole.INDICATOR_BUILDER)
         yield IndicatorWriterSession(connection)
 

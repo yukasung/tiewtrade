@@ -8,6 +8,7 @@ import { fetchStopRequestByKey, fetchStopStatus, postStop, stopKey, type StopMod
 import { ApiRequestError } from "./auth";
 import { clearJournal, clearJournalForKnownFailure } from "./killSwitchJournal";
 import { killSwitchText as t } from "./killSwitchMessages";
+import { paperBotText } from "./paperBotMessages";
 import { StopSummaryModal } from "./StopSummaryModal";
 import { fetchRisk, riskKey } from "./riskLimits";
 
@@ -27,13 +28,14 @@ function recoveryErrorKind(error: unknown): "missing" | "invalid-key" | "unknown
   return error.status === 422 ? "invalid-key" : "unknown";
 }
 
-function StopControl({ owner, mode, settingsTarget, settingsTrigger, closeSettings, inline = false }: {
+function StopControl({ owner, mode, settingsTarget, settingsTrigger, closeSettings, inline = false, compact = false }: {
   owner: string;
   mode: StopMode;
   settingsTarget: HTMLDivElement | null;
   settingsTrigger: RefObject<HTMLButtonElement>;
   closeSettings: () => void;
   inline?: boolean;
+  compact?: boolean;
 }) {
   const client = useQueryClient();
   const [details, setDetails] = useState(false);
@@ -113,13 +115,13 @@ function StopControl({ owner, mode, settingsTarget, settingsTrigger, closeSettin
       throw error;
     }
   }, onSuccess: () => { if (mounted.current) return client.invalidateQueries({ queryKey: stopKey(owner, mode) }); } });
-  const label = mode === "PAPER" ? t("paperStop") : t("liveStop");
+  const label = compact ? paperBotText("stopBot") : mode === "PAPER" ? t("paperStop") : t("liveStop");
   const actionText = restoring ? t("checkingPrevious") : label;
   const actionLabel = `${label} — ${t("retry")}`;
   const controls = <section className="kill-switch-settings-group" aria-label={mode}>
-      <strong>{mode}</strong>
+      {!compact && <strong>{mode}</strong>}
       <div className="kill-switch-control" role="group" aria-label={t("modeStatus", { mode })}>
-        <span role="status" className="kill-switch-state">{status.data?.progress ? t(status.data.progress) : status.isLoading ? t("loading") : "—"}{status.data?.pending_count ? ` (${status.data.pending_count} ${t("pending")})` : ""}</span>
+        {!compact && <span role="status" className="kill-switch-state">{status.data?.progress ? t(status.data.progress) : status.isLoading ? t("loading") : "—"}{status.data?.pending_count ? ` (${status.data.pending_count} ${t("pending")})` : ""}</span>}
         {(unknown || storageUnavailable) && <div role="alert" className="kill-switch-unknown">
           {unknown && <p>{t("requestFailed")}</p>}
           {storageUnavailable && <p>{t("storageUnavailable")}</p>}
@@ -127,13 +129,13 @@ function StopControl({ owner, mode, settingsTarget, settingsTrigger, closeSettin
       </div>
       <Button ref={inline ? settingsTrigger : undefined} size="sm" variant={mode === "LIVE" ? "outline" : "primary"} disabled={mutation.isPending || restoring || unknown}
         onClick={() => { closeSettings(); settingsTrigger.current?.focus(); mutation.mutate(); }} aria-label={label}>{actionText}</Button>
-      {(status.data?.stop_id || details) && <Button size="sm" variant="outline" onClick={() => {
+      {!compact && (status.data?.stop_id || details) && <Button size="sm" variant="outline" onClick={() => {
         flushSync(closeSettings);
         setDetails(true);
       }}>{t("details")}</Button>}
       {unknown && <Button size="sm" variant="outline" disabled={mutation.isPending || restoring} aria-label={actionLabel}
         onClick={() => { closeSettings(); settingsTrigger.current?.focus(); mutation.mutate(); }}>{t("retry")}</Button>}
-      {!status.data?.stop_id && !details && !unknown && <p>{t("noStopDetails")}</p>}
+      {!compact && status.isSuccess && !status.data.stop_id && !details && !unknown && <p>{t("noStopDetails")}</p>}
     </section>;
   return <>
     {inline ? controls : settingsTarget && createPortal(controls, settingsTarget)}
@@ -142,10 +144,10 @@ function StopControl({ owner, mode, settingsTarget, settingsTrigger, closeSettin
 }
 
 /** Same durable F-19 requests, recovery journal and summary in the bot panel. */
-export function BotStopControls({ owner, mode }: { owner: string; mode: StopMode }) {
+export function BotStopControls({ owner, mode, compact = false }: { owner: string; mode: StopMode; compact?: boolean }) {
   const trigger = useRef<HTMLButtonElement>(null);
   const close = useCallback(() => {}, []);
-  return <StopControl key={`${owner}:${mode}`} owner={owner} mode={mode} inline
+  return <StopControl key={`${owner}:${mode}`} owner={owner} mode={mode} inline compact={compact}
     settingsTarget={null} settingsTrigger={trigger} closeSettings={close}/>;
 }
 

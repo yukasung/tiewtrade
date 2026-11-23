@@ -2,7 +2,7 @@ import { openStopSettings } from "./stopSettings";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { KillSwitchBanner, KillSwitchControls } from "../src/KillSwitchControls";
+import { BotStopControls, KillSwitchBanner, KillSwitchControls } from "../src/KillSwitchControls";
 import { killSwitchText as t } from "../src/killSwitchMessages";
 import { riskText } from "../src/riskLimitMessages";
 import { postResume, type StopReceipt, type StopStatus } from "../src/killSwitch";
@@ -439,5 +439,35 @@ it("a recovered old receipt cannot retire a newer unknown STOP identity", async 
   openStopSettings();
   fireEvent.click(screen.getByRole("button", { name: `${t("paperStop")} — ${t("retry")}` }));
   await waitFor(() => expect(posted).toHaveLength(2)); expect(posted[1]).toBe(posted[0]);
+  client.clear();
+});
+
+
+it("uses the existing Paper stop request from the compact bot button", async () => {
+  const fetcher = vi.fn((url: string, init?: RequestInit) => Promise.resolve(new Response(
+    JSON.stringify(init?.method === "POST" ? appliedUserStop : status("PAPER")),
+  )));
+  vi.stubGlobal("fetch", fetcher);
+  const client = makeControlClient();
+  render(<QueryClientProvider client={client}><BotStopControls owner="compact-stop" mode="PAPER" compact/></QueryClientProvider>);
+  fireEvent.click(await screen.findByRole("button", { name: "หยุดบอท" }));
+  await waitFor(() => expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1));
+  const [url, request] = fetcher.mock.calls.find(([, init]) => init?.method === "POST")!;
+  expect(url).toBe("/api/paper/kill-switch/stop");
+  expect((request?.headers as Record<string, string>)["Idempotency-Key"]).toBeTruthy();
+});
+
+
+it.each([null, "existing-stop", "failure"])("does not claim no stop before status resolves (%s)", async result => {
+  let resolve!: (response: Response) => void;
+  vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>(done => { resolve = done; })));
+  const client = makeControlClient();
+  render(<QueryClientProvider client={client}><BotStopControls owner="owner" mode="PAPER"/></QueryClientProvider>);
+  expect(screen.queryByText(t("noStopDetails"))).toBeNull();
+  await waitFor(() => expect(resolve).toBeTypeOf("function"));
+  await act(async () => { resolve(new Response(JSON.stringify(result === "failure" ? { detail: "TRADING_STOP_UNAVAILABLE" } : status("PAPER", result)), { status: result === "failure" ? 503 : 200 })); await Promise.resolve(); });
+  await waitFor(() => expect(client.isFetching()).toBe(0));
+  if (result === null) expect(await screen.findByText(t("noStopDetails"))).toBeTruthy();
+  else expect(screen.queryByText(t("noStopDetails"))).toBeNull();
   client.clear();
 });

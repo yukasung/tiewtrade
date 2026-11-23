@@ -18,7 +18,6 @@ function Panel({ name }: { name: string }) {
   }, [name, client]);
   return <p data-testid={`module-${name}`}>{name}</p>;
 }
-vi.mock("../src/CandlestickChartPanel", () => ({ CandlestickChartPanel: () => <Panel name="chart" /> }));
 vi.mock("../src/TotpPanel", () => ({ TotpPanel: () => <Panel name="security" /> }));
 vi.mock("../src/ApiKeyPanel", () => ({ ApiKeyPanel: () => <Panel name="api-keys" /> }));
 vi.mock("../src/TradingAccountPanel", () => ({ TradingAccountPanel: () => <Panel name="trading-account" /> }));
@@ -30,7 +29,6 @@ beforeEach(() => {
   observed.mounts = []; observed.exits = []; observed.clients = [];
   platformRole = null;
   window.history.replaceState(null, "", "/");
-  vi.stubEnv("VITE_CHART_ENABLED", "1");
   vi.stubGlobal("fetch", vi.fn((url: string) => Promise.resolve(new Response(JSON.stringify(
     url.endsWith("auth/me") ? { user_id: "nav-owner", totp_enabled: false, platform_role: platformRole } : { csrf_token: "t" },
   )))));
@@ -43,13 +41,13 @@ async function navigate(page: string) {
     await Promise.resolve();
   });
 }
-it("defaults to chart and mounts only the selected module without replacing the session", async () => {
+it("defaults to Paper trade and mounts only the selected module without replacing the session", async () => {
   render(<StrictMode><AuthPanel /></StrictMode>);
-  await screen.findByTestId("module-chart");
-  await waitFor(() => expect(window.location.pathname).toBe("/chart"));
-  expect(observed.mounts.every(name => name === "chart")).toBe(true);
+  await screen.findByTestId("module-paper/trade");
+  await waitFor(() => expect(window.location.pathname).toBe("/paper/trade"));
+  expect(observed.mounts.every(name => name === "paper/trade")).toBe(true);
   const client = observed.clients.at(-1);
-  for (const page of ["security", "api-keys", "trading-account", "paper/trade", "live/trade", "chart"]) {
+  for (const page of ["security", "api-keys", "trading-account", "paper/trade", "live/trade", "paper/trade"]) {
     await navigate(page);
     expect(screen.getAllByTestId(/^module-/)).toHaveLength(1);
     expect(screen.getByTestId(`module-${page}`)).toBeTruthy();
@@ -73,8 +71,8 @@ it("preserves a direct link through authentication and handles a changed or unkn
   await navigate("api-keys");
   expect(screen.getByTestId("module-api-keys")).toBeTruthy();
   await navigate("unknown");
-  expect(window.location.pathname).toBe("/chart");
-  expect(screen.getByTestId("module-chart")).toBeTruthy();
+  expect(window.location.pathname).toBe("/paper/trade");
+  expect(screen.getByTestId("module-paper/trade")).toBeTruthy();
 });
 it.each(["th", "en"])("redirects retired prices links and removes the menu in %s", async language => {
   await accountI18n.changeLanguage(language);
@@ -82,15 +80,15 @@ it.each(["th", "en"])("redirects retired prices links and removes the menu in %s
   vi.stubGlobal("WebSocket", sockets);
   window.history.replaceState(null, "", "/prices?from=bookmark");
   render(<AuthPanel />);
-  await screen.findByTestId("module-chart");
-  await waitFor(() => expect(window.location.pathname).toBe("/chart"));
+  await screen.findByTestId("module-paper/trade");
+  await waitFor(() => expect(window.location.pathname).toBe("/paper/trade"));
   expect(window.location.search).toBe("?from=bookmark");
   expect(screen.queryByRole("link", { name: /ราคาสด|Live prices/ })).toBeNull();
   expect(document.querySelector('a[href="/prices"]')).toBeNull();
   const client = observed.clients.at(-1);
   await navigate("api-keys");
   await navigate("prices");
-  expect(window.location.pathname).toBe("/chart");
+  expect(window.location.pathname).toBe("/paper/trade");
   expect(observed.clients.at(-1)).toBe(client);
   expect(observed.mounts).not.toContain("prices");
   expect(vi.mocked(fetch).mock.calls.some(([url]) => typeof url === "string" && url.includes("/market-data/prices"))).toBe(false);
@@ -106,21 +104,21 @@ it("keeps a retired prices bookmark behind authentication", async () => {
   expect(window.location.pathname).toBe("/prices");
   expect(observed.mounts).toEqual([]);
 });
-it("keeps the disabled chart default without mounting modules or starting their requests", async () => {
-  vi.stubEnv("VITE_CHART_ENABLED", "0");
-  window.history.replaceState(null, "", "/prices");
+it.each(["0", "1"])("retires the standalone chart regardless of its former flag (%s)", async flag => {
+  vi.stubEnv("VITE_CHART_ENABLED", flag);
+  window.history.replaceState(null, "", "/chart?from=bookmark");
   render(<AuthPanel />);
-  await screen.findByText("กราฟยังไม่เปิดใช้งาน");
-  expect(screen.queryByTestId(/^module-/)).toBeNull();
-  expect(screen.queryByRole("link", { name: "กราฟแท่งเทียน" })).toBeNull();
-  expect(observed.mounts).toEqual([]);
-  await waitFor(() => expect(window.location.pathname).toBe("/chart"));
+  await screen.findByTestId("module-paper/trade");
+  await waitFor(() => expect(window.location.pathname).toBe("/paper/trade"));
+  expect(window.location.search).toBe("?from=bookmark");
+  expect(document.querySelector('a[href="/chart"]')).toBeNull();
+  expect(screen.queryByText("กราฟยังไม่เปิดใช้งาน")).toBeNull();
 });
 
 it("shows catalog management only to a platform role and rejects a trader deep link", async () => {
   window.history.replaceState(null, "", "/supported-symbols");
   render(<AuthPanel />);
-  await screen.findByTestId("module-chart");
+  await screen.findByTestId("module-paper/trade");
   expect(screen.queryByRole("link", { name: "คู่เทรดที่รองรับ" })).toBeNull();
   cleanup();
   platformRole = "PLATFORM_ADMIN";
@@ -133,9 +131,9 @@ it("shows catalog management only to a platform role and rejects a trader deep l
 
 it("navigates a plain internal click without reloading and preserves modified clicks", async () => {
   render(<AuthPanel />);
-  await screen.findByTestId("module-chart");
-  // Chart DOM can appear before the navigation effect installs its popstate listener.
-  await waitFor(() => expect(window.location.pathname).toBe("/chart"));
+  await screen.findByTestId("module-paper/trade");
+  // Trading DOM can appear before the navigation effect installs its popstate listener.
+  await waitFor(() => expect(window.location.pathname).toBe("/paper/trade"));
   const client = observed.clients.at(-1);
   fireEvent.click(screen.getByRole("button", { name: "เมนูบัญชี" }));
   const link = screen.getByRole<HTMLAnchorElement>("link", { name: "API key" });

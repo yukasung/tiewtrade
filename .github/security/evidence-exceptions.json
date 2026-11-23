@@ -540,6 +540,18 @@
       "reason": "Synthetic UUID request identities from isolated W4 pending.intent.key and retry.key, not venue/API credentials.",
       "approval": "Owner approved these six exact immutable evidence bindings on 2026-11-09.",
       "evidence": "specs/features/2026-11-02-tp-sl/publication-checksum-exceptions-proposal.md"
+    },
+    {
+      "commit": "c864411eb730d200cbb8dad3410a356e20579e88",
+      "path": "specs/features/2026-11-21-candle-closure-proof/evidence/public-paper-campaign-4-diagnostics.json",
+      "git_blob": "efa230cc4f1a248517af06f124cde0083936cb9b",
+      "rule": "generic-api-key",
+      "reported_matches": 2,
+      "occurrence_digest": "39300c3e82add96b48536196bda5185f27485de40840e12f45b5a0622e43f892",
+      "resolution": "false_positive",
+      "reason": "The two flagged strings are the same non-secret Paper order UUID in idempotency_key and intent.key; both exactly equal the stored order_id and intent.order_id. They identify a disposable Paper command and provide no authentication capability.",
+      "approval": "Owner explicitly approved these two exact occurrences on 2026-11-22 in the draft PR85 continuation; no wider exception authorized.",
+      "evidence": "specs/features/2026-11-21-candle-closure-proof/plan.md#owner-approved-exact-evidence-exception-2026-11-22-before-registry-edit; diagnostics commands[0] idempotency_key and payload.intent.key both exactly equal order_id."
     }
   ]
 }

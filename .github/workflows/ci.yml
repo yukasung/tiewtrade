@@ -323,7 +323,6 @@ jobs:
       TIEWTRADE_SIGNUP_OPEN: "1"
       TIEWTRADE_COOKIE_SECURE: "0"
       # The chart is the authenticated default page for F-12.
-      VITE_CHART_ENABLED: "1"
       TIEWTRADE_CHART_ENABLED: "1"
       # กุญแจปิดผนึก secret ของ TOTP (F-06) — **ค่านี้ใช้ได้เฉพาะเครื่องพัฒนาและ CI**
       # บนเครื่องจริงยังเป็นข้อที่ต้องตัดสิน (T-03) ซึ่งเป็นงาน F-31
@@ -401,6 +400,42 @@ jobs:
         working-directory: frontend
         env:
           CI: "1"
+
+      - name: F-21 single-basket Paper strategy E2E
+        working-directory: frontend
+        env:
+          CI: "1"
+          TIEWTRADE_E2E_DATABASE_NAME: tiewtrade_e2e_f21
+          TIEWTRADE_PRICE_ORIGINS: http://127.0.0.1:15121
+        run: |
+          export PGPASSWORD=postgres
+          createdb -h 127.0.0.1 -U postgres "$TIEWTRADE_E2E_DATABASE_NAME"
+          for script in ../backend/db/bootstrap/*.sql; do
+            psql -h 127.0.0.1 -U postgres -d "$TIEWTRADE_E2E_DATABASE_NAME" -v ON_ERROR_STOP=1 -f "$script"
+          done
+          for role_url in ${!TIEWTRADE_DATABASE_URL_@}; do
+            export "$role_url=${!role_url%/*}/$TIEWTRADE_E2E_DATABASE_NAME"
+          done
+          (cd ../backend && uv run alembic upgrade head)
+          npm run test:e2e:strategy
+
+      - name: Paper Test Entry first-fill TP/SL E2E
+        working-directory: frontend
+        env:
+          CI: "1"
+          TIEWTRADE_E2E_DATABASE_NAME: tiewtrade_e2e_paper_test
+          TIEWTRADE_PRICE_ORIGINS: http://127.0.0.1:15122
+        run: |
+          export PGPASSWORD=postgres
+          createdb -h 127.0.0.1 -U postgres "$TIEWTRADE_E2E_DATABASE_NAME"
+          for script in ../backend/db/bootstrap/*.sql; do
+            psql -h 127.0.0.1 -U postgres -d "$TIEWTRADE_E2E_DATABASE_NAME" -v ON_ERROR_STOP=1 -f "$script"
+          done
+          for role_url in ${!TIEWTRADE_DATABASE_URL_@}; do
+            export "$role_url=${!role_url%/*}/$TIEWTRADE_E2E_DATABASE_NAME"
+          done
+          (cd ../backend && uv run alembic upgrade head)
+          npm run test:e2e:paper-test
 
       # Dedicated suites create durable append-only operators and stop history.
       # F-19 must prove bootstrap and stop behavior from its own clean boundary.

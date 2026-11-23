@@ -14,6 +14,7 @@ from tiewtrade.core.order_book import BookLevel, BookState, MarketTrade
 from tiewtrade.core.orders import SourceUnavailableError
 from tiewtrade.core.positions import ExecutionSide, PositionPair
 from tiewtrade.infra.market_data.order_book_storage import BUFFER_SIZE
+from tiewtrade.infra.market_data.realtime_records import WriterLeaseLost
 from tiewtrade.services.market_data import order_book
 from tiewtrade.services.market_data.order_book import (
     ExecutionBookAssembler,
@@ -21,12 +22,14 @@ from tiewtrade.services.market_data.order_book import (
     TradeWindow,
 )
 from tiewtrade.venues.binance_th.order_book_mapping import observation_from_stream
+from tiewtrade.venues.errors import VenueUnavailableError
 from tiewtrade.venues.order_books import (
     DepthUpdate,
     ExecutionFeed,
     TradeObservation,
     TradeSample,
 )
+from tiewtrade.venues.symbols import Symbol
 
 
 def depth(first: int = 11, last: int = 11, milliseconds: int = 1) -> DepthUpdate:
@@ -242,3 +245,92 @@ async def test_supervisor_starts_and_stops_managed_pair(
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
+
+
+@pytest.mark.parametrize(
+    "failure_types",
+    [
+        (SourceUnavailableError,),
+        (VenueUnavailableError,),
+        (WriterLeaseLost,),
+        (SourceUnavailableError, VenueUnavailableError, WriterLeaseLost),
+    ],
+)
+async def test_supervisor_retries_expected_nested_failures_only_after_existing_interval(
+    monkeypatch: pytest.MonkeyPatch, failure_types: tuple[type[Exception], ...]
+) -> None:
+    waiting = asyncio.Event()
+    retry = asyncio.Event()
+    restarted = asyncio.Event()
+    stopped = asyncio.Event()
+    calls = 0
+
+    async def ingest(**kwargs: object) -> None:
+        nonlocal calls
+        assert kwargs["symbol"] == SYMBOL
+        calls += 1
+        if calls == 1:
+            raise ExceptionGroup(
+                "source tasks", [ExceptionGroup("nested", [kind() for kind in failure_types])]
+            )
+        restarted.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            stopped.set()
+
+    async def sleep(delay: float) -> None:
+        assert delay == 1.0
+        waiting.set()
+        await retry.wait()
+
+    monkeypatch.setattr(order_book, "ingest_execution_pair", ingest)
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    supervisor = ExecutionBookSupervisor(cast(AsyncEngine, object()), cast(ExecutionFeed, object()))
+    task = asyncio.create_task(supervisor._produce(PositionPair(SYMBOL.base, SYMBOL.quote)))
+    try:
+        await asyncio.wait_for(waiting.wait(), timeout=1)
+        assert calls == 1 and not restarted.is_set()
+        retry.set()
+        await asyncio.wait_for(restarted.wait(), timeout=1)
+        assert calls == 2
+    finally:
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+    assert stopped.is_set()
+
+
+async def test_supervisor_propagates_unexpected_mixed_failure_and_cleans_up_sibling(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sibling_started = asyncio.Event()
+    sibling_stopped = asyncio.Event()
+    calls: list[str] = []
+
+    async def pairs(self: ExecutionBookSupervisor) -> frozenset[PositionPair]:
+        del self
+        return frozenset({PositionPair("BTC", "USDT"), PositionPair("ETH", "USDT")})
+
+    async def ingest(**kwargs: object) -> None:
+        symbol = cast(Symbol, kwargs["symbol"])
+        calls.append(symbol.base)
+        if symbol.base == "BTC":
+            await sibling_started.wait()
+            raise ExceptionGroup("mixed", [SourceUnavailableError(), RuntimeError()])
+        sibling_started.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            sibling_stopped.set()
+
+    monkeypatch.setattr(ExecutionBookSupervisor, "_desired_pairs", pairs)
+    monkeypatch.setattr(order_book, "ingest_execution_pair", ingest)
+    supervisor = ExecutionBookSupervisor(
+        cast(AsyncEngine, object()), cast(ExecutionFeed, object()), refresh_interval=0.001
+    )
+    with pytest.raises(ExceptionGroup) as caught:
+        await asyncio.wait_for(supervisor.run(), timeout=1)
+    assert [type(error) for error in caught.value.exceptions] == [RuntimeError]
+    assert sorted(calls) == ["BTC", "ETH"]
+    assert sibling_stopped.is_set() and not supervisor.tasks

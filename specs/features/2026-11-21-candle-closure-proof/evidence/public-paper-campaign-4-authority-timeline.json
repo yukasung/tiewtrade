@@ -1,0 +1,152 @@
+{
+  "purpose": "Read-only commit-timestamp authority timeline for the single rejected command",
+  "decision": [
+    {
+      "id": "ed25f63f-fc32-5266-941e-7dc79afe6c66",
+      "run_revision": 7,
+      "recorded_at": "2026-11-21 12:55:41.081358+00:00",
+      "committed_at": "2026-11-21 12:55:41.701637+00:00"
+    }
+  ],
+  "events": [
+    {
+      "event": "START_REQUEST_APPLIED",
+      "revision": 1,
+      "recorded_at": "2026-11-21 12:53:16.400586+00:00",
+      "reason": null,
+      "committed_at": "2026-11-21 12:53:16.732317+00:00"
+    },
+    {
+      "event": "SOURCE_NOT_READY",
+      "revision": 2,
+      "recorded_at": "2026-11-21 12:53:18.014385+00:00",
+      "reason": "BOT_CANDLE_UNCONFIRMED",
+      "committed_at": "2026-11-21 12:53:18.117903+00:00"
+    },
+    {
+      "event": "SOURCE_NOT_READY",
+      "revision": 3,
+      "recorded_at": "2026-11-21 12:54:01.094612+00:00",
+      "reason": "INDICATOR_NOT_READY",
+      "committed_at": "2026-11-21 12:54:01.155355+00:00"
+    },
+    {
+      "event": "RUN_READY",
+      "revision": 4,
+      "recorded_at": "2026-11-21 12:54:23.556811+00:00",
+      "reason": null,
+      "committed_at": "2026-11-21 12:54:23.849099+00:00"
+    },
+    {
+      "event": "DECISION_RECORDED",
+      "revision": 5,
+      "recorded_at": "2026-11-21 12:54:23.556811+00:00",
+      "reason": null,
+      "committed_at": "2026-11-21 12:54:23.849099+00:00"
+    },
+    {
+      "event": "SOURCE_NOT_READY",
+      "revision": 6,
+      "recorded_at": "2026-11-21 12:55:02.976792+00:00",
+      "reason": "INDICATOR_NOT_READY",
+      "committed_at": "2026-11-21 12:55:02.999415+00:00"
+    },
+    {
+      "event": "RUN_READY",
+      "revision": 7,
+      "recorded_at": "2026-11-21 12:55:41.081358+00:00",
+      "reason": null,
+      "committed_at": "2026-11-21 12:55:41.701637+00:00"
+    },
+    {
+      "event": "DECISION_RECORDED",
+      "revision": 8,
+      "recorded_at": "2026-11-21 12:55:41.081358+00:00",
+      "reason": null,
+      "committed_at": "2026-11-21 12:55:41.701637+00:00"
+    },
+    {
+      "event": "SOURCE_NOT_READY",
+      "revision": 9,
+      "recorded_at": "2026-11-21 12:56:00.673466+00:00",
+      "reason": "INDICATOR_NOT_READY",
+      "committed_at": "2026-11-21 12:56:00.684285+00:00"
+    },
+    {
+      "event": "RUN_READY",
+      "revision": 10,
+      "recorded_at": "2026-11-21 12:56:27.953508+00:00",
+      "reason": null,
+      "committed_at": "2026-11-21 12:56:28.294247+00:00"
+    },
+    {
+      "event": "DECISION_RECORDED",
+      "revision": 11,
+      "recorded_at": "2026-11-21 12:56:27.953508+00:00",
+      "reason": null,
+      "committed_at": "2026-11-21 12:56:28.294247+00:00"
+    },
+    {
+      "event": "SOURCE_NOT_READY",
+      "revision": 12,
+      "recorded_at": "2026-11-21 12:56:29.487634+00:00",
+      "reason": "BOT_CANDLE_UNCONFIRMED",
+      "committed_at": "2026-11-21 12:56:29.503238+00:00"
+    },
+    {
+      "event": "SOURCE_NOT_READY",
+      "revision": 13,
+      "recorded_at": "2026-11-21 12:57:01.887005+00:00",
+      "reason": "INDICATOR_NOT_READY",
+      "committed_at": "2026-11-21 12:57:01.900157+00:00"
+    },
+    {
+      "event": "SOURCE_NOT_READY",
+      "revision": 14,
+      "recorded_at": "2026-11-21 12:58:06.052127+00:00",
+      "reason": "BOT_CANDLE_SOURCE_NOT_READY",
+      "committed_at": "2026-11-21 12:58:06.074802+00:00"
+    },
+    {
+      "event": "SOURCE_NOT_READY",
+      "revision": 15,
+      "recorded_at": "2026-11-21 12:58:33.079259+00:00",
+      "reason": "BOT_CANDLE_UNCONFIRMED",
+      "committed_at": "2026-11-21 12:58:33.090907+00:00"
+    },
+    {
+      "event": "SOURCE_NOT_READY",
+      "revision": 16,
+      "recorded_at": "2026-11-21 12:59:03.222866+00:00",
+      "reason": "INDICATOR_NOT_READY",
+      "committed_at": "2026-11-21 12:59:03.242949+00:00"
+    },
+    {
+      "event": "RUN_READY",
+      "revision": 17,
+      "recorded_at": "2026-11-21 12:59:13.648953+00:00",
+      "reason": null,
+      "committed_at": "2026-11-21 12:59:13.788990+00:00"
+    },
+    {
+      "event": "DECISION_RECORDED",
+      "revision": 18,
+      "recorded_at": "2026-11-21 12:59:13.648953+00:00",
+      "reason": null,
+      "committed_at": "2026-11-21 12:59:13.788990+00:00"
+    }
+  ],
+  "result": [
+    {
+      "state": "REJECTED",
+      "failure_code": "ORDER_SAFETY_UNAVAILABLE",
+      "completed_at": "2026-11-21 12:56:24.323755+00:00",
+      "committed_at": "2026-11-21 12:56:24.448782+00:00"
+    }
+  ],
+  "stops": [
+    {
+      "count": 0
+    }
+  ]
+}
