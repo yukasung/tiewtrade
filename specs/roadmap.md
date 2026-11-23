@@ -2586,3 +2586,23 @@ awaiting_proof stage failed because queued dispatch claim returned None, cause
 unconfirmed. Security45106793030 and frontend/API/container/E2E passed. V19 Failed.
 Next: offline dispatch claim diagnosis before another authorized CI round. Public
 fill/protection and remaining acceptance gates unchanged; no merge/Completed.
+
+
+### Dispatch diagnostics CI checkpoint —2026-11-23
+
+762315ab CI45113386759 Failed overall. Backend6127 and all isolated backend
+steps Passed; prior reconnect/awaiting_proof cases Passed, historical cause still
+unconfirmed. Security45113386814, frontend/API/container Passed. F17 E2E failed
+before order submission: HTTP200 snapshot wallet:null after prepare/reload.
+V19 Failed. Next: offline F17 preparation/snapshot diagnosis, then a concrete
+proposal before further CI. No public round, merge or Completed claim.
+
+
+### F17 response observer local correction —2026-11-23
+
+CI trace proves old-document wallet:null response captured despite ready wallet
+after reload. Scoped observer fix tracks new-navigation requests and shares F16/
+F17 helper. Red/green regression2cases and real browser/isolatedPG F17(7), F16(1)
+passed; scoped lint/types passed. V19 remains Failed pending final-candidate CI.
+Next: separately authorized publication/CI round; historical dispatch cause and
+other acceptance gaps retained. No new public campaign or merge.

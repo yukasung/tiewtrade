@@ -1218,3 +1218,50 @@ authorized diagnostics publication/CI round with hypothesis: first admission may
 be terminal/rejected before the second claim; evidence separates that from lease/
 schedule/state predicates. Stop after that round, retain failures and diagnose
 actual reason before runtime change. No extra CI/public campaign or merge performed.
+
+
+## Dispatch diagnostics CI checkpoint —2026-11-23
+
+Owner authorized one publication/CI round;762315ab75332791b26b23f364658ccd348609b5
+published to draft PR85 including approved testing-standard amendment. Required
+CI45113386759 Failed overall. Backend Passed:6127passed/2skipped/32deselected
+in1598.84s; isolated protection55, writer-fence1, optional-limit1, fresh-state28,
+rollback16 passed. Both awaiting_proof and reconnect cases passed. No dispatch
+failure captured, so historical cause remains unconfirmed; no causal fix claim.
+
+Security45113386814 Passed; frontend/API/container Passed. F17 E2E failed before
+order submission: protections.spec.ts:76 register->reloadPaperPair line33 received
+HTTP200 PAPER/BTC with wallet:null instead of wallet_id/episode_id. prepare returned
+204 before reload. Subsequent E2E steps were not run. No evidence yet determines
+wallet initialization, response timing or another cause. Preserve assertion.
+
+Evidence dispatch-diagnostics-ci-result.json. V19 remains Failed. Next: offline
+F17 prepare-to-snapshot lifecycle investigation with bounded safe diagnostics;
+consider framework/session/dependency effects only when evidence supports them.
+Stop publication/CI after this authorized round; retain the repeated failures and
+propose a concrete next diagnostic/fix before any further run. No new public Paper
+campaign or merge. Receipt remains local without documentation-only CI loop.
+
+
+## F17 reload observer correction —2026-11-23
+
+Actual CI45113386759 trace artifact14790399958 establishes stale response capture:
+old BTC request04:48:11.923Z has wallet:null; post-reload BTC04:48:12.870Z has wallet
+and no admission reasons. Raw trace retained locally only; safe summary/digest in
+evidence/f17-reload-observer-local.json. No wallet creation/runtime change justified.
+
+Shared reloadPaperPair now uses reloadResponse request-identity tracking after
+main-frame navigation; old in-flight requests cannot satisfy it. F16/F17 duplicate
+helper removed; HTTP200, wallet/episode and rendered scope assertions retained.
+Deterministic ordering regression fails without guard and passes with guard;
+2unit cases cover old response before/after navigation, subframe and cleanup.
+Fresh isolated PostgreSQL/browser: F17 all7passed55.7s; F16 shared-helper MARKET/
+LIMIT/partial/cancel case1passed16.3s. Scoped ESLint and frontend tsc passed; diff
+check passed. Initial unit lint errors corrected; wrong-cwd npx interrupted and
+rerun from frontend. Scoped review found no remaining defect in this diff; test-only
+request state is ephemeral, no persistent business/session data or financial change.
+
+V19 remains Failed pending final-candidate required CI. Historical dispatch failure
+cause remains unconfirmed, public fill/protection and other gates unchanged.
+Next: separately authorized publication and one CI round of this causal observer
+fix, keeping prior failures. No additional CI/public campaign or merge performed.

@@ -1,0 +1,40 @@
+{
+  "candidate": "762315ab75332791b26b23f364658ccd348609b5",
+  "ci": {
+    "id": 45113386759,
+    "result": "Failed"
+  },
+  "backend": {
+    "result": "Passed",
+    "main_passed": 6127,
+    "main_skipped": 2,
+    "main_deselected": 32,
+    "main_seconds": 1598.84,
+    "isolated_step_pass_counts": [
+      55,
+      1,
+      1,
+      28,
+      16
+    ],
+    "previous_awaiting_proof_and_reconnect": "Passed",
+    "limitation": "No failure captured in dispatch; historical root cause remains unconfirmed"
+  },
+  "security": {
+    "id": 45113386814,
+    "result": "Passed"
+  },
+  "e2e": {
+    "result": "Failed",
+    "test": "e2e/protections.spec.ts:76 bracket fill, reload, replace and cancel use durable production requests",
+    "failure_location": "reloadPaperPair line33",
+    "observed": "HTTP200 mode PAPER base BTC wallet null; expected wallet_id/episode_id",
+    "phase": "register after prepare204 and reload, before order submission",
+    "cause": "Unconfirmed; do not infer from prior passing runs",
+    "remaining_after_f17": "Not run due failed step"
+  },
+  "other_jobs": "Frontend/API/container Passed",
+  "next": "Offline F17 prepare-to-snapshot lifecycle diagnosis; no automatic CI retry",
+  "public_campaign": "Not run",
+  "merge": "Not performed"
+}

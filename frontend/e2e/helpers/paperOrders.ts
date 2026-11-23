@@ -1,3 +1,4 @@
+import { reloadResponse } from "./reloadResponse";
 import { expect, type Page } from "@playwright/test";
 import type { NewManualOrder } from "../../src/manualOrders";
 type WithoutScope<T> = T extends unknown ? Omit<T, "expected_wallet_id" | "expected_episode_id"> : never;
@@ -56,4 +57,22 @@ export async function submitSell(page: Page) {
   const pending = page.waitForResponse(r => r.url().endsWith("/api/paper/orders") && r.request().method() === "POST");
   await button.click();
   return pending;
+}
+
+export async function reloadPaperPair(page: Page) {
+  const response = await reloadResponse(page, response => {
+    const url = new URL(response.url());
+    return url.pathname === "/api/paper/trade" && url.searchParams.get("base") === "BTC" &&
+      response.request().method() === "GET";
+  }, async () => {
+    await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
+    await page.getByLabel("คู่เทรด").selectOption("BTC");
+  });
+  expect(response.status()).toBe(200);
+  const data: unknown = await response.json();
+  expect(data).toMatchObject({ mode: "PAPER", base: "BTC", wallet: {
+    wallet_id: expect.any(String), episode_id: expect.any(String),
+  } });
+  // The wallet scope must render before filling: its first arrival remounts the form.
+  await expect(page.locator('[aria-labelledby="paper-bot-title"] dd .market-value')).toBeVisible();
 }

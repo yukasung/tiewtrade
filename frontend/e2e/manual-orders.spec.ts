@@ -1,4 +1,4 @@
-import { postFixtureBuy, seedLegacyBuy, openSell, submitSell } from "./helpers/paperOrders";
+import { reloadPaperPair, postFixtureBuy, seedLegacyBuy, openSell, submitSell } from "./helpers/paperOrders";
 import { navigationLink } from "./helpers/ui";
 import { mkdirSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
@@ -12,25 +12,7 @@ async function capture(page: Page, name: string) {
   mkdirSync(evidence, { recursive: true });
   await page.screenshot({ path: `${evidence}/${name}`, fullPage: true });
 }
-async function reloadPaperPair(page: Page) {
-  // Arm before reload: the chart can select BTC before the selector is ready.
-  const snapshot = page.waitForResponse(response => {
-    const url = new URL(response.url());
-    return url.pathname === "/api/paper/trade" && url.searchParams.get("base") === "BTC" &&
-      response.request().method() === "GET";
-  });
-  await page.reload();
-  await expect(page.getByLabel("คู่เทรด")).toBeEnabled();
-  await page.getByLabel("คู่เทรด").selectOption("BTC");
-  const response = await snapshot;
-  expect(response.status()).toBe(200);
-  const data: unknown = await response.json();
-  expect(data).toMatchObject({ mode: "PAPER", base: "BTC", wallet: {
-    wallet_id: expect.any(String), episode_id: expect.any(String),
-  } });
-  // The wallet scope must render before filling: its first arrival remounts the form.
-  await expect(page.locator('[aria-labelledby="paper-bot-title"] dd .market-value')).toBeVisible();
-}
+
 async function register(page: Page, email = `manual-${Date.now()}@example.com`) {
   await page.goto("/paper/trade");
   await page.getByTestId("switch-mode").click();

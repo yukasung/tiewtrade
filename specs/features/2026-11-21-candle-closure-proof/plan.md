@@ -1123,3 +1123,30 @@ evidence and approved testing-standard amendment to draft PR85. Hypothesis: firs
 admission may be terminal/rejected before second claim; retain actual admission
 and claim predicates. One round only; no public campaign, runtime safety changes
 or merge. Report captured cause or remaining uncertainty honestly.
+
+
+## F17 stale response observer correction —2026-11-23
+
+Owner instructed offline diagnosis. Downloaded CI45113386759 playwright-report
+trace: original BTC request starts04:48:11.923Z, wallet:null; post-reload BTC starts
+04:48:12.870Z, wallet present and no admission reasons. prepare204 starts11.868Z.
+Original response waiter accepts any matching response, including a request from
+the previous document. This establishes an observer defect; no wallet/runtime
+change justified. Keep raw trace local (may contain session data), record only
+safe timings/presence flags and source artifact identity in evidence.
+
+Reuse existing identical reloadPaperPair in F16/F17 by centralizing it in paperOrders
+helper; track requests only after main-frame navigation request of page.reload.
+Reject old in-flight response identity; retain HTTP/wallet/UI assertions. Add
+deterministic request ordering regression that fails before guard and passes
+after, check listener cleanup. Run scoped frontend lint/types/unit checks then
+isolated F17 browser/PG acceptance if environment available. No CI/public round
+or runtime change authorized.
+
+
+## Owner-authorized reload observer publication —2026-11-23
+
+Owner instructed "เริ่มทำ" after proposal to commit/push the causal F17 observer
+correction and run one required-CI round. Publish fingerprint-matched helpers,
+regressions and related existing evidence to draft PR85. No further public campaign
+or merge. Track final SHA/run links and retain prior failures and uncertainty.
