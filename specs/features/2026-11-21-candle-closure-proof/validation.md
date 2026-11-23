@@ -1178,3 +1178,43 @@ hazard but does not establish the exact CI failure cause. V19 remains Failed unt
 final-candidate required CI passes; other gates unchanged. Next: publish this
 reviewable fixture correction in an authorized CI round; if failure recurs use
 durable reasons to diagnose it. No public campaign, merge or runtime fix claimed.
+
+
+## Reconnect fixture candidate CI result —2026-11-23
+
+Owner instructed publication and one CI round. Candidate3a5a1d7fdead8941c2e0a7682bde3f97c5ba7fe2
+pushed to draft PR85. CI45106792952 Failed:6126passed/1failed/2skipped/32deselected
+in1258.12s. Reconnect case passed. Failure is awaiting_proof stage in queued-result
+verification: drive helper test_execution.py:274 expected claim token but got None.
+Captured assertion does not establish why claim was unavailable. Preserve criteria;
+do not call flaky or remove assertion. Security45106793030 and frontend/API/container/
+E2E passed; backend static passed, later isolated backend steps skipped. Local
+gitleaks binary was unavailable; CI Security/secrets passed on published candidate.
+Evidence reconnect-fixture-ci-failed.json. V19 remains Failed; public and owner/
+independent/deployment gates unchanged. Next: focused offline dispatch claim
+diagnosis and affected validation; further CI/public round is not inferred.
+No merge or Completed claim. This CI receipt remains local without another
+documentation-only commit/CI loop.
+
+
+## Dispatch diagnostic local checkpoint —2026-11-23
+
+CI45106792952 traceback establishes claim failure at second drive (verify helper
+line67), after first admission. Historical rejection cause remains unconfirmed.
+Test helper now asserts successful admission before matching and includes safe
+dispatch state/schedule/lease/result/DB-clock predicates on claim failure. Snapshot
+is diagnostic evidence, not proof of transient lock ownership. No production
+changes/retries/lease relaxation; existing order/balance/position assertions retained.
+
+61closure-proof/commit-fence cases passed;8dispatch cases passed2.14s after correcting
+a temporary launcher's nonexistent DB name (initial8setup errors SQLSTATE3D000).
+69distinct cases passed. Scoped Ruff/format/mypy2files and diff check passed.
+Scoped review: changes are test-only, no API/schema/persistent session or financial
+logic change; diagnostics exclude payloads/secrets. Evidence dispatch-claim-diagnostics-local.json.
+
+This checkpoint adds diagnostics; it does not certify historical cause or fix.
+V19 remains Failed and other acceptance gaps unchanged. Next: one separately
+authorized diagnostics publication/CI round with hypothesis: first admission may
+be terminal/rejected before the second claim; evidence separates that from lease/
+schedule/state predicates. Stop after that round, retain failures and diagnose
+actual reason before runtime change. No extra CI/public campaign or merge performed.

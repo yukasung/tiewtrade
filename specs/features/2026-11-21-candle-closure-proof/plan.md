@@ -1063,3 +1063,63 @@ No runtime change is justified without a reproduced runtime failure.
 Owner instructed "เริ่มทำ" after the proposal to commit/push the reviewed fixture
 correction and run one additional required-CI round. Publish the fixture and
 related existing evidence to draft PR85. No additional public campaign or merge.
+
+
+## Repeated CI failure investigation checkpoint —2026-11-23
+
+Owner requested systematic handling because repeated CI rounds delay development.
+Use delegated diagnostic authority; do not infer another publication/CI campaign.
+
+Observed: c5f724f3 reconnect decision=None;3a5a1d7f reconnect Passed, awaiting_proof
+claim token=None. Neither captured failure proves its rejection cause. Preserve
+all historical failures and distinguish fixture hazards from reproduced causes.
+
+Investigate existing drive/verify_queued_result and claim_order before runtime
+changes. Ordinary claim can reject for busy advisory owner, terminal dispatch,
+stale expected_due, not-yet-due schedule, active lease, another active owner claim,
+or skipped row lock. Current test helper overwrites next_attempt_at and then only
+asserts token is not None, losing the predicate evidence. Record minimal safe
+dispatch fields, DB clock, command result, relevant lock ownership and call phase
+(first admission vs subsequent matching) on failure. Do not mutate lease/state to
+make tests pass or automatically retry an unexplained claim failure.
+
+Before choosing a correction: deterministic PostgreSQL cases must distinguish
+active/expired lease, busy owner, stale scheduling hint, terminal dispatch, and
+transaction completion/restart. Reuse existing dispatch and concurrency cases;
+add only missing evidence/behavior. Check whether timing/window selection and
+claim failure share a cause; do not assume it.
+
+Local prepublication set: closure proof integration, strategy commit fences,
+dispatch claim/lease/concurrency, same-book recovery and affected financial/protection
+paths; scoped static checks. Select actual existing cases after causal diagnosis,
+rather than blanket full regression after each patch. Keep production Money/Quantity,
+admission, expiry, lease, idempotency and security invariants unchanged.
+
+Exit criteria for this repair checkpoint: reproduced or predicate-proven failure,
+causal correction, regression that fails before/passes after, relevant PostgreSQL
+and static checks, scoped diff review. If exact historical cause remains unknowable,
+state it explicitly and publish diagnostics only with that limitation. Required CI
+remains mandatory; no local green replaces it. No "fixed" claim based only on a
+passing rerun. Additional CI needs the separately bounded authorization.
+
+
+## Dispatch claim diagnostic implementation —2026-11-23
+
+CI45106792952 traceback locates failure at verify_queued_result line67: second
+drive after admission, sleep and next_book, not the first admission claim. Existing
+helper loses the preceding admission outcome. Add safe predicate snapshot on claim
+failure (schedule/lease/state/busy owner/DB clock and command outcome) and assert
+expected successful admission before second drive. This distinguishes terminal
+rejection from lease/lock failures without retries or production changes. Historical
+cause remains unconfirmed. Reuse existing drive and PostgreSQL integration module;
+no publication/CI/public campaign authorized.
+
+
+## Owner-authorized dispatch diagnostics CI —2026-11-23
+
+Owner instructed "เริ่มทำ" after the proposal for one additional diagnostics
+publication/CI round. Publish fingerprint-matched test diagnostics with related
+evidence and approved testing-standard amendment to draft PR85. Hypothesis: first
+admission may be terminal/rejected before second claim; retain actual admission
+and claim predicates. One round only; no public campaign, runtime safety changes
+or merge. Report captured cause or remaining uncertainty honestly.

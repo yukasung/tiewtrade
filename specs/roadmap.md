@@ -2577,3 +2577,12 @@ established. Security45055199790, frontend/API/container/E2E passed. Backend
 isolated follow-up steps skipped. V19 Failed; public fill/TP/SL remains Partial.
 Next: focused offline diagnosis/fix and targeted validation before requesting
 another CI round. No attempt9/merge/Completed claim.
+
+
+### Reconnect fixture CI checkpoint —2026-11-23
+
+3a5a1d7f CI45106792952 Failed:6126passed/1failed. Reconnect case now passed;
+awaiting_proof stage failed because queued dispatch claim returned None, cause
+unconfirmed. Security45106793030 and frontend/API/container/E2E passed. V19 Failed.
+Next: offline dispatch claim diagnosis before another authorized CI round. Public
+fill/protection and remaining acceptance gates unchanged; no merge/Completed.

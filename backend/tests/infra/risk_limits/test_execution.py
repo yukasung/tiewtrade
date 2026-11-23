@@ -271,7 +271,30 @@ async def drive(engine: AsyncEngine, owner: UUID, command_id: UUID) -> None:
         token = await claim_order(
             session, DueOrder(command_id, owner, due), worker="risk-composition"
         )
-    assert token is not None
+        diagnostics = None
+        if token is None:
+            diagnostics = (
+                (
+                    await session.execute(
+                        """SELECT d.state,d.next_attempt_at,d.lease_until,d.claim_revision,
+                    d.attempts,clock_timestamp() AS db_now,
+                    d.next_attempt_at=:due AS expected_due_matches,
+                    d.next_attempt_at<=clock_timestamp() AS is_due,
+                    d.lease_until IS NULL OR d.lease_until<=clock_timestamp() AS lease_available,
+                    EXISTS(SELECT 1 FROM paper_order_dispatch busy
+                      WHERE busy.user_id=d.user_id AND busy.state='CLAIMED'
+                      AND busy.lease_until>clock_timestamp()) AS owner_busy,
+                    r.state AS result_state,r.failure_code
+                    FROM paper_order_dispatch d
+                    LEFT JOIN paper_order_command_results r USING(command_id)
+                    WHERE d.command_id=:id""",
+                        {"id": command_id, "due": due},
+                    )
+                )
+                .mappings()
+                .one_or_none()
+            )
+    assert token is not None, diagnostics
     async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
         await process_claimed_order(session, token, policy=TransactionalRiskPolicy())
 

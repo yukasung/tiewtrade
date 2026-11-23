@@ -62,6 +62,15 @@ async def verify_queued_result(
 ) -> None:
     await drive(engine, owner, command)
     if should_fill:
+        async with user_session(engine, owner, role=DatabaseRole.ENGINE) as session:
+            admission = (
+                await session.execute(
+                    "SELECT state,failure_code FROM paper_order_command_results "
+                    "WHERE command_id=:command",
+                    {"command": command},
+                )
+            ).one_or_none()
+            assert admission is not None and admission.state == "SUCCEEDED", admission
         await asyncio.sleep(0.12)
         await source.next_book()
         await drive(engine, owner, command)
